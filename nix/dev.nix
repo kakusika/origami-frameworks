@@ -2,7 +2,6 @@
   mkShell,
   pkgs,
   qt6,
-
   ...
 }:
 mkShell {

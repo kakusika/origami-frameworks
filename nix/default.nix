@@ -1,9 +1,9 @@
 {
   nixpkgs,
+  rust-overlay,
   ...
 }@inputs:
 let
-  # https://github.com/numtide/go2nix/blob/main/flake.nix
   systems = [
     "x86_64-linux"
     "aarch64-linux"
@@ -16,6 +16,7 @@ let
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [ (import rust-overlay) ];
         };
       in
       f system pkgs
@@ -24,8 +25,8 @@ in
 {
   packages = forAllSystems (
     _: pkgs: rec {
-      default = temp;
-      temp = pkgs.callPackage ./pkgs/temp.nix { };
+      default = origami;
+      origami = pkgs.kdePackages.callPackage ./pkgs/origami.nix { };
     }
   );
   devShells = forAllSystems (

@@ -6,7 +6,7 @@
   kdePackages,
 }:
 rustPlatform.buildRustPackage {
-  pname = "cettila";
+  pname = "origami";
   version = "0.1.0";
 
   src = ../..;

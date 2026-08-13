@@ -78,16 +78,13 @@ QQC2.ToolButton {
         popup.close();
     }
 
-    // Same bordered/framed look DropdownButton.qml/HamburgerButton.qml
-    // both draw -- see either's own class comment for why this is
-    // Theme.paletteFor()-driven rather than left to the active QQC2
-    // style's own default chrome.
-    background: Rectangle {
-        radius: Units.cornerRadius
-        color: popup.visible ? root.colors.highlightColor : (root.hovered ? root.colors.hoverColor : root.colors.backgroundColor)
-        border.width: Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
-    }
+    // `checked` (not `checkable` -- nothing should auto-toggle it, only
+    // this binding drives it) instead of a hand-painted highlight color:
+    // the active QQC2 style already knows how to render a checked
+    // toggle/tool button distinctly, so this keeps the "popup is open"
+    // affordance without this component owning any background paint.
+    // Same fix as DropdownButton.qml/HamburgerButton.qml.
+    checked: popup.visible
 
     implicitHeight: Units.gridUnit * 1.6
     implicitWidth: contentRow.implicitWidth + Units.largeSpacing + 4

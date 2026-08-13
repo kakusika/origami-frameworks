@@ -18,12 +18,8 @@ QQC2.Menu {
     property bool detachedWindow: false
     popupType: detachedWindow ? QQC2.Popup.Window : QQC2.Popup.Item
 
-    background: Rectangle {
-        color: root.colors.backgroundColor
-        radius: Units.cornerRadius > 0 ? Units.cornerRadius + root.padding : 0
-        border.width: Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
-    }
+    // No background override -- left to the active QQC2 style's own
+    // popup-panel chrome.
 
     contentItem: ListView {
         implicitHeight: contentHeight
@@ -47,6 +43,9 @@ QQC2.Menu {
 
             readonly property string _iconName: (typeof modelData === "string") ? "" : (modelData.icon || "")
 
+            // Left as-is -- same `_selected`-vs-`checked`/`checkable`
+            // conflict as ThemedMenu.qml's Instantiator MenuItem, see its
+            // comment for why this isn't a safe mechanical delete.
             background: Rectangle {
                 radius: Units.cornerRadius
                 color: (menuItem.highlighted || menuItem._selected) ? root.colors.highlightColor : "transparent"

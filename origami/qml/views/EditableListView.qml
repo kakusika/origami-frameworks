@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // A Blender UIList-style container. Combines a ListView with a side action column
 // (+, -, Up, Down buttons) for managing editable lists.
@@ -17,30 +17,30 @@ Item {
     signal moveUpRequested(int index)
     signal moveDownRequested(int index)
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: Origami.Theme.paletteFor(Theme.view)
 
-    implicitWidth: Units.gridUnit * 16
-    implicitHeight: Units.gridUnit * 12
+    implicitWidth: Origami.Units.gridUnit * 16
+    implicitHeight: Origami.Units.gridUnit * 12
 
     RowLayout {
         anchors.fill: parent
-        spacing: Units.smallSpacing
+        spacing: Origami.Units.smallSpacing
 
         // Main ListView area
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: Units.cornerRadius
+            radius: Origami.Units.cornerRadius
             color: root.colors.backgroundColor
-            border.width: Units.borderWidth
+            border.width: Origami.Units.borderWidth
             border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.25)
             clip: true
 
             ListView {
                 id: listView
                 anchors.fill: parent
-                anchors.margins: Units.smallSpacing
-                spacing: Units.smallSpacing / 2
+                anchors.margins: Origami.Units.smallSpacing
+                spacing: Origami.Units.smallSpacing / 2
                 boundsBehavior: Flickable.StopAtBounds
 
                 QQC2.ScrollBar.vertical: QQC2.ScrollBar {}

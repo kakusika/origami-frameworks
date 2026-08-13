@@ -22,12 +22,8 @@ QQC2.Menu {
 
     padding: Units.smallSpacing
 
-    background: Rectangle {
-        color: root.colors.backgroundColor
-        radius: Units.cornerRadius > 0 ? Units.cornerRadius + root.padding : 0
-        border.width: Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
-    }
+    // No background override -- left to the active QQC2 style's own
+    // popup-panel chrome.
 
     contentItem: ListView {
         implicitHeight: contentHeight
@@ -54,10 +50,9 @@ QQC2.Menu {
         QQC2.MenuItem {
             id: wrapItem
 
-            background: Rectangle {
-                radius: Units.cornerRadius
-                color: wrapItem.highlighted ? root.colors.highlightColor : "transparent"
-            }
+            // No background override -- `highlighted` is a native
+            // MenuItem property the active style already renders
+            // distinctly on its own.
 
             contentItem: Row {
                 spacing: Units.smallSpacing
@@ -124,6 +119,15 @@ QQC2.Menu {
 
             readonly property string _iconName: (typeof menuItem._entry === "string") ? "" : (menuItem._entry.icon || "")
 
+            // Left as a background override, unlike this file's other two
+            // -- `_selected` isn't native `highlighted` state, it's "this
+            // entry is the current value" from external data. The
+            // idiomatic native equivalent would be `checked`, but that
+            // needs `checkable: true` to actually render, and `checkable`
+            // makes QQC2 auto-toggle `checked` on click, which would
+            // fight this live `_selected` binding (severs it on the
+            // first click). Not safe to change without also reworking
+            // how selection here interacts with `onTriggered` below.
             background: Rectangle {
                 radius: Units.cornerRadius
                 color: (menuItem.highlighted || menuItem._selected) ? root.colors.highlightColor : "transparent"

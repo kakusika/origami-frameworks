@@ -26,12 +26,12 @@ QQC2.ToolButton {
         menu.close();
     }
 
-    background: Rectangle {
-        radius: Units.cornerRadius
-        color: menu.visible ? root.colors.highlightColor : (root.hovered ? root.colors.hoverColor : root.colors.backgroundColor)
-        border.width: Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
-    }
+    // `checked` (not `checkable` -- nothing should auto-toggle it, only
+    // this binding drives it) instead of a hand-painted highlight color:
+    // the active QQC2 style already knows how to render a checked
+    // toggle/tool button distinctly, so this keeps the "popup is open"
+    // affordance without this component owning any background paint.
+    checked: menu.visible
 
     implicitHeight: Units.gridUnit * 1.4
     implicitWidth: contentRow.implicitWidth + Units.largeSpacing + 4

@@ -45,6 +45,8 @@ struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     theme_mode: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    accent_color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     last_image_pick_dir: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     last_media_pick_dir: Option<String>,
@@ -278,6 +280,26 @@ pub fn load_theme_mode(vault_root: &Path) -> String {
 pub fn save_theme_mode(vault_root: &Path, mode: &str) -> io::Result<()> {
     let mut settings = load(vault_root);
     settings.theme_mode = Some(mode.to_string());
+    save(vault_root, &settings)
+}
+
+/// The user's freely-chosen accent color for Ayame's own palette, as a
+/// `"#RRGGBB"` hex string -- see `ThemeSettings`/`ayame::apply_theme`/
+/// `ayame-colors`, which compose it with the `theme_mode` preset into
+/// Ayame's `QGuiApplication` palette. Only meaningful while `theme_mode` is
+/// `"light"`/`"dark"` *and* Ayame is the active QQC2 style (see `style`);
+/// ignored otherwise -- no override is attempted for other styles. Defaults
+/// to Ayame's historical fixed accent, `"#3daee9"`. Like `theme_mode`,
+/// applied live -- no restart required.
+pub fn load_accent_color(vault_root: &Path) -> String {
+    load(vault_root)
+        .accent_color
+        .unwrap_or_else(|| "#3daee9".to_string())
+}
+
+pub fn save_accent_color(vault_root: &Path, hex: &str) -> io::Result<()> {
+    let mut settings = load(vault_root);
+    settings.accent_color = Some(hex.to_string());
     save(vault_root, &settings)
 }
 
@@ -653,6 +675,18 @@ mod tests {
 
         save_theme_mode(&dir, "light").unwrap();
         assert_eq!(load_theme_mode(&dir), "light");
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn round_trips_accent_color_through_yaml_on_disk() {
+        let dir = temp_dir("accent-color-roundtrip");
+
+        assert_eq!(load_accent_color(&dir), "#3daee9");
+
+        save_accent_color(&dir, "#ff8800").unwrap();
+        assert_eq!(load_accent_color(&dir), "#ff8800");
 
         fs::remove_dir_all(&dir).unwrap();
     }

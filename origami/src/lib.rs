@@ -3,11 +3,13 @@ pub mod fs_entries;
 pub mod fs_watch;
 pub mod pane_tree;
 
-pub use ayame::apply_theme_mode;
+pub use ayame::apply_theme;
 
 pub fn apply_saved_theme_mode() {
     let vault_root = std::path::Path::new(origami_config::workspace::DEFAULT_VAULT_ROOT);
-    ayame::apply_theme_mode(&origami_config::settings::load_theme_mode(vault_root));
+    let mode = origami_config::settings::load_theme_mode(vault_root);
+    let accent = origami_config::settings::load_accent_color(vault_root);
+    ayame::apply_theme(&mode, &accent);
 }
 
 pub fn apply_saved_ui_font() {

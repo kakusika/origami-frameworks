@@ -130,13 +130,132 @@ lists; not every `hovered` hit is a style-fighting bug.)
 
 ## Steps
 
-- [ ] Phase 1 -- Category A: for each file, separate any genuine
-      top-level QQC2 `background:` override from embedded Category-B
-      chrome, delete the former, confirm (by reading the resulting file,
-      not by launching the GUI -- see cettila's AGENTS.md rule on this)
-      that nothing else in the file re-implements what the style would
-      now provide (e.g. a `contentItem` manually recoloring text to match
-      a `pressed` state that the style's own delegate already handles).
+- [x] Phase 1 -- Category A, all 16 files triaged one at a time (done
+      2026-08-14). Outcome: 6 files edited (background removed, 3 of
+      those replaced the lost affordance with `checked: <popup
+      visible>`), 4 reclassified to Category B (structural
+      grouping/shape had no style to delegate to), 6 left unchanged with
+      documented reasoning (legitimate context-matching or
+      safety-semantic overrides, not style-fighting). Per-file detail
+      below.
+  - [x] `widgets/buttons/ActionButton.qml` -- removed the `background:`
+        Rectangle and the `_borderColor` property that only fed its
+        border color. Kept `_colors`/`_textColor`/`contentItem` (the
+        `destructive` red-text variant is semantic, not style-fighting --
+        same reasoning as `Label.qml`'s positive/negative/neutral
+        colors). Kept `implicitHeight`/`implicitWidth`/`opacity`/
+        `hoverEnabled`/tooltip -- sizing and disabled-opacity weren't
+        part of what was asked (background/color/hover), left untouched
+        to avoid scope creep.
+  - [x] `widgets/buttons/ActionButtonGroup.qml` -- reclassified to
+        Category B, not touched in this pass. Its `background:` isn't a
+        plain style override: the per-segment corner rounding (only
+        first/last segment rounded) and the 1px inter-segment separator
+        are what make this a *grouped/segmented* row at all -- no QQC2
+        style has an opinion on that shape, so there's nothing to
+        delegate to. The outer border `Rectangle` (container chrome, not
+        a QQC2 control) is the same story. Revisit in the Category B
+        phase.
+  - [x] `widgets/buttons/DropdownButton.qml` -- removed the `background:`
+        override. Its `menu.visible ? highlightColor : ...` fill was
+        replaced with `checked: menu.visible` (not `checkable` -- nothing
+        should auto-toggle it) instead of dropping the affordance: QQC2
+        styles already render a checked tool/button distinctly, so the
+        "popup is open" cue survives without this component painting
+        anything itself. Same technique likely applies to
+        `HamburgerButton.qml`/`HeaderMenuButton.qml`/
+        `ViewTypePickerButton.qml` below -- same `menu.visible`/
+        `popup.visible` -> `highlightColor` pattern.
+  - [x] `widgets/buttons/HamburgerButton.qml` -- same shape as
+        `DropdownButton.qml`, same fix: `background:` removed,
+        `checked: menu.visible` added in its place.
+  - [x] `widgets/buttons/ToggleButton.qml` -- reclassified to Category B,
+        not touched. Same shape as `ActionButtonGroup.qml`: main toggle +
+        optional details-popup button sit in a joined-corner pair with a
+        hairline separator; the `background:` overrides are what make it
+        read as one joined control, not a per-control style override.
+  - [x] `widgets/buttons/ToggleGroup.qml` -- reclassified to Category B,
+        not touched. Same segmented-group shape as
+        `ActionButtonGroup.qml`, plus an animated sliding
+        `selectionIndicator` Rectangle -- all structural, no style
+        equivalent to delegate to.
+  - [x] `widgets/menus/ThemedMenu.qml` -- partial. Removed the menu
+        panel's own `background:` (plain popup chrome, no grouping) and
+        the generic `wrapItem` delegate's `background:` (driven only by
+        native `highlighted`, zero info loss). Left the `Instantiator`'s
+        `QQC2.MenuItem` background alone -- it also encodes `_selected`
+        ("this is the current value" from external data), which has no
+        risk-free native equivalent (`checked`+`checkable` would work in
+        principle but `checkable` auto-toggles `checked` on click,
+        severing the live `_selected` binding on first click -- would
+        need a real rework of the click/selection interaction, not a
+        mechanical delete). Left a comment explaining why in the file.
+  - [x] `widgets/menus/ThemedSubMenu.qml` -- same treatment as
+        `ThemedMenu.qml`: removed the panel's own `background:`, left the
+        single `MenuItem` delegate's `background:` alone (same
+        `_selected`-vs-`checked` conflict, commented why).
+  - [x] `widgets/popups/ConfirmDialog.qml` -- no change needed. The
+        dialog's own `QQC2.Popup` background was already un-overridden
+        (already style-delegated). The one `background:` present is on
+        the confirm `ActionButton` instance, applying a red fill only
+        when `isDestructive` -- kept, same reasoning as `ActionButton`'s
+        destructive text color: no QQC2 style has a "danger" role to
+        delegate to, and this is safety-relevant (signals an
+        irreversible action), not idle/hover-chrome style-fighting.
+  - [x] `widgets/popups/IoErrorBanner.qml` -- no change. The root
+        `Rectangle`'s error-tint `color` isn't a QQC2 override at all
+        (Rectangle has no style to delegate to). The close button's
+        `background:` already carries an in-code comment explaining it's
+        intentional (matches the banner's own red tint so a native gray
+        hover fill doesn't look out of place on a colored strip) --
+        can't verify visually in this environment either way (no
+        GUI/screenshot verification per cettila's AGENTS.md rule), so
+        left the existing, already-reasoned choice alone rather than
+        guess.
+  - [x] `pane/ViewTypePickerButton.qml` -- same fix as
+        `DropdownButton.qml`/`HamburgerButton.qml`: `background:` removed,
+        `checked: popup.visible` added in its place. Left its unrelated
+        `_suppressReopen`/`onHoveredChanged` click-race guard untouched
+        (behavior, not appearance).
+  - [x] `regions/header/HeaderMenuButton.qml` -- reclassified to Category
+        B, not touched. Its `leftRadius`/`rightRadius` are load-bearing:
+        `HeaderMenuGroup.qml` sets them so a row of these buttons reads as
+        one joined, rounded bar. `background:` is a single property --
+        can't keep custom shaping while handing color/hover to the style,
+        since setting *any* background item fully replaces the style's
+        own delegate. Same structural-grouping blocker as
+        `ActionButtonGroup.qml`.
+  - [x] `regions/panel/CollapsiblePanel.qml` -- no change. `panelBody`'s
+        `Rectangle` isn't a QQC2 override (it's the floating panel's own
+        translucent surface, not a control). The collapsed-handle
+        `IconButton`'s `background:` sets it to the same translucent
+        `panelColor` as the panel body so the collapsed tab reads as an
+        attached continuation of the panel -- a native opaque style
+        background would look detached/wrong here. Same "match
+        surrounding context color" precedent as `IoErrorBanner.qml`'s
+        close button / `ConfirmDialog.qml`'s destructive button.
+  - [x] `views/Breadcrumb.qml` -- removed the segment button's
+        `background:` (plain hover-only fill, no grouping constraint
+        unlike `ActionButtonGroup.qml`). Kept `contentItem`'s plain
+        (non-hover-driven) text color.
+  - [x] `views/CollapsibleTextField.qml` -- no change. `frame` is a plain
+        `Rectangle` (the whole composite widget's own frame/background,
+        not a QQC2 control) -- no style equivalent to delegate to, same
+        as `ActionButtonGroup.qml`'s outer border. Both nested
+        `QQC2.TextField`s set `background: null` deliberately (avoids a
+        double border/fill nesting inside `frame`'s own chrome), not
+        style-fighting. Text/placeholder colors are plain content color,
+        not hover-driven -- already-established as fine.
+  - [x] `views/FileTile.qml` -- no change. Its `background:` already
+        carries a specific, well-reasoned design rationale in-code: the
+        active style's default `ItemDelegate` background is an opaque
+        row fill, which would paint over the grid view's own background
+        -- wrong for an icon-grid tile. The override instead does
+        transparent + hover outline + filled-only-when-selected,
+        explicitly matching Dolphin's real icon-grid convention (as
+        opposed to its list-row convention) -- this is opting out of a
+        default that doesn't fit a grid-tile context, not reinventing
+        Breeze for no reason. Kept.
 - [ ] Phase 2 -- Category B: per-widget judgment call for each entry --
       rebuild atop a real QQC2 control where practical, otherwise
       re-source hover/highlight colors from the active

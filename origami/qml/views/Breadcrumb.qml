@@ -85,17 +85,6 @@ Item {
                         id: segmentButton
                         text: modelData.label
 
-                        // Explicit background/contentItem (Theme-driven,
-                        // flat hover fill) rather than the active QQC2
-                        // style's own ToolButton chrome -- same reasoning
-                        // as every other de-Breezed button in origami
-                        // (see widgets/buttons/Button.qml's class
-                        // comment).
-                        background: Rectangle {
-                            radius: Units.cornerRadius
-                            color: segmentButton.hovered ? root.colors.hoverColor : "transparent"
-                        }
-
                         contentItem: Text {
                             anchors.centerIn: parent
                             text: segmentButton.text

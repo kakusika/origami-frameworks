@@ -11,7 +11,6 @@ QQC2.Button {
     property bool destructive: false
 
     readonly property var _colors: Origami.Theme.paletteFor(Origami.Theme.header)
-    readonly property color _borderColor: control.destructive ? control._colors.negativeTextColor : control._colors.textColor
     readonly property color _textColor: control.destructive ? control._colors.negativeTextColor : control._colors.textColor
 
     hoverEnabled: true
@@ -20,13 +19,6 @@ QQC2.Button {
 
     implicitHeight: Origami.Units.gridUnit * 1.6
     implicitWidth: labelItem.implicitWidth + Origami.Units.largeSpacing * 2
-
-    background: Rectangle {
-        radius: Origami.Units.cornerRadius
-        color: control.pressed ? control._colors.highlightColor : (control.hovered ? control._colors.hoverColor : "transparent")
-        border.width: Origami.Units.borderWidth
-        border.color: Qt.rgba(control._borderColor.r, control._borderColor.g, control._borderColor.b, 0.5)
-    }
 
     contentItem: QQC2.Label {
         id: labelItem

@@ -1,43 +1,99 @@
 {
-  mkShell,
+  lib,
   pkgs,
+  inputs,
+  stdenv,
+  mkShell,
   qt6,
+  ayame,
   ...
 }:
-mkShell {
+let
+  qtToolchain = pkgs.callPackage ./qt-toolchain.nix { inherit qt6; };
+  rustToolchain = inputs.fenix.packages.${stdenv.hostPlatform.system}.stable.withComponents [
+    "cargo"
+    "clippy"
+    "rustc"
+    "rust-src"
+    # "rust-analyzer"
+  ];
+in
+mkShell rec {
+  #[ https://github.com/NixOS/nixpkgs/blob/master/pkgs/kde/plasma/breeze/default.nix ]
   buildInputs = with pkgs; [
-    pkg-config
+    ayame
+
+    #[ Rust ]
+    rustToolchain
+    cargo-edit
+    cargo-outdated
+    cargo-nextest
+
+    #[ CMake ]
     cmake
     ninja
 
-    # Rust
-    (rust-bin.stable.latest.default.override {
-      extensions = [
-        "clippy"
-        "rust-src"
-      ];
-    })
-    cargo
-    rustc
+    #[ Qt ]
+    qt6.qtbase
+    qt6.qtsvg
+    qt6.qtdeclarative
+    #[ KDE ]
+    kdePackages.extra-cmake-modules
+    kdePackages.kcmutils
+    kdePackages.kcoreaddons
+    kdePackages.kcolorscheme
+    kdePackages.kconfig
+    kdePackages.kguiaddons
+    kdePackages.ki18n
+    kdePackages.kiconthemes
+    kdePackages.kwindowsystem
+    kdePackages.kdecoration
+    #[ Graphics ]
+    libGL
+    mesa
   ];
 
-  ENV_QT_INCLUDE_PATH = "${qt6.qtdeclarative}/include";
-  # NIX_CFLAGS_COMPILE = [
-  #   "-I${qt6.qtbase}/include"
-  #   "-I${qt6.qtbase}/include/QtQml"
-  #   "-I${qt6.qtdeclarative}/include"
-  #   "-I${qt6.qtdeclarative}/include/QtQml"
-  #   "-U_FORTIFY_SOURCE"
-  # ];
-  QML2_IMPORT_PATH = builtins.concatStringsSep ":" [
-    "${qt6.qtdeclarative}/lib/qt-6/qml"
-    # "${kdePackages.qqc2-breeze-style}/lib/qt-6/qml"
-    # "${kdePackages.kguiaddons}/lib/qt-6/qml"
+  PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+  LD_LIBRARY_PATH = lib.makeLibraryPath [
+    ayame
+
+    qt6.qtbase
+    qt6.qtdeclarative
+    qt6.qtwayland
+    qt6.qtwebengine
+    qt6.qtmultimedia
+
+    pkgs.wayland
+    pkgs.libxkbcommon
+    pkgs.pipewire
+    pkgs.mesa
+    pkgs.libGL
+
+    pkgs.stdenv.cc.cc.lib
   ];
+
+  RUSTFLAGS = "-C link-arg=-fuse-ld=lld";
+  #[ Qt ]
+  ENV_QT_INCLUDE_PATH = "${qt6.qtdeclarative}/include";
   QT_QPA_PLATFORM_PLUGIN_PATH = "${qt6.qtbase}/${qt6.qtbase.qtPluginPrefix}/platforms";
-  QT_PLUGIN_PATH = "${qt6.qtbase}/${qt6.qtbase.qtPluginPrefix}";
+  QT_PLUGIN_PATH = lib.makeSearchPath "lib/qt-6/plugins" [
+    qt6.qtbase
+    qt6.qtwayland
+    qt6.qtmultimedia
+  ];
+  QML_IMPORT_PATH = lib.makeSearchPath "lib/qt-6/qml" [
+    qt6.qtdeclarative
+    qt6.qtmultimedia
+    qt6.qtwayland
+
+    ayame
+  ];
+  QML2_IMPORT_PATH = QML_IMPORT_PATH;
 
   shellHook = ''
-    echo "🧪 dev"
+    export QT_QUICK_CONTROLS_STYLE="Ayame"
+    export QMAKE="${qtToolchain.qmakeWrapper}/bin/qmake-wrapper"
+
+    echo "🧪 C++ Qt Rust"
   '';
 }

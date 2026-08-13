@@ -1,58 +1,69 @@
 {
-  rustPlatform,
+  craneLib,
+  callPackage,
+
+  #[ Dependencies ]
   pkg-config,
   cmake,
   qt6,
-  kdePackages,
+  llvmPackages,
 }:
-rustPlatform.buildRustPackage {
-  pname = "origami";
-  version = "0.1.0";
-
+let
   src = ../..;
+  qtToolchain = callPackage ../qt-toolchain.nix { inherit qt6; };
+  commonArgs = rec {
+    inherit src;
+    pname = "origami";
+    version = "0.1.0";
 
-  cargoLock = {
-    lockFile = ../../Cargo.lock;
-    outputHashes = {
-      "qtbridge-0.1.5" = "sha256-JmrL0wa0c2GKLxRDQ+5r9WXt0nUFDw5CvWqM8vqSSBs=";
+    dontWrapQtApps = true;
+    cargoExtraArgs = "-p origami";
+
+    nativeBuildInputs = [
+      pkg-config
+      cmake
+      qt6.qtbase
+      qt6.qtdeclarative
+      qt6.qmake
+      llvmPackages.lld
+    ];
+
+    buildInputs = [
+      qt6.qtbase
+      qt6.qtdeclarative
+    ];
+
+    env = {
+      ENV_QT_INCLUDE_PATH = "${qt6.qtdeclarative}/include";
+      RUSTFLAGS = "-C link-arg=-fuse-ld=lld";
     };
+
+    preBuild = ''
+      export QMAKE="${qtToolchain.qmakeWrapper}/bin/qmake-wrapper"
+      if [ -d target ]; then
+        find target -type f -exec sed -i "s|/build/[^/]*source|$PWD|g" {} + 2>/dev/null || true
+      fi
+    '';
   };
-  cargoBuildFlags = [ "--bin cettila" ];
-
-  nativeBuildInputs = [
-    pkg-config
-    cmake
-    qt6.qtbase
-    qt6.qtdeclarative
-    qt6.qmake
-    qt6.wrapQtAppsHook
-  ];
-
-  buildInputs = [
-    qt6.qtbase
-    qt6.qtsvg
-    qt6.qtdeclarative
-    qt6.qtwebengine
-
-    kdePackages.qqc2-breeze-style
-    kdePackages.kirigami
-    kdePackages.kguiaddons
-  ];
-
-  env = {
-    ENV_QT_INCLUDE_PATH = "${qt6.qtdeclarative}/include";
-  };
-
-  NIX_CFLAGS_COMPILE = [
-    "-I${qt6.qtbase}/include"
-    "-I${qt6.qtbase}/include/QtQml"
-    "-I${qt6.qtdeclarative}/include"
-    "-I${qt6.qtdeclarative}/include/QtQml"
-    "-U_FORTIFY_SOURCE"
-  ];
-
-  postInstall = ''
-    mkdir -p $out/share/applications
-    cp $src/app/desktop/assets/*.desktop $out/share/applications/
-  '';
-}
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+in
+craneLib.buildPackage (
+  commonArgs
+  // {
+    inherit cargoArtifacts;
+    doCheck = false;
+    postInstall = ''
+      mkdir -p $out/lib/qt-6/qml/la/cettila/Ayame
+      mkdir -p $out/lib/qt-6/qml/QtQuick/Controls/Ayame
+      if [ -d crates/qml6/qml ]; then
+        cp -r crates/qml6/qml/* $out/lib/qt-6/qml/la/cettila/Ayame/
+        cp -r crates/qml6/qml/* $out/lib/qt-6/qml/QtQuick/Controls/Ayame/
+      fi
+      qmldir_file=$(find target -name qmldir 2>/dev/null | head -n 1)
+      if [ -n "$qmldir_file" ]; then
+        cp "$qmldir_file" $out/lib/qt-6/qml/la/cettila/Ayame/qmldir
+        cp "$qmldir_file" $out/lib/qt-6/qml/QtQuick/Controls/Ayame/qmldir
+      fi
+    '';
+  }
+)

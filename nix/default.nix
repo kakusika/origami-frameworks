@@ -1,44 +1,37 @@
 {
-  nixpkgs,
-  rust-overlay,
+  flake-parts,
   ...
 }@inputs:
-let
+flake-parts.lib.mkFlake { inherit inputs; } {
   systems = [
     "x86_64-linux"
     "aarch64-linux"
     "aarch64-darwin"
   ];
-  forAllSystems =
-    f:
-    nixpkgs.lib.genAttrs systems (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ (import rust-overlay) ];
-        };
-      in
-      f system pkgs
-    );
-in
-{
-  packages = forAllSystems (
-    _: pkgs: rec {
-      default = origami;
-      origami = pkgs.kdePackages.callPackage ./pkgs/origami.nix { };
-    }
-  );
-  devShells = forAllSystems (
-    _: pkgs: {
-      default = pkgs.callPackage ./dev.nix { };
-    }
-  );
-  formatter = forAllSystems (
-    _: pkgs:
+  imports = [
+    inputs.treefmt-nix.flakeModule
+  ];
+
+  perSystem =
+    { pkgs, ... }:
     let
-      treefmt = import ./formatter.nix { inherit pkgs inputs; };
+      craneLib = inputs.crane.mkLib pkgs;
     in
-    treefmt.wrapper
-  );
+    {
+      packages = rec {
+        default = origami;
+        origami = pkgs.callPackage ./pkgs/origami.nix {
+          inherit craneLib;
+          ayame = inputs.ayame.packages.${pkgs.stdenv.hostPlatform.system}.default;
+        };
+        origami-settings = pkgs.callPackage ./pkgs/origami-settings.nix { };
+      };
+
+      devShells.default = pkgs.callPackage ./dev.nix {
+        inherit inputs craneLib;
+        ayame = inputs.ayame.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      };
+
+      treefmt = import ./formatter.nix;
+    };
 }

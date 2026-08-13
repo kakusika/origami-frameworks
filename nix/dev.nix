@@ -22,22 +22,24 @@ mkShell rec {
   #[ https://github.com/NixOS/nixpkgs/blob/master/pkgs/kde/plasma/breeze/default.nix ]
   buildInputs = with pkgs; [
     ayame
+    kdePackages.kirigami-gallery
 
-    #[ Rust ]
+    #[ Develop ]
+    ##[ Rust ]
     rustToolchain
     cargo-edit
     cargo-outdated
     cargo-nextest
-
-    #[ CMake ]
+    ##[ CMake ]
     cmake
     ninja
 
-    #[ Qt ]
+    #[ Runtime ]
+    ##[ Qt ]
     qt6.qtbase
     qt6.qtsvg
     qt6.qtdeclarative
-    #[ KDE ]
+    ##[ KDE ]
     kdePackages.extra-cmake-modules
     kdePackages.kcmutils
     kdePackages.kcoreaddons
@@ -48,7 +50,7 @@ mkShell rec {
     kdePackages.kiconthemes
     kdePackages.kwindowsystem
     kdePackages.kdecoration
-    #[ Graphics ]
+    ##[ Graphics ]
     libGL
     mesa
   ];

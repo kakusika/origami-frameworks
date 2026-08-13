@@ -3,4 +3,26 @@ name = "origami-gallery"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["staticlib", "lib"]
+
+[[bin]]
+name = "origami-gallery"
+path = "src/main.rs"
+
+[features]
+profile-tracy = ["tracy-client/enable", "tracy-client/timer-fallback"]
+qml-debug = []
+
 [dependencies]
+ayame = { workspace = true }
+origami = { workspace = true }
+
+# === Crates.io ===
+cxx = { workspace = true }
+cxx-qt = { workspace = true }
+cxx-qt-lib = { workspace = true, features = ["qt_full"] }
+tracy-client = { workspace = true }
+
+[build-dependencies]
+cxx-qt-build = { workspace = true, features = ["link_qt_object_files"] }

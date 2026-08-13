@@ -5,7 +5,8 @@ members = [
   "origami",
   "origami-kit/config",
   "origami-gallery",
-  "ayame"
+  "ayame",
+  "colors"
 ]
 
 default-members = ["origami"]

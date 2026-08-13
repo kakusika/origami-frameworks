@@ -40,16 +40,9 @@ mkShell rec {
     qt6.qtsvg
     qt6.qtdeclarative
     ##[ KDE ]
-    kdePackages.extra-cmake-modules
-    kdePackages.kcmutils
-    kdePackages.kcoreaddons
-    kdePackages.kcolorscheme
-    kdePackages.kconfig
+    kdePackages.qqc2-breeze-style
+    kdePackages.kirigami
     kdePackages.kguiaddons
-    kdePackages.ki18n
-    kdePackages.kiconthemes
-    kdePackages.kwindowsystem
-    kdePackages.kdecoration
     ##[ Graphics ]
     libGL
     mesa
@@ -57,8 +50,6 @@ mkShell rec {
 
   PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
   LD_LIBRARY_PATH = lib.makeLibraryPath [
-    ayame
-
     qt6.qtbase
     qt6.qtdeclarative
     qt6.qtwayland
@@ -87,13 +78,17 @@ mkShell rec {
     qt6.qtdeclarative
     qt6.qtmultimedia
     qt6.qtwayland
+    pkgs.kdePackages.qqc2-breeze-style
+    pkgs.kdePackages.kirigami.unwrapped
+    pkgs.kdePackages.kguiaddons
 
     ayame
   ];
   QML2_IMPORT_PATH = QML_IMPORT_PATH;
 
   shellHook = ''
-    export QT_QUICK_CONTROLS_STYLE="Ayame"
+    export QT_QUICK_CONTROLS_STYLE="org.kde.breeze"
+    export QT_LOGGING_RULES="qt.qpa.wayland.textinput=false"
     export QMAKE="${qtToolchain.qmakeWrapper}/bin/qmake-wrapper"
 
     echo "🧪 C++ Qt Rust"

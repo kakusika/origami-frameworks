@@ -1,0 +1,6 @@
+[package]
+name = "origami-framework"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

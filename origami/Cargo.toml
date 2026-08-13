@@ -1,6 +1,22 @@
 [package]
 name = "origami"
-version = "0.1.0"
-edition = "2024"
+links = "origami"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
 
 [dependencies]
+ayame = { workspace = true }
+origami-config = { workspace = true }
+
+# === Crates.io ===
+cxx = { workspace = true }
+cxx-qt = { workspace = true }
+cxx-qt-lib = { workspace = true, features = ["qt_full"] }
+notify = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sysinfo = { workspace = true }
+
+[build-dependencies]
+cxx-qt-build = { workspace = true }

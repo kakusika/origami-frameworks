@@ -35,7 +35,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 1: Buttons & Toggles
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "1. Buttons & Toggles"
             Layout.fillWidth: true
 
@@ -150,7 +150,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 2: Input Fields
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "2. Input Fields & Selection"
             Layout.fillWidth: true
 
@@ -224,7 +224,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 3: Sliders, Dials & Indicators
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "3. Sliders, Dials & Indicators"
             Layout.fillWidth: true
 
@@ -352,7 +352,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 4: Delegates
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "4. Delegates (Item, Check, Radio, Switch, Swipe)"
             Layout.fillWidth: true
 
@@ -414,7 +414,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 5: Containers, TabBars & Popups
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "5. Navigation, TabBars & Dialogs"
             Layout.fillWidth: true
 

@@ -26,7 +26,6 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 [[package]]
 name = "ayame"
 version = "0.1.0"
-source = "git+https://github.com/kakusika/ayame#91a17eafd54cef5f73a24494cd5a47b19285bd83"
 dependencies = [
  "cxx",
  "cxx-qt",

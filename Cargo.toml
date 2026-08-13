@@ -4,7 +4,8 @@ resolver = "3"
 members = [
   "origami",
   "origami-kit/config",
-  "origami-gallery"
+  "origami-gallery",
+  "ayame"
 ]
 
 default-members = ["origami"]
@@ -16,8 +17,8 @@ edition = "2024"
 [workspace.dependencies]
 origami = { path = "origami" }
 origami-config = { path = "origami-kit/config" }
-# ayame = { path = "../ayame" }
-ayame = { git = "https://github.com/kakusika/ayame" }
+ayame = { path = "ayame" }
+# ayame = { git = "https://github.com/kakusika/ayame" }
 
 #[ Crates.io ]
 anyhow = "1"

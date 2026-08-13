@@ -3,8 +3,8 @@ resolver = "3"
 
 members = [
   "origami",
-  "origami-framework",
-  "origami-gallary"
+  "origami-kit",
+  "origami-gallery"
 ]
 
 default-members = ["origami"]

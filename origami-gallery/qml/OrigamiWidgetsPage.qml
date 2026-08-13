@@ -44,7 +44,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 1: Buttons & Action Controls
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "1. Buttons & Action Controls"
             Layout.fillWidth: true
 
@@ -253,7 +253,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 2: Controls & Indicators
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "2. Controls & Indicators"
             Layout.fillWidth: true
 
@@ -373,7 +373,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 3: Input Controls
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "3. Input Controls"
             Layout.fillWidth: true
 
@@ -415,7 +415,7 @@ QQC2.ScrollView {
         // ---------------------------------------------------------
         // Section 4: Popups, Dialogs & Toast Notifications
         // ---------------------------------------------------------
-        QQC2.GroupBox {
+        Origami.CollapsibleSection {
             title: "4. Popups, Dialogs & Notifications"
             Layout.fillWidth: true
 

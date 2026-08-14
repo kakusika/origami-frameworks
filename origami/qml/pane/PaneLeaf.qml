@@ -224,22 +224,53 @@ Item {
         // `maximized` comment and PaneMaximizeBar.qml's own class comment
         // for why a maximized leaf shows only a back button up top rather
         // than its normal tab strip.
-        PaneMaximizeBar {
+        // Loader-gated (active only while this leaf is actually the
+        // maximized one) rather than always built + visible-toggled: at
+        // most one leaf across the whole app is ever maximized at a
+        // time, so every other leaf previously paid for a fully
+        // materialized (if hidden) HeaderBar+IconButton tree for
+        // nothing. `visible` kept alongside `active` (same condition) so
+        // ColumnLayout still excludes this from layout sizing while
+        // inactive, same as it did when this was a plain invisible Item
+        // (Qt Quick Layouts skip invisible children entirely --
+        // Layout.preferredHeight below would otherwise reserve blank
+        // space here even with nothing loaded). Layout.preferredHeight
+        // pinned to the same constant PaneMaximizeBar.qml itself uses,
+        // rather than relying on implicitHeight propagating up through
+        // the Loader while active (both amount to the same number, but
+        // this doesn't depend on Loader's item-not-yet-loaded timing).
+        Loader {
             Layout.fillWidth: true
+            Layout.preferredHeight: Units.gridUnit * 1.6
+            active: root.maximized
             visible: root.maximized
-            controller: root.controller
-            leafId: root.node ? root.node.id : -1
+            sourceComponent: PaneMaximizeBar {
+                controller: root.controller
+                leafId: root.node ? root.node.id : -1
+            }
         }
 
-        PaneTabs {
+        // Loader-gated the same way and for the same reason as the
+        // maximize-bar Loader above: a standalone "pane" leaf (the
+        // tree's default shape, see PaneView.qml's class comment) never
+        // shows a tab strip at all, so building PaneTabs' full
+        // PaneTabBar (HeaderBar + search field + view-type picker +
+        // hamburger + Repeater) for every such leaf just to hide it was
+        // pure waste -- most leaves in an ordinary workspace are exactly
+        // this case.
+        Loader {
             Layout.fillWidth: true
-            visible: !root.maximized && !!(root.node && root.node.type === "tabs")
-            node: root.node
-            leafId: root.node ? root.node.id : -1
-            currentIndex: root.currentIndex
-            controller: root.controller
-            onTabClicked: index => root.selectTab(index)
-            onTabCloseRequested: tabId => root.controller.closeTab(root.node.id, tabId)
+            Layout.preferredHeight: Units.gridUnit * 1.6
+            active: !root.maximized && !!(root.node && root.node.type === "tabs")
+            visible: active
+            sourceComponent: PaneTabs {
+                node: root.node
+                leafId: root.node ? root.node.id : -1
+                currentIndex: root.currentIndex
+                controller: root.controller
+                onTabClicked: index => root.selectTab(index)
+                onTabCloseRequested: tabId => root.controller.closeTab(root.node.id, tabId)
+            }
         }
 
         // Wraps PaneHeader + contentArea together so the "grouped content"

@@ -322,6 +322,31 @@ Item {
             }).filter(function (c) {
                 return c !== null;
             });
+            // One-time cleanup of same-orientation nesting (e.g. a
+            // horizontal split directly containing another horizontal
+            // split) in whatever was saved -- runs once here at startup,
+            // covering layouts saved before requestDrop()/insertTab()
+            // started avoiding that shape on write. Safe to do
+            // unconditionally: children were just restored bottom-up
+            // above, so any restored "split" child is already flattened
+            // at its own level, and this only ever merges one level with
+            // its immediate parent. Sizes are redistributed proportionally
+            // so the flattened layout renders identically to the nested
+            // one.
+            var flatChildren = [];
+            children.forEach(function (c) {
+                if (c.node.type === "split" && c.node.orientation === saved.orientation) {
+                    c.node.children.forEach(function (inner) {
+                        flatChildren.push({
+                            size: c.size * inner.size,
+                            node: inner.node
+                        });
+                    });
+                } else {
+                    flatChildren.push(c);
+                }
+            });
+            children = flatChildren;
             if (children.length === 0)
                 return null;
             if (children.length === 1)
@@ -896,39 +921,65 @@ Item {
             var newPaneNode = root._paneNode(pane);
             var orientation = (zone === "left" || zone === "right") ? "horizontal" : "vertical";
             var newFirst = (zone === "left" || zone === "top");
-            var children = newFirst ? [
-                {
-                    size: 0.5,
-                    node: newPaneNode
-                },
-                {
-                    size: 0.5,
-                    node: found.node
-                }
-            ] : [
-                {
-                    size: 0.5,
-                    node: found.node
-                },
-                {
-                    size: 0.5,
-                    node: newPaneNode
-                }
-            ];
-            var splitNode = {
-                type: "split",
-                id: root._genId(),
-                orientation: orientation,
-                children: children
-            };
 
-            if (found.parentChildren === null) {
-                newTree = splitNode;
+            // If the target's own parent is already a split with the same
+            // orientation, insert as a direct sibling there instead of
+            // nesting a redundant same-orientation split one level deeper
+            // (e.g. a horizontal split directly containing another
+            // horizontal split) -- mirrors PaneTree::split_pane's
+            // same-orientation merge on the Rust side.
+            if (found.parentNode && found.parentNode.type === "split" && found.parentNode.orientation === orientation) {
+                var insertIdx = newFirst ? found.index : found.index + 1;
+                var half = found.parentChildren[found.index].size / 2;
+                found.parentChildren[found.index].size = half;
+                found.parentChildren.splice(insertIdx, 0, {
+                    size: half,
+                    node: newPaneNode
+                });
+                // Inserting shifts every sibling at/after insertIdx one
+                // slot right. If the not-yet-removed standalone source
+                // pane (see sourceSlot above) sits later in this very
+                // array, its captured index must shift too, or the
+                // deferred removal below would splice out the wrong
+                // element.
+                if (sourceSlot && sourceSlot.parentChildren === found.parentChildren && sourceSlot.index >= insertIdx) {
+                    sourceSlot.index += 1;
+                }
             } else {
-                found.parentChildren[found.index] = {
-                    size: found.parentChildren[found.index].size,
-                    node: splitNode
+                var children = newFirst ? [
+                    {
+                        size: 0.5,
+                        node: newPaneNode
+                    },
+                    {
+                        size: 0.5,
+                        node: found.node
+                    }
+                ] : [
+                    {
+                        size: 0.5,
+                        node: found.node
+                    },
+                    {
+                        size: 0.5,
+                        node: newPaneNode
+                    }
+                ];
+                var splitNode = {
+                    type: "split",
+                    id: root._genId(),
+                    orientation: orientation,
+                    children: children
                 };
+
+                if (found.parentChildren === null) {
+                    newTree = splitNode;
+                } else {
+                    found.parentChildren[found.index] = {
+                        size: found.parentChildren[found.index].size,
+                        node: splitNode
+                    };
+                }
             }
         }
 
@@ -1071,39 +1122,52 @@ Item {
             var newPaneNode = root._paneNode(pane);
             var orientation = (zone === "left" || zone === "right") ? "horizontal" : "vertical";
             var newFirst = (zone === "left" || zone === "top");
-            var children = newFirst ? [
-                {
-                    size: 0.5,
-                    node: newPaneNode
-                },
-                {
-                    size: 0.5,
-                    node: found.node
-                }
-            ] : [
-                {
-                    size: 0.5,
-                    node: found.node
-                },
-                {
-                    size: 0.5,
-                    node: newPaneNode
-                }
-            ];
-            var splitNode = {
-                type: "split",
-                id: root._genId(),
-                orientation: orientation,
-                children: children
-            };
 
-            if (found.parentChildren === null) {
-                newTree = splitNode;
+            // Same same-orientation merge as requestDrop()'s edge-zone
+            // branch -- see its comment.
+            if (found.parentNode && found.parentNode.type === "split" && found.parentNode.orientation === orientation) {
+                var insertIdx = newFirst ? found.index : found.index + 1;
+                var half = found.parentChildren[found.index].size / 2;
+                found.parentChildren[found.index].size = half;
+                found.parentChildren.splice(insertIdx, 0, {
+                    size: half,
+                    node: newPaneNode
+                });
             } else {
-                found.parentChildren[found.index] = {
-                    size: found.parentChildren[found.index].size,
-                    node: splitNode
+                var children = newFirst ? [
+                    {
+                        size: 0.5,
+                        node: newPaneNode
+                    },
+                    {
+                        size: 0.5,
+                        node: found.node
+                    }
+                ] : [
+                    {
+                        size: 0.5,
+                        node: found.node
+                    },
+                    {
+                        size: 0.5,
+                        node: newPaneNode
+                    }
+                ];
+                var splitNode = {
+                    type: "split",
+                    id: root._genId(),
+                    orientation: orientation,
+                    children: children
                 };
+
+                if (found.parentChildren === null) {
+                    newTree = splitNode;
+                } else {
+                    found.parentChildren[found.index] = {
+                        size: found.parentChildren[found.index].size,
+                        node: splitNode
+                    };
+                }
             }
         }
 
@@ -1309,6 +1373,19 @@ Item {
 
         root.tree = null;
         root.tree = newTree;
+    }
+
+    // Same tree removal as closeTab(), for callers that have already taken
+    // ownership of the pane's live Item elsewhere (e.g. PaneHeader.qml's
+    // "別ウィンドウに移動" reparenting it into a new PaneWindow) instead of
+    // letting it fall through to PaneLeaf.qml's own dragLayer-eviction
+    // path. Purges the _itemCache entry too -- same reasoning
+    // changePaneType() already applies (line ~561): without this, a future
+    // pane that happens to reuse this id would find and incorrectly reuse
+    // the stale (now window-owned) Item.
+    function detachPane(areaId, paneId) {
+        delete root._itemCache[paneId];
+        root.closeTab(areaId, paneId);
     }
 
     // Closes every tab/pane in a "tabs"/"drawer" group (areaId) at once,

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // One grid cell representing a file or directory entry: an icon (or, for
 // callers that opt in via `thumbnailSource`, a thumbnail preview once it
@@ -27,7 +27,11 @@ QQC2.ItemDelegate {
     // the Image below.
     property url thumbnailSource: ""
 
-    property int iconSize: Units.iconSizes.large
+    // Off for callers that want an icon-only grid (denser packing at
+    // small sizes -- CollectionsView.qml's own grid display-options
+    // toggle) -- on by default so every existing caller (ExplorerGrid.qml/
+    // ExplorerTree.qml) keeps its label unchanged.
+    property bool showLabel: true
 
     // Selection highlight, driven by the caller's own selection model
     // (e.g. ExplorerGridModel's IsSelected role) -- distinct from
@@ -61,6 +65,12 @@ QQC2.ItemDelegate {
     // file managers use.
     opacity: tapArea.drag.active ? 0.4 : 1.0
 
+    // A caller-adjustable cell size (CollectionsView.qml's own gridAspectRatio
+    // slider) can end up shorter than contentItem's icon + label actually
+    // need -- clip rather than let the overflow bleed into whichever
+    // delegate GridView/ListView happens to have positioned just below.
+    clip: true
+
     // New: carries the click's keyboard modifiers (Qt::KeyboardModifiers),
     // which the inherited clicked() (still explicitly re-emitted below,
     // for existing callers like ImagePickerPage.qml) never exposes --
@@ -68,7 +78,17 @@ QQC2.ItemDelegate {
     // from a Ctrl/Shift-click for multi-select.
     signal tapped(int modifiers)
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    // Right-click (or press-and-hold, on a platform where MouseArea
+    // synthesizes that as a right-click) -- x/y are this tile's own
+    // local coordinates, so a caller can pass them straight through to a
+    // QQC2.Menu's popup(anchorItem, x, y) to open right where the click
+    // landed. Kept separate from tapped() above rather than folding a
+    // "which button" flag into it, since a context-menu request is a
+    // different kind of event entirely (never a selection/activation),
+    // not just another modifier combination on the same one.
+    signal contextMenuRequested(real x, real y)
+
+    readonly property var colors: Origami.Theme.paletteFor(Origami.Theme.view)
 
     // The default style-drawn background is an opaque rectangle that
     // would paint over the grid's own background -- same stock Kirigami/
@@ -79,57 +99,80 @@ QQC2.ItemDelegate {
     background: Rectangle {
         anchors.fill: parent
         anchors.margins: 2
-        radius: Units.cornerRadius
+        radius: Origami.Units.cornerRadius
         color: root.selected ? Qt.rgba(root.colors.highlightColor.r, root.colors.highlightColor.g, root.colors.highlightColor.b, 0.3) : "transparent"
         // down (AbstractButton's own press state) no longer updates once
         // tapArea below owns real press handling -- tapArea.pressed
         // stands in for it.
-        border.width: (root.hovered || tapArea.pressed || root.selected) ? Units.borderWidth : 0
+        border.width: (root.hovered || tapArea.pressed || root.selected) ? Origami.Units.borderWidth : 0
         border.color: root.colors.highlightColor
     }
 
     contentItem: ColumnLayout {
-        spacing: Units.smallSpacing
+        spacing: Origami.Units.smallSpacing
 
+        // Claims whatever space is left over after the (optional) Label
+        // below takes its own natural height -- the icon/thumbnail below
+        // is then sized to this Item's smaller dimension (see
+        // resolvedIconSize), so it grows or shrinks automatically
+        // with FileTile's own width/height instead of every caller
+        // computing a matching size itself. ExplorerGrid.qml and
+        // CollectionsView.qml both used to duplicate near-identical
+        // cellWidth-based iconSize math for this; letting FileTile figure
+        // it out from its own actual layout means a caller's cell-sizing
+        // knobs (Explorer's iconScale, Collections' gridIconScale/
+        // gridAspectRatio) just work without a second, parallel icon-size
+        // formula that has to be kept in sync by hand.
         Item {
-            Layout.alignment: Qt.AlignHCenter
-            implicitWidth: root.iconSize
-            implicitHeight: root.iconSize
+            id: iconArea
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            readonly property int resolvedIconSize: Math.max(0, Math.floor(Math.min(iconArea.width, iconArea.height)))
 
             // Shown whenever there's no (attempted or successful)
-            // thumbnail -- directories always, files until/unless their
-            // thumbnail finishes loading.
-            Icon {
-                anchors.fill: parent
+            // thumbnail -- directories always, files until/unless
+            // their thumbnail finishes loading.
+            Origami.Icon {
+                anchors.centerIn: parent
+                width: iconArea.resolvedIconSize
+                height: iconArea.resolvedIconSize
                 visible: root.isDir || thumbnail.status !== Image.Ready
                 source: root.iconName
             }
 
             Image {
                 id: thumbnail
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: iconArea.resolvedIconSize
+                height: iconArea.resolvedIconSize
                 visible: !root.isDir && status === Image.Ready
                 asynchronous: true
                 fillMode: Image.PreserveAspectFit
                 source: root.isDir ? "" : root.thumbnailSource
-                sourceSize.width: root.iconSize
-                sourceSize.height: root.iconSize
+                sourceSize.width: iconArea.resolvedIconSize
+                sourceSize.height: iconArea.resolvedIconSize
             }
 
             // Symlink badge, Dolphin-style: Icon has no emblem/overlay
             // support of its own, so this is a second, smaller Icon
-            // pinned to the main icon's bottom-right corner.
-            Icon {
+            // pinned to the visible icon's own bottom-right corner --
+            // positioned relative to iconArea's center ± half of
+            // resolvedIconSize (not parent.right/bottom directly), since
+            // iconArea itself can be wider or taller than the square icon
+            // actually drawn inside it.
+            Origami.Icon {
                 visible: root.isSymlink
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                width: parent.width * 0.5
-                height: parent.height * 0.5
+                width: iconArea.resolvedIconSize * 0.5
+                height: iconArea.resolvedIconSize * 0.5
+                x: iconArea.width / 2 + iconArea.resolvedIconSize / 2 - width
+                y: iconArea.height / 2 + iconArea.resolvedIconSize / 2 - height
                 source: root.isBrokenSymlink ? "emblem-warning" : "emblem-symbolic-link"
             }
         }
 
-        Label {
+        Origami.Label {
+            visible: root.showLabel
             text: root.text
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
@@ -190,7 +233,11 @@ QQC2.ItemDelegate {
     MouseArea {
         id: tapArea
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
+        // Right button accepted too, for contextMenuRequested below --
+        // everything else in this MouseArea (drag-start, tapped()) stays
+        // gated to a left-button press specifically (see leftPressed), so
+        // a right-click can never also kick off a file drag.
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         // A child item's own accepted press is hit-tested before the
         // parent Control (this ItemDelegate/AbstractButton) ever sees it
         // -- ordinary QtQuick propagation, safe to reason about without a
@@ -216,8 +263,18 @@ QQC2.ItemDelegate {
         // itself changing too, not just frozen at whatever it was on the
         // last press.
         property bool shiftHeld: false
-        drag.target: (root.dragEnabled && !shiftHeld) ? dragProxy : null
+        // Tracks whether the current press started with the left button
+        // -- drag.target below only activates for a left-button
+        // press-drag; without this a right-click-and-drag could also
+        // kick off the same OS-level file drag a left-drag does, which
+        // isn't what a right click means anywhere else in this app (or
+        // any desktop file manager).
+        property bool leftPressed: false
+        drag.target: (root.dragEnabled && !shiftHeld && leftPressed) ? dragProxy : null
         onPressed: mouse => {
+            leftPressed = mouse.button === Qt.LeftButton;
+            if (!leftPressed)
+                return;
             shiftHeld = (mouse.modifiers & Qt.ShiftModifier) !== 0;
             if (root.dragEnabled && !shiftHeld) {
                 root._dragHotSpotX = mouse.x;
@@ -251,7 +308,13 @@ QQC2.ItemDelegate {
                 }, Qt.size(root.width, root.height));
             }
         }
+        onReleased: leftPressed = false
+        onCanceled: leftPressed = false
         onClicked: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                root.contextMenuRequested(mouse.x, mouse.y);
+                return;
+            }
             root.clicked();
             root.tapped(mouse.modifiers);
         }

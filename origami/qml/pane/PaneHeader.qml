@@ -10,8 +10,12 @@ import la.cettila.Origami 1.0
 // by exposing a `paneHeaderMenus` property (same optional-interface
 // pattern as paneSerialize/paneRestore): an array of { text, items },
 // where each item is either a plain string (inert placeholder) or
-// { text, onTriggered } (an actual action). Views that don't implement
-// it show no menu row at all -- see `_effectiveMenus` below.
+// { text, onTriggered } (an actual action). This is merged (see
+// `_mergeMenus`/`_effectiveMenus` below) with a builtin "表示" submenu
+// (別ウィンドウで開く/別ウィンドウに移動, via PaneWindow.qml) present on
+// every pane regardless of view type -- a view's own "表示" entry, if any
+// (e.g. Explorer/BoardView's own "ペインを最大化"), gets these appended
+// into it rather than a second separate "表示" submenu appearing.
 //
 // A view may additionally expose a `paneHeaderExtraRows` property -- an
 // array of already-built Items, one per additional row (typically each a
@@ -65,7 +69,104 @@ MultiRowHeaderBar {
     // paneHeaderExtraRow) so there's one materialize() call, not two.
     readonly property var _activeItem: (root._activeTab && root.controller) ? root.controller.materialize(root._activeTab) : null
 
-    readonly property var _effectiveMenus: (root._activeItem && root._activeItem.paneHeaderMenus) ? root._activeItem.paneHeaderMenus : []
+    Component {
+        id: paneWindowComponent
+        PaneWindow {}
+    }
+
+    // "別ウィンドウで開く": a fresh instance of the active pane's own view
+    // type, in a brand-new PaneWindow -- the existing pane is untouched.
+    //
+    // Parented to root.controller (the PaneView instance, alive for the
+    // whole app session), not root (this PaneHeader) -- Component.
+    // createObject(parent, ...) makes the new object a QObject child of
+    // parent for C++ ownership purposes, and this PaneHeader can be
+    // destroyed well before the new window should be (trivially so for
+    // _moveActiveToNewWindow below, which closes this very pane right
+    // after; parenting to root here too for the same reason/consistency,
+    // since panes can be closed/split from elsewhere at any time).
+    function _openActiveInNewWindow() {
+        if (!root._activeTab || !root.controller)
+            return;
+        var component = root.controller.componentRegistry ? root.controller.componentRegistry[root._activeTab.viewType] : null;
+        if (!component)
+            return;
+        paneWindowComponent.createObject(root.controller, {
+            paneComponent: component,
+            title: root._activeTab.title,
+            paneViewType: root._activeTab.viewType
+        });
+    }
+
+    // "別ウィンドウに移動": the active pane's own already-live Item, moved
+    // (not recreated) into a new PaneWindow -- see PaneView.detachPane()'s
+    // own comment for why creating the window (which reparents the Item
+    // synchronously via its initial `hostedItem` property) has to happen
+    // before detachPane()/closeTab() runs, not after.
+    function _moveActiveToNewWindow() {
+        if (!root._activeTab || !root.controller || !root._activeItem || !root.node)
+            return;
+        var item = root._activeItem;
+        var title = root._activeTab.title;
+        var viewType = root._activeTab.viewType;
+        var areaId = root.node.id;
+        var paneId = root._activeTab.id;
+        paneWindowComponent.createObject(root.controller, {
+            hostedItem: item,
+            title: title,
+            paneViewType: viewType
+        });
+        root.controller.detachPane(areaId, paneId);
+    }
+
+    readonly property var _builtinMenus: [
+        {
+            text: "表示",
+            items: [
+                {
+                    text: "別ウィンドウで開く",
+                    onTriggered: function () {
+                        root._openActiveInNewWindow();
+                    }
+                },
+                {
+                    text: "別ウィンドウに移動",
+                    onTriggered: function () {
+                        root._moveActiveToNewWindow();
+                    }
+                }
+            ]
+        }
+    ]
+
+    // Merges builtinMenus into viewMenus: a top-level entry with a matching
+    // `text` and `items` (e.g. both calling it "表示") gets builtinMenus'
+    // items appended into the *existing* entry rather than producing a
+    // second separate submenu of the same name; anything builtinMenus has
+    // that viewMenus doesn't is appended as its own new top-level entry.
+    function _mergeMenus(viewMenus, builtinMenus) {
+        var result = viewMenus.slice();
+        for (var i = 0; i < builtinMenus.length; i++) {
+            var builtin = builtinMenus[i];
+            var existingIdx = -1;
+            for (var j = 0; j < result.length; j++) {
+                if (result[j].text === builtin.text && result[j].items) {
+                    existingIdx = j;
+                    break;
+                }
+            }
+            if (existingIdx !== -1)
+                result[existingIdx] = {
+                    text: result[existingIdx].text,
+                    items: result[existingIdx].items.concat(builtin.items)
+                };
+            else
+                result.push(builtin);
+        }
+        return result;
+    }
+
+    readonly property var _effectiveMenus: root._mergeMenus((root._activeItem && root._activeItem.paneHeaderMenus) ? root._activeItem.paneHeaderMenus : [], root._builtinMenus)
 
     // Shared "seamless hover switch" coordinator (see HeaderMenuCoordinator.
     // qml's own class comment) for every menu-opening control in this
@@ -274,6 +375,20 @@ MultiRowHeaderBar {
             leafId: root.leafId
             active: true
             controller: root.controller
+
+            // Right-clicking the grip still opens PaneTabHeader's own
+            // "閉じる" context menu (compact only hides the drag glyph's
+            // look, not that menu -- see PaneTabHeader.qml's own
+            // `compact` comment). Without this handler closeRequested()
+            // had nowhere to go, so the menu item did nothing. Same call
+            // shape as PaneLeaf.qml's own tab-bar wiring
+            // (`controller.closeTab(node.id, tabId)`); leafId here is
+            // always root.node.id (see PaneLeaf.qml's own leafId
+            // bindings), so it stands in for the areaId.
+            onCloseRequested: {
+                if (root.controller && root._activeTab)
+                    root.controller.closeTab(root.leafId, root._activeTab.id);
+            }
         },
 
         // The active view's own icon (from viewType, via

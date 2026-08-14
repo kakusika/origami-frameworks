@@ -114,6 +114,43 @@ pub fn parse_extension_filter(raw: &str) -> Option<Vec<String>> {
     }
 }
 
+/// Renames `path` to `new_name`, kept in the same parent directory --
+/// unlike `move_entries_to`/`copy_entries_to` below (a different
+/// directory, either silently skipped or auto-disambiguated on a name
+/// collision, since those act on a whole batch where one bad entry
+/// shouldn't block the rest), a rename acts on exactly one path the user
+/// is actively waiting on, so a failure is reported back as an `Err`
+/// message instead of being silently skipped. Returns the new full path
+/// on success.
+pub fn rename_entry(path: &str, new_name: &str) -> Result<String, String> {
+    let new_name = new_name.trim();
+    if new_name.is_empty() {
+        return Err("名前を入力してください".to_string());
+    }
+    if new_name.contains('/') {
+        return Err("名前に \"/\" は使えません".to_string());
+    }
+    let source = Path::new(path);
+    let Some(parent) = source.parent() else {
+        return Err("名前を変更できません".to_string());
+    };
+    let destination = parent.join(new_name);
+    if destination == source {
+        // Renaming to the exact same name -- a no-op, not an error (the
+        // caller's own RenameDialog.qml already skips calling this at all
+        // when the typed name matches the original, but this stays
+        // correct even if some other future caller doesn't do that
+        // check).
+        return Ok(destination.to_string_lossy().into_owned());
+    }
+    if destination.exists() {
+        return Err("同じ名前の項目が既に存在します".to_string());
+    }
+    std::fs::rename(source, &destination)
+        .map_err(|err| format!("名前を変更できませんでした: {err}"))?;
+    Ok(destination.to_string_lossy().into_owned())
+}
+
 /// Moves every entry in `paths` into `target_dir` via a plain rename,
 /// returning how many actually moved. Used by cettila-view-explorer's
 /// drag-and-drop (both internal drag-move and, incidentally, any drop

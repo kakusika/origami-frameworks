@@ -11,6 +11,7 @@ fn main() {
                 QmlFile::from("qml/theme/Theme.qml").singleton(true),
                 QmlFile::from("qml/pane/PaneContext.qml").singleton(true),
                 QmlFile::from("qml/pane/PaneBackdrop.qml").singleton(true),
+                QmlFile::from("qml/pane/PaneWindowRegistry.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ErrorBus.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ToastBus.qml").singleton(true),
             ])
@@ -20,6 +21,9 @@ fn main() {
                 "qml/pane/PaneNode.qml",
                 "qml/pane/PaneLeaf.qml",
                 "qml/pane/PaneHeader.qml",
+                "qml/pane/PaneWindow.qml",
+                "qml/pane/PaneManager.qml",
+                "qml/pane/PaneManagerRow.qml",
                 "qml/pane/PaneDropOverlay.qml",
                 "qml/pane/ViewTypePickerButton.qml",
                 "qml/pane/ViewTypePickerPopup.qml",

@@ -1,12 +1,14 @@
 //! Load/save the pane workspace layout (split/tab tree, per-tab properties)
-//! under a vault's `.cettila/workspace/` directory.
+//! under a vault's `.cettila/workspaces/` directory.
 //!
 //! This module treats the workspace content as an opaque JSON value with no
 //! knowledge of pane/split/leaf semantics -- that shape lives entirely in
 //! `PaneView.qml` (the only place with enough context to map a view-type
 //! string back to a QML `Component`), so callers just hand this module a JSON
-//! string and get one back. On disk it's stored as YAML, matching this
-//! project's other `.cettila` config files.
+//! string and get one back. On disk it's stored as YAML -- unlike
+//! `settings.rs`/`cache.rs`, which moved to TOML, this stays YAML since the
+//! pane tree can contain JSON `null` (e.g. an unset optional prop), which
+//! TOML has no representation for.
 
 use std::fs;
 use std::io;
@@ -21,7 +23,7 @@ pub const DEFAULT_VAULT_ROOT: &str =
 pub fn workspace_path(vault_root: &Path) -> PathBuf {
     vault_root
         .join(".cettila")
-        .join("workspace")
+        .join("workspaces")
         .join("workspace.yaml")
 }
 
@@ -44,7 +46,7 @@ pub fn load_workspace_json(vault_root: &Path) -> Option<String> {
 }
 
 /// Parses `json` and writes it to the vault's workspace file as YAML,
-/// creating `.cettila/workspace/` if needed.
+/// creating `.cettila/workspaces/` if needed.
 pub fn save_workspace_json(vault_root: &Path, json: &str) -> io::Result<()> {
     let value: serde_json::Value = serde_json::from_str(json)
         .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
@@ -97,5 +99,28 @@ mod tests {
         ));
         let result = save_workspace_json(&dir, "not json");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn round_trips_nulls_since_yaml_has_null() {
+        let dir = std::env::temp_dir().join(format!(
+            "cettila-config-workspace-test-nulls-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+
+        let json = r#"{"type":"leaf","title":null,"tabs":[{"viewType":"explorer"},null]}"#;
+        save_workspace_json(&dir, json).unwrap();
+
+        let loaded = load_workspace_json(&dir).expect("workspace should now load");
+        let actual: serde_json::Value = serde_json::from_str(&loaded).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(json).unwrap();
+        assert_eq!(actual, expected);
+
+        fs::remove_dir_all(&dir).unwrap();
     }
 }

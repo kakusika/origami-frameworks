@@ -326,8 +326,16 @@ Item {
             menuItems: root._groupMenuItems
         }
 
+        // model is emptied out (rather than just relying on railVertical's
+        // own `visible: !root.horizontal` above) whenever the horizontal
+        // rail is the one actually in effect -- otherwise this Repeater
+        // built a full PaneTabHeader per drawer child regardless of which
+        // rail was shown (`visible: false` hides a Repeater's delegates,
+        // it doesn't stop it building them), doubling the rail-tab item
+        // count for every drawer node in the tree. See railHorizontal's
+        // own Repeater below for the mirror image of this.
         Repeater {
-            model: root.node ? root.node.children : []
+            model: root.horizontal ? [] : (root.node ? root.node.children : [])
 
             delegate: PaneTabHeader {
                 id: railTabV
@@ -380,8 +388,9 @@ Item {
             menuItems: root._groupMenuItems
         }
 
+        // Mirror of railVertical's own Repeater above -- see its comment.
         Repeater {
-            model: root.node ? root.node.children : []
+            model: root.horizontal ? (root.node ? root.node.children : []) : []
 
             delegate: PaneTabHeader {
                 id: railTabH

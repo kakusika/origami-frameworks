@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Dismissible strip for the `io_error` qproperty pattern shared by every
 // JSON save/load-backed view model (CalendarModel, BoardState,
@@ -29,18 +29,18 @@ Rectangle {
     // ErrorBus.qml) alongside this banner, so a save/load failure is
     // noticed even if this banner isn't currently in view.
     onMessageChanged: if (root.message.length > 0)
-        ErrorBus.reportError(root.message)
+        Origami.ErrorBus.reportError(root.message)
 
     height: errorLabel.implicitHeight + 16
     visible: message.length > 0
-    color: Qt.rgba(Theme.negativeTextColor.r, Theme.negativeTextColor.g, Theme.negativeTextColor.b, 0.25)
+    color: Qt.rgba(Origami.Theme.negativeTextColor.r, Origami.Theme.negativeTextColor.g, Origami.Theme.negativeTextColor.b, 0.25)
 
-    Label {
+    QQC2.Label {
         id: errorLabel
         anchors.left: parent.left
         anchors.right: closeErrorButton.left
         anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: Units.smallSpacing
+        anchors.margins: Origami.Units.smallSpacing
         type: "negative"
         wrapMode: Text.Wrap
     }
@@ -58,15 +58,15 @@ Rectangle {
         // color already comes from Theme.negativeTextColor, so its close
         // button should too rather than mismatching in native gray.
         background: Rectangle {
-            radius: Units.cornerRadius
-            color: closeErrorButton.hovered ? Qt.rgba(Theme.negativeTextColor.r, Theme.negativeTextColor.g, Theme.negativeTextColor.b, 0.2) : "transparent"
+            radius: Origami.Units.cornerRadius
+            color: closeErrorButton.hovered ? Qt.rgba(Origami.Theme.negativeTextColor.r, Origami.Theme.negativeTextColor.g, Origami.Theme.negativeTextColor.b, 0.2) : "transparent"
         }
 
         contentItem: QQC2.Label {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: closeErrorButton.text
-            color: Theme.negativeTextColor
+            color: Origami.Theme.negativeTextColor
         }
 
         onClicked: root.dismissed()

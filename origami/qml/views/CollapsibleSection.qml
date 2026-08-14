@@ -50,6 +50,11 @@ Rectangle {
     // 別のcolorSetを使う。
     readonly property var colors: Origami.Theme.paletteFor(Origami.Theme.window)
 
+    // Shared by body and the title label below, so both dim together when
+    // the toggle is off -- the toggle itself and the expand/collapse arrow
+    // stay at full opacity since they remain interactive either way.
+    readonly property bool toggleEnabled: !root.showToggle || root.toggleChecked
+
     default property alias content: body.data
 
     implicitWidth: Origami.Units.gridUnit * 16
@@ -119,6 +124,13 @@ Rectangle {
                 colorSet: Origami.Theme.window
                 text: root.title
                 font.bold: true
+                opacity: root.toggleEnabled ? 1.0 : 0.5
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Origami.Units.shortDuration
+                    }
+                }
             }
         }
 
@@ -153,8 +165,8 @@ Rectangle {
         // apply at all -- disabling (and dimming) the body when it's off
         // means every child control here reads as inert without each one
         // needing its own `enabled: Units.somethingEnabled` binding.
-        enabled: !root.showToggle || root.toggleChecked
-        opacity: body.enabled ? 1.0 : 0.5
+        enabled: root.toggleEnabled
+        opacity: root.toggleEnabled ? 1.0 : 0.5
 
         Behavior on opacity {
             NumberAnimation {

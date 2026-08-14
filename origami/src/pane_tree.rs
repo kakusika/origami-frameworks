@@ -248,6 +248,12 @@ impl PaneTree {
 
     /// Split a node (Pane, Tabs, Drawer, Split) by target_id, replacing it with a Split node
     /// containing the target node and a newly created Pane node.
+    ///
+    /// If the target's immediate parent is already a Split with the same
+    /// orientation, the new pane is inserted as a direct sibling there
+    /// instead -- otherwise this would nest a redundant same-orientation
+    /// Split one level deeper (e.g. a horizontal Split directly containing
+    /// another horizontal Split).
     pub fn split_pane(
         &mut self,
         target_id: i32,
@@ -362,6 +368,126 @@ impl PaneTree {
             _ => false,
         }
     }
+
+    /// Removes the standalone pane/split/tabs/drawer node identified by
+    /// `target_id` from wherever it sits as a direct child of a "split" or
+    /// "drawer" in the tree. See `remove_standalone_node` for the
+    /// recursive walk/collapse/renormalize behavior. Returns false (a
+    /// no-op) if `target_id` is the tree's own root -- same as
+    /// PaneView.qml, removing the whole tree's root is the caller's own
+    /// responsibility (e.g. closeTab()'s `root.tree = null` branch), not
+    /// something this shared primitive decides on its own.
+    pub fn remove_standalone(&mut self, target_id: i32) -> bool {
+        match &mut self.root {
+            Some(root) => remove_standalone_node(root, target_id),
+            None => false,
+        }
+    }
+}
+
+/// Rescales `children`'s size fractions back up to sum to 1. Needed after
+/// removing a child from a split's children so the survivors' fractions
+/// don't leave a blank gap the width of the removed child's old share --
+/// mirrors PaneView.qml's `_renormalizeSizes()`.
+fn renormalize_sizes(children: &mut [SplitChild]) {
+    let sum: f64 = children.iter().map(|c| c.size).sum();
+    if sum <= 0.0 {
+        return;
+    }
+    for child in children.iter_mut() {
+        child.size /= sum;
+    }
+}
+
+/// Overwrites `container` in place with `remaining`'s content, keeping
+/// `container`'s own id where `remaining`'s node kind has one -- mirrors
+/// PaneView.qml's `_collapseInto()`. Used when a "split" drops to a single
+/// remaining child, which then takes the collapsing split's place.
+fn collapse_into(container: &mut PaneNode, remaining: PaneNode) {
+    let kept_id = container.id();
+    *container = remaining;
+    match container {
+        PaneNode::Split { id, .. } => *id = kept_id,
+        PaneNode::Tabs { id, .. } | PaneNode::Drawer { id, .. } | PaneNode::Pane { id, .. } => {
+            if let Some(kept_id) = kept_id {
+                *id = kept_id;
+            }
+        }
+    }
+}
+
+/// Removes the standalone child node identified by `target_id` from
+/// whichever "split" or "drawer" directly holds it, anywhere under `node`.
+/// A "split" that drops to one remaining child collapses into it (see
+/// `collapse_into`) and otherwise renormalizes its size fractions; a
+/// "drawer" never collapses (mirrors `PaneNode::is_group`) and just keeps
+/// its `current_index` in range. Mirrors PaneView.qml's
+/// `_removeStandalonePane()`. Returns true if `target_id` was found and
+/// removed.
+pub fn remove_standalone_node(node: &mut PaneNode, target_id: i32) -> bool {
+    let removable_idx: Option<usize> = match node {
+        PaneNode::Split { children, .. } => {
+            children.iter().position(|c| c.node.id() == Some(target_id))
+        }
+        PaneNode::Drawer { children, .. } => {
+            children.iter().position(|c| c.node.id() == Some(target_id))
+        }
+        _ => None,
+    };
+
+    if let Some(idx) = removable_idx {
+        match node {
+            PaneNode::Split { children, .. } => {
+                children.remove(idx);
+                if children.len() == 1 {
+                    let remaining = children.remove(0).node;
+                    collapse_into(node, remaining);
+                } else {
+                    renormalize_sizes(children);
+                }
+            }
+            PaneNode::Drawer {
+                children,
+                current_index,
+                ..
+            } => {
+                children.remove(idx);
+                if *current_index >= children.len() {
+                    *current_index = children.len().saturating_sub(1);
+                }
+            }
+            _ => unreachable!(),
+        }
+        return true;
+    }
+
+    match node {
+        PaneNode::Split { children, .. } => {
+            for child in children.iter_mut() {
+                if remove_standalone_node(&mut child.node, target_id) {
+                    return true;
+                }
+            }
+            false
+        }
+        PaneNode::Tabs { children, .. } => {
+            for child in children.iter_mut() {
+                if remove_standalone_node(&mut child.node, target_id) {
+                    return true;
+                }
+            }
+            false
+        }
+        PaneNode::Drawer { children, .. } => {
+            for child in children.iter_mut() {
+                if remove_standalone_node(&mut child.node, target_id) {
+                    return true;
+                }
+            }
+            false
+        }
+        PaneNode::Pane { .. } => false,
+    }
 }
 
 fn split_node_rec(
@@ -398,7 +524,25 @@ fn split_node_rec(
     }
 
     match node {
-        PaneNode::Split { children, .. } => {
+        PaneNode::Split {
+            orientation: split_orientation,
+            children,
+            ..
+        } => {
+            if split_orientation == orientation {
+                if let Some(idx) = children.iter().position(|c| c.node.id() == Some(target_id)) {
+                    let half = children[idx].size / 2.0;
+                    children[idx].size = half;
+                    children.insert(
+                        idx + 1,
+                        SplitChild {
+                            size: half,
+                            node: new_pane,
+                        },
+                    );
+                    return true;
+                }
+            }
             for child in children {
                 if split_node_rec(&mut child.node, target_id, orientation, new_pane.clone()) {
                     return true;
@@ -519,6 +663,98 @@ mod tests {
     }
 
     #[test]
+    fn test_split_pane_merges_into_same_orientation_parent() {
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: None,
+            orientation: "horizontal".to_string(),
+            children: vec![
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 1,
+                        title: "A".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 2,
+                        title: "B".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+            ],
+        }));
+
+        let new_id = tree
+            .split_pane(1, "horizontal", "calendar", "Calendar")
+            .unwrap();
+
+        if let Some(PaneNode::Split {
+            orientation,
+            children,
+            ..
+        }) = &tree.root
+        {
+            // No nested Split -- the new pane lands as a third sibling of
+            // the existing horizontal Split, not wrapped around pane 1.
+            assert_eq!(orientation, "horizontal");
+            assert_eq!(children.len(), 3);
+            assert_eq!(children[0].node.id(), Some(1));
+            assert_eq!(children[1].node.id(), Some(new_id));
+            assert_eq!(children[2].node.id(), Some(2));
+            assert!((children[0].size - 0.25).abs() < 1e-9);
+            assert!((children[1].size - 0.25).abs() < 1e-9);
+            assert!((children[2].size - 0.5).abs() < 1e-9);
+        } else {
+            panic!("Expected Split root");
+        }
+    }
+
+    #[test]
+    fn test_split_pane_nests_different_orientation() {
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: None,
+            orientation: "horizontal".to_string(),
+            children: vec![SplitChild {
+                size: 1.0,
+                node: PaneNode::Pane {
+                    id: 1,
+                    title: "A".to_string(),
+                    view_type: "board".to_string(),
+                    props: json!({}),
+                },
+            }],
+        }));
+
+        let new_id = tree
+            .split_pane(1, "vertical", "calendar", "Calendar")
+            .unwrap();
+
+        if let Some(PaneNode::Split { children, .. }) = &tree.root {
+            assert_eq!(children.len(), 1);
+            if let PaneNode::Split {
+                orientation,
+                children: inner,
+                ..
+            } = &children[0].node
+            {
+                assert_eq!(orientation, "vertical");
+                assert_eq!(inner.len(), 2);
+                assert_eq!(inner[0].node.id(), Some(1));
+                assert_eq!(inner[1].node.id(), Some(new_id));
+            } else {
+                panic!("Expected nested vertical Split");
+            }
+        } else {
+            panic!("Expected Split root");
+        }
+    }
+
+    #[test]
     fn test_move_tab() {
         let mut tree = PaneTree::new(Some(PaneNode::Split {
             id: None,
@@ -586,5 +822,194 @@ mod tests {
                 panic!("Expected group 20 Tabs");
             }
         }
+    }
+
+    #[test]
+    fn test_remove_standalone_collapses_split_to_one_child() {
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: None,
+            orientation: "horizontal".to_string(),
+            children: vec![
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 1,
+                        title: "A".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 2,
+                        title: "B".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+            ],
+        }));
+
+        assert!(tree.remove_standalone(1));
+
+        // The split (which had a None id) collapses into pane 2 in place.
+        if let Some(PaneNode::Pane { id, title, .. }) = &tree.root {
+            assert_eq!(*id, 2);
+            assert_eq!(title, "B");
+        } else {
+            panic!("Expected root to collapse into remaining Pane");
+        }
+    }
+
+    #[test]
+    fn test_remove_standalone_renormalizes_split_sizes() {
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: None,
+            orientation: "horizontal".to_string(),
+            children: vec![
+                SplitChild {
+                    size: 0.25,
+                    node: PaneNode::Pane {
+                        id: 1,
+                        title: "A".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+                SplitChild {
+                    size: 0.25,
+                    node: PaneNode::Pane {
+                        id: 2,
+                        title: "B".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 3,
+                        title: "C".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+            ],
+        }));
+
+        assert!(tree.remove_standalone(1));
+
+        if let Some(PaneNode::Split { children, .. }) = &tree.root {
+            assert_eq!(children.len(), 2);
+            assert_eq!(children[0].node.id(), Some(2));
+            assert_eq!(children[1].node.id(), Some(3));
+            // Remaining shares (0.25, 0.5) renormalized back up to sum to 1.
+            assert!((children[0].size - 1.0 / 3.0).abs() < 1e-9);
+            assert!((children[1].size - 2.0 / 3.0).abs() < 1e-9);
+        } else {
+            panic!("Expected Split root");
+        }
+    }
+
+    #[test]
+    fn test_remove_standalone_from_drawer_never_collapses() {
+        let mut tree = PaneTree::new(Some(PaneNode::Drawer {
+            id: 10,
+            current_index: 1,
+            expanded: true,
+            children: vec![
+                GroupChild {
+                    node: PaneNode::Pane {
+                        id: 1,
+                        title: "A".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+                GroupChild {
+                    node: PaneNode::Pane {
+                        id: 2,
+                        title: "B".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+            ],
+        }));
+
+        // Removing the currently-active (index 1) child clamps
+        // current_index back into range instead of collapsing the drawer.
+        assert!(tree.remove_standalone(2));
+
+        if let Some(PaneNode::Drawer {
+            children,
+            current_index,
+            ..
+        }) = &tree.root
+        {
+            assert_eq!(children.len(), 1);
+            assert_eq!(children[0].node.id(), Some(1));
+            assert_eq!(*current_index, 0);
+        } else {
+            panic!("Expected Drawer root to remain a Drawer");
+        }
+    }
+
+    #[test]
+    fn test_remove_standalone_recurses_and_reports_missing() {
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: None,
+            orientation: "horizontal".to_string(),
+            children: vec![
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Split {
+                        id: None,
+                        orientation: "vertical".to_string(),
+                        children: vec![
+                            SplitChild {
+                                size: 0.5,
+                                node: PaneNode::Pane {
+                                    id: 1,
+                                    title: "A".to_string(),
+                                    view_type: "board".to_string(),
+                                    props: json!({}),
+                                },
+                            },
+                            SplitChild {
+                                size: 0.5,
+                                node: PaneNode::Pane {
+                                    id: 2,
+                                    title: "B".to_string(),
+                                    view_type: "board".to_string(),
+                                    props: json!({}),
+                                },
+                            },
+                        ],
+                    },
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane {
+                        id: 3,
+                        title: "C".to_string(),
+                        view_type: "board".to_string(),
+                        props: json!({}),
+                    },
+                },
+            ],
+        }));
+
+        assert!(tree.remove_standalone(1));
+        if let Some(PaneNode::Split { children, .. }) = &tree.root {
+            // Nested vertical split collapsed into pane 2 in place.
+            assert_eq!(children[0].node.id(), Some(2));
+            assert_eq!(children[1].node.id(), Some(3));
+        } else {
+            panic!("Expected Split root");
+        }
+
+        assert!(!tree.remove_standalone(999));
     }
 }

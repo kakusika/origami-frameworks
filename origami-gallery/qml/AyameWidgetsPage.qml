@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import QtQuick.Controls.Ayame as Ayame
+import Ayame as Ayame
 import la.cettila.Origami 1.0 as Origami
 
 QQC2.ScrollView {

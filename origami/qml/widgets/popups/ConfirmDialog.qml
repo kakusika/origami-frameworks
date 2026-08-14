@@ -24,7 +24,7 @@ QQC2.Popup {
         spacing: Origami.Units.largeSpacing
         implicitWidth: Origami.Units.gridUnit * 16
 
-        Label {
+        Origami.Label {
             font.bold: true
             font.pointSize: Origami.Units.gridUnit * 0.75
             text: root.title
@@ -32,14 +32,14 @@ QQC2.Popup {
             elide: Text.ElideRight
         }
 
-        Label {
+        Origami.Label {
             text: root.message
             type: "secondary"
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
 
-        Separator {
+        Origami.Separator {
             Layout.fillWidth: true
         }
 

@@ -2,7 +2,9 @@
 //! directory. Currently just the chosen QQC2 style name (see the settings
 //! screen's "外観" category). Kept separate from `workspace.rs` since it
 //! has nothing to do with the pane layout, but follows the same shape:
-//! one opaque YAML file, vault-root relative.
+//! one opaque TOML file, vault-root relative. Transient "last used
+//! directory" state lives in `cache.rs` instead, not here -- see that
+//! module for the reasoning.
 
 use std::fs;
 use std::io;
@@ -11,7 +13,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 pub fn settings_path(vault_root: &Path) -> PathBuf {
-    vault_root.join(".cettila").join("settings.yaml")
+    vault_root.join(".cettila").join("settings.toml")
 }
 
 /// Where the precomputed background-effect result (see
@@ -47,14 +49,6 @@ struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     accent_color: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    last_image_pick_dir: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    last_media_pick_dir: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    last_json_pick_dir: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    last_text_pick_dir: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     ui_font_family: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ui_font_point_size: Option<f64>,
@@ -87,7 +81,7 @@ struct Settings {
 /// simply ignored rather than this being a tagged union; mirrors
 /// `cettila-view-settings`'s `background_effects::EffectParams`
 /// field-for-field, kept as a separate type since that crate can't depend
-/// on this one's serde/YAML shape). `kind` is one of "none" (default),
+/// on this one's serde/TOML shape). `kind` is one of "none" (default),
 /// "blur", "voronoi", "pixelate", "grayscale", "sepia", "invert",
 /// "brightness_contrast", "posterize", "vignette", "noise", "duotone",
 /// "hue_rotate", "edge_detect" -- see `SettingsPage.qml`'s effect catalog
@@ -140,19 +134,19 @@ pub struct BookmarkEntry {
 fn load(vault_root: &Path) -> Settings {
     let path = settings_path(vault_root);
     match fs::read_to_string(&path) {
-        Ok(content) => serde_yaml::from_str(&content).unwrap_or_default(),
+        Ok(content) => toml::from_str(&content).unwrap_or_default(),
         Err(_) => Settings::default(),
     }
 }
 
 fn save(vault_root: &Path, settings: &Settings) -> io::Result<()> {
-    let yaml = serde_yaml::to_string(settings)
+    let toml = toml::to_string_pretty(settings)
         .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
     let path = settings_path(vault_root);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(path, yaml)
+    fs::write(path, toml)
 }
 
 /// The QQC2 style name the user picked in the settings screen, or `None` if
@@ -300,68 +294,6 @@ pub fn load_accent_color(vault_root: &Path) -> String {
 pub fn save_accent_color(vault_root: &Path, hex: &str) -> io::Result<()> {
     let mut settings = load(vault_root);
     settings.accent_color = Some(hex.to_string());
-    save(vault_root, &settings)
-}
-
-/// The directory `ImagePickerDialog.qml` (cettila-view-explorer --
-/// migrated there from cettila-view-origami, see
-/// `crates/views/explorer`'s `TASKS.md` for the reasoning) last navigated
-/// to, or `None` if it hasn't been used yet (in which case the picker
-/// falls back to `workspace::DEFAULT_VAULT_ROOT`). Applied live -- each
-/// navigation persists immediately, unlike `style`.
-pub fn load_last_image_pick_dir(vault_root: &Path) -> Option<String> {
-    load(vault_root).last_image_pick_dir
-}
-
-pub fn save_last_image_pick_dir(vault_root: &Path, dir: &str) -> io::Result<()> {
-    let mut settings = load(vault_root);
-    settings.last_image_pick_dir = Some(dir.to_string());
-    save(vault_root, &settings)
-}
-
-/// The directory `MediaPickerDialog.qml` (cettila-view-explorer, same
-/// migration as `last_image_pick_dir` above) last navigated to, or `None`
-/// if it hasn't been used yet. Separate key from `last_image_pick_dir`
-/// since it's a different picker (image *or* video files, used by
-/// cettila-view-preview) with its own independent "last used" location.
-pub fn load_last_media_pick_dir(vault_root: &Path) -> Option<String> {
-    load(vault_root).last_media_pick_dir
-}
-
-pub fn save_last_media_pick_dir(vault_root: &Path, dir: &str) -> io::Result<()> {
-    let mut settings = load(vault_root);
-    settings.last_media_pick_dir = Some(dir.to_string());
-    save(vault_root, &settings)
-}
-
-/// The directory `SaveOpenFileDialogPair.qml` (cettila-view-explorer)
-/// last saved to or opened from, or `None` if it hasn't been used yet.
-/// Shared between its own save and open windows (both browse the same
-/// general "JSON export" area of the vault) rather than two separate
-/// keys, unlike `last_image_pick_dir`/`last_media_pick_dir`'s own genuine
-/// picker-identity split.
-pub fn load_last_json_pick_dir(vault_root: &Path) -> Option<String> {
-    load(vault_root).last_json_pick_dir
-}
-
-pub fn save_last_json_pick_dir(vault_root: &Path, dir: &str) -> io::Result<()> {
-    let mut settings = load(vault_root);
-    settings.last_json_pick_dir = Some(dir.to_string());
-    save(vault_root, &settings)
-}
-
-/// The directory `TextFilePickerDialog.qml` (cettila-view-explorer, used by
-/// cettila-view-text-editor's "ファイル > 開く..." menu entry) last
-/// navigated to, or `None` if it hasn't been used yet. Separate key from
-/// `last_image_pick_dir`/`last_media_pick_dir`/`last_json_pick_dir`, same
-/// "genuine picker-identity split" reasoning as those.
-pub fn load_last_text_pick_dir(vault_root: &Path) -> Option<String> {
-    load(vault_root).last_text_pick_dir
-}
-
-pub fn save_last_text_pick_dir(vault_root: &Path, dir: &str) -> io::Result<()> {
-    let mut settings = load(vault_root);
-    settings.last_text_pick_dir = Some(dir.to_string());
     save(vault_root, &settings)
 }
 
@@ -595,7 +527,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_style_through_yaml_on_disk() {
+    fn round_trips_style_through_toml_on_disk() {
         let dir = temp_dir("roundtrip");
 
         assert_eq!(load_style(&dir), None);
@@ -613,7 +545,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_status_bar_and_editor_settings_through_yaml_on_disk() {
+    fn round_trips_status_bar_and_editor_settings_through_toml_on_disk() {
         let dir = temp_dir("status-bar-editor-roundtrip");
 
         assert!(load_status_bar_visible(&dir));
@@ -635,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_corner_radius_through_yaml_on_disk() {
+    fn round_trips_corner_radius_through_toml_on_disk() {
         let dir = temp_dir("corner-radius-roundtrip");
 
         assert_eq!(load_corner_radius(&dir), "small");
@@ -650,7 +582,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_border_width_through_yaml_on_disk() {
+    fn round_trips_border_width_through_toml_on_disk() {
         let dir = temp_dir("border-width-roundtrip");
 
         assert_eq!(load_border_width(&dir), "default");
@@ -665,7 +597,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_theme_mode_through_yaml_on_disk() {
+    fn round_trips_theme_mode_through_toml_on_disk() {
         let dir = temp_dir("theme-mode-roundtrip");
 
         assert_eq!(load_theme_mode(&dir), "system");
@@ -680,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_accent_color_through_yaml_on_disk() {
+    fn round_trips_accent_color_through_toml_on_disk() {
         let dir = temp_dir("accent-color-roundtrip");
 
         assert_eq!(load_accent_color(&dir), "#3daee9");
@@ -692,91 +624,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_last_image_pick_dir_through_yaml_on_disk() {
-        let dir = temp_dir("last-image-pick-dir-roundtrip");
-
-        assert_eq!(load_last_image_pick_dir(&dir), None);
-
-        save_last_image_pick_dir(&dir, "/home/user/Pictures").unwrap();
-        assert_eq!(
-            load_last_image_pick_dir(&dir),
-            Some("/home/user/Pictures".to_string())
-        );
-
-        save_last_image_pick_dir(&dir, "/home/user/Pictures/screenshots").unwrap();
-        assert_eq!(
-            load_last_image_pick_dir(&dir),
-            Some("/home/user/Pictures/screenshots".to_string())
-        );
-
-        fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn round_trips_last_media_pick_dir_through_yaml_on_disk() {
-        let dir = temp_dir("last-media-pick-dir-roundtrip");
-
-        assert_eq!(load_last_media_pick_dir(&dir), None);
-
-        save_last_media_pick_dir(&dir, "/home/user/Videos").unwrap();
-        assert_eq!(
-            load_last_media_pick_dir(&dir),
-            Some("/home/user/Videos".to_string())
-        );
-
-        save_last_media_pick_dir(&dir, "/home/user/Videos/clips").unwrap();
-        assert_eq!(
-            load_last_media_pick_dir(&dir),
-            Some("/home/user/Videos/clips".to_string())
-        );
-
-        fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn round_trips_last_json_pick_dir_through_yaml_on_disk() {
-        let dir = temp_dir("last-json-pick-dir-roundtrip");
-
-        assert_eq!(load_last_json_pick_dir(&dir), None);
-
-        save_last_json_pick_dir(&dir, "/home/user/Documents").unwrap();
-        assert_eq!(
-            load_last_json_pick_dir(&dir),
-            Some("/home/user/Documents".to_string())
-        );
-
-        save_last_json_pick_dir(&dir, "/home/user/Documents/exports").unwrap();
-        assert_eq!(
-            load_last_json_pick_dir(&dir),
-            Some("/home/user/Documents/exports".to_string())
-        );
-
-        fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn round_trips_last_text_pick_dir_through_yaml_on_disk() {
-        let dir = temp_dir("last-text-pick-dir-roundtrip");
-
-        assert_eq!(load_last_text_pick_dir(&dir), None);
-
-        save_last_text_pick_dir(&dir, "/home/user/notes").unwrap();
-        assert_eq!(
-            load_last_text_pick_dir(&dir),
-            Some("/home/user/notes".to_string())
-        );
-
-        save_last_text_pick_dir(&dir, "/home/user/notes/drafts").unwrap();
-        assert_eq!(
-            load_last_text_pick_dir(&dir),
-            Some("/home/user/notes/drafts".to_string())
-        );
-
-        fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn round_trips_ui_font_through_yaml_on_disk() {
+    fn round_trips_ui_font_through_toml_on_disk() {
         let dir = temp_dir("ui-font-roundtrip");
 
         assert_eq!(load_ui_font_family(&dir), None);
@@ -792,7 +640,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_network_allowed_through_yaml_on_disk() {
+    fn round_trips_network_allowed_through_toml_on_disk() {
         let dir = temp_dir("network-allowed-roundtrip");
 
         assert!(!load_network_allowed(&dir));
@@ -807,7 +655,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_layout_locked_through_yaml_on_disk() {
+    fn round_trips_layout_locked_through_toml_on_disk() {
         let dir = temp_dir("layout-locked-roundtrip");
 
         assert!(!load_layout_locked(&dir));
@@ -822,7 +670,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_resize_locked_through_yaml_on_disk() {
+    fn round_trips_resize_locked_through_toml_on_disk() {
         let dir = temp_dir("resize-locked-roundtrip");
 
         assert!(!load_resize_locked(&dir));
@@ -837,7 +685,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_bookmarks_through_yaml_on_disk() {
+    fn round_trips_bookmarks_through_toml_on_disk() {
         let dir = temp_dir("bookmarks-roundtrip");
 
         assert_eq!(load_bookmarks(&dir), Vec::new());
@@ -869,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_background_settings_through_yaml_on_disk() {
+    fn round_trips_background_settings_through_toml_on_disk() {
         let dir = temp_dir("background-roundtrip");
 
         assert_eq!(load_background_image_path(&dir), None);
@@ -894,7 +742,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_background_effect_through_yaml_on_disk() {
+    fn round_trips_background_effect_through_toml_on_disk() {
         let dir = temp_dir("background-effect-roundtrip");
 
         assert_eq!(load_background_effect(&dir), BackgroundEffect::default());
@@ -911,7 +759,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_explorer_alternating_row_colors_through_yaml_on_disk() {
+    fn round_trips_explorer_alternating_row_colors_through_toml_on_disk() {
         let dir = temp_dir("explorer-alternating-row-colors-roundtrip");
 
         assert!(load_explorer_alternating_row_colors(&dir));
@@ -926,7 +774,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_animation_settings_through_yaml_on_disk() {
+    fn round_trips_animation_settings_through_toml_on_disk() {
         let dir = temp_dir("animation-settings-roundtrip");
 
         assert_eq!(load_animation_speed(&dir), "normal");
@@ -948,7 +796,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_ui_scale_through_yaml_on_disk() {
+    fn round_trips_ui_scale_through_toml_on_disk() {
         let dir = temp_dir("ui-scale-roundtrip");
 
         assert_eq!(load_ui_scale(&dir), 1.0);

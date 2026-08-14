@@ -35,7 +35,7 @@ Rectangle {
     visible: message.length > 0
     color: Qt.rgba(Origami.Theme.negativeTextColor.r, Origami.Theme.negativeTextColor.g, Origami.Theme.negativeTextColor.b, 0.25)
 
-    QQC2.Label {
+    Origami.Label {
         id: errorLabel
         anchors.left: parent.left
         anchors.right: closeErrorButton.left

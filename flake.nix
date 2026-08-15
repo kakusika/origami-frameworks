@@ -16,7 +16,7 @@
     #[ Library ]
     ayame = {
       url = "github:kakusika/ayame";
-      inputs.nixpkgs.follows = "nixpkgs";
+      # inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 

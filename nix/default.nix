@@ -24,7 +24,7 @@ flake-parts.lib.mkFlake { inherit inputs; } {
           inherit craneLib;
           ayame = inputs.ayame.packages.${pkgs.stdenv.hostPlatform.system}.default;
         };
-        origami-settings = pkgs.callPackage ./pkgs/origami-settings.nix { };
+        origami-gallery = pkgs.callPackage ./pkgs/origami-gallery.nix { inherit craneLib; };
       };
 
       devShells.default = pkgs.callPackage ./dev.nix {

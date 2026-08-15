@@ -26,8 +26,10 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 [[package]]
 name = "ayame"
 version = "0.1.0"
+source = "git+https://github.com/kakusika/ayame#a78d465edf9d4b44726ccb526c95703375dbeb92"
 dependencies = [
  "ayame-colors",
+ "ayame-config",
  "cxx",
  "cxx-qt",
  "cxx-qt-build",
@@ -37,8 +39,20 @@ dependencies = [
 [[package]]
 name = "ayame-colors"
 version = "0.1.0"
+source = "git+https://github.com/kakusika/ayame#a78d465edf9d4b44726ccb526c95703375dbeb92"
 dependencies = [
  "cxx-qt-lib",
+]
+
+[[package]]
+name = "ayame-config"
+version = "0.1.0"
+source = "git+https://github.com/kakusika/ayame#a78d465edf9d4b44726ccb526c95703375dbeb92"
+dependencies = [
+ "anyhow",
+ "directories",
+ "serde",
+ "toml",
 ]
 
 [[package]]

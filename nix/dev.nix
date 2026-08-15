@@ -39,7 +39,7 @@ mkShell rec {
     qt6.qtbase
     qt6.qtsvg
     qt6.qtdeclarative
-    ##[ KDE ]
+    ##[ Breeze ]
     kdePackages.qqc2-breeze-style
     kdePackages.kirigami
     kdePackages.kguiaddons

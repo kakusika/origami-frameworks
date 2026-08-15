@@ -11,11 +11,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1786599018,
-        "narHash": "sha256-KNbeMvFi2Ap1s3kImkDA9rVjP8wJ/JOESATpRjbHBOw=",
+        "lastModified": 1786758140,
+        "narHash": "sha256-Zr9Hk/xAzgPLc8hN6O211jpYdpxvs3EP7dv0wCml1xM=",
         "owner": "kakusika",
         "repo": "ayame",
-        "rev": "e5536113e5effb7287d07e58eafdf01d97966694",
+        "rev": "a78d465edf9d4b44726ccb526c95703375dbeb92",
         "type": "github"
       },
       "original": {

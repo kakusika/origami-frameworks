@@ -14,7 +14,7 @@ let
       ln -sfn "$f" "$out/$(basename "$f")"
     done
 
-    for mod in Qt6Qml Qt6Quick Qt6QuickControls2; do
+    for mod in Qt6Qml Qt6Quick Qt6QuickControls2 Qt6QuickShapes; do
       if [ ! -e "$out/lib''${mod}.prl" ]; then
         cat > "$out/lib''${mod}.prl" <<EOF
     QMAKE_PRL_TARGET = $mod

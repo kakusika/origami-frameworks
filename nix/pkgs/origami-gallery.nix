@@ -17,7 +17,7 @@ let
     version = "0.1.0";
 
     dontWrapQtApps = true;
-    cargoExtraArgs = "-p ayame";
+    cargoExtraArgs = "-p origami-gallery";
 
     nativeBuildInputs = [
       pkg-config

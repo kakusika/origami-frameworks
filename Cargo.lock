@@ -26,7 +26,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 [[package]]
 name = "ayame"
 version = "0.1.0"
-source = "git+https://github.com/kakusika/ayame#40a8f3ecb294d47ad0fb281679cc5aaf8a65dcf2"
+source = "git+https://github.com/kakusika/ayame#25f5648a1c5a4463f419669ae8c04b232bca7a48"
 dependencies = [
  "ayame-colors",
  "ayame-config",
@@ -39,7 +39,7 @@ dependencies = [
 [[package]]
 name = "ayame-colors"
 version = "0.1.0"
-source = "git+https://github.com/kakusika/ayame#40a8f3ecb294d47ad0fb281679cc5aaf8a65dcf2"
+source = "git+https://github.com/kakusika/ayame#25f5648a1c5a4463f419669ae8c04b232bca7a48"
 dependencies = [
  "cxx-qt-lib",
 ]
@@ -47,7 +47,7 @@ dependencies = [
 [[package]]
 name = "ayame-config"
 version = "0.1.0"
-source = "git+https://github.com/kakusika/ayame#40a8f3ecb294d47ad0fb281679cc5aaf8a65dcf2"
+source = "git+https://github.com/kakusika/ayame#25f5648a1c5a4463f419669ae8c04b232bca7a48"
 dependencies = [
  "anyhow",
  "directories",
@@ -302,7 +302,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -578,7 +578,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1188,7 +1188,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

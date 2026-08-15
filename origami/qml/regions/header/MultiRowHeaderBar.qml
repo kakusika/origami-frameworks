@@ -1,5 +1,5 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Multi-line header: a top start/center/end row (HeaderBarRow.qml, the same
 // layout HeaderBar.qml itself uses) followed by zero or more additional
@@ -58,7 +58,7 @@ Item {
         id: column
         anchors.fill: parent
 
-        HeaderBarRow {
+        Origami.HeaderBarRow {
             id: topRow
             width: column.width
             start: root.start

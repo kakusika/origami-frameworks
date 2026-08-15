@@ -84,7 +84,7 @@ Item {
         radius: Units.cornerRadius
         color: control.colors.backgroundColor
         border.width: Units.borderWidth
-        border.color: Qt.rgba(control.colors.textColor.r, control.colors.textColor.g, control.colors.textColor.b, 0.3)
+        border.color: control.colors.borderColor
 
         // A rounded rectangle's actual silhouette pinches inward (lower
         // usable height) the closer x gets to its left/right edge -- true

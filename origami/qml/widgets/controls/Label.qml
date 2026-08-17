@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
 // Themed drop-in for QQC2's Label. Provides semantic `type` variants:

@@ -34,6 +34,24 @@ QQC2.ItemDelegate {
     // ExplorerTree.qml) keeps its label unchanged.
     property bool showLabel: true
 
+    // Off (the default) keeps the original icon-above-label ColumnLayout,
+    // sized off iconArea's own available space -- every grid caller
+    // (ExplorerGrid.qml, CollectionsView.qml). On switches to an icon-
+    // beside-label RowLayout for list/tree rows (ExplorerTree.qml), where
+    // row height is fixed and set by the caller rather than derived from
+    // available square space.
+    property bool horizontal: false
+
+    // Only read in horizontal mode -- vertical mode keeps sizing its icon
+    // off iconArea's own resolvedIconSize instead (see below).
+    property real iconSize: StyleKit.Units.iconSizes.small
+
+    // Opt-in escape hatch from the active style's own ItemDelegate
+    // padding -- off by default, see the Binding blocks below for the
+    // full reasoning on why this exists and why it's independent of
+    // `horizontal`.
+    property bool flushPadding: false
+
     // Selection highlight, driven by the caller's own selection model
     // (e.g. ExplorerGridModel's IsSelected role) -- distinct from
     // hover/press, computed entirely within this file (see tapArea below).
@@ -91,6 +109,44 @@ QQC2.ItemDelegate {
 
     readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
+    // Off by default -- padding is left alone, coming entirely from
+    // whichever QQC2 style is active (Ayame's own widgets/delegates/
+    // ItemDelegate.qml sets `padding: StyleKit.Units.smallSpacing`; this
+    // file has no opinion of its own and never should). A caller flips
+    // this on only when it genuinely needs a flush, style-independent
+    // row -- ExplorerTree.qml's dense Dolphin-style tree rows, where the
+    // row height itself is computed tightly around the icon's own fixed
+    // iconSize (see ExplorerTree.qml's own rowPadding/rowIconSize) and
+    // the style's own padding would eat into that same fixed box instead
+    // of adding to it, clipping the icon. Deliberately independent of
+    // `horizontal` -- orientation and padding are unrelated axes; a
+    // horizontal caller that's fine with the active style's own padding
+    // (there may be one some day) shouldn't be forced to fight it.
+    Binding {
+        target: root
+        property: "topPadding"
+        value: 0
+        when: root.flushPadding
+    }
+    Binding {
+        target: root
+        property: "bottomPadding"
+        value: 0
+        when: root.flushPadding
+    }
+    Binding {
+        target: root
+        property: "leftPadding"
+        value: 0
+        when: root.flushPadding
+    }
+    Binding {
+        target: root
+        property: "rightPadding"
+        value: 0
+        when: root.flushPadding
+    }
+
     // The default style-drawn background is an opaque rectangle that
     // would paint over the grid's own background -- same stock Kirigami/
     // Breeze look as before extraction: no fill, just a highlight-
@@ -109,86 +165,191 @@ QQC2.ItemDelegate {
         border.color: root.colors.highlightColor
     }
 
-    contentItem: ColumnLayout {
-        spacing: StyleKit.Units.smallSpacing
+    contentItem: Loader {
+        sourceComponent: root.horizontal ? horizontalContent : verticalContent
+    }
 
-        // Claims whatever space is left over after the (optional) Label
-        // below takes its own natural height -- the icon/thumbnail below
-        // is then sized to this Item's smaller dimension (see
-        // resolvedIconSize), so it grows or shrinks automatically
-        // with FileTile's own width/height instead of every caller
-        // computing a matching size itself. ExplorerGrid.qml and
-        // CollectionsView.qml both used to duplicate near-identical
-        // cellWidth-based iconSize math for this; letting FileTile figure
-        // it out from its own actual layout means a caller's cell-sizing
-        // knobs (Explorer's iconScale, Collections' gridIconScale/
-        // gridAspectRatio) just work without a second, parallel icon-size
-        // formula that has to be kept in sync by hand.
-        Item {
-            id: iconArea
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+    // Icon-beside-label row for list/tree callers (ExplorerTree.qml).
+    // Unlike verticalContent below, the icon is a fixed root.iconSize
+    // square (the caller owns row height, there's no leftover-space
+    // square to derive it from) and the label sits to its right,
+    // single-line with tail elision -- matches how a file-manager list
+    // view (not a grid) truncates a long name.
+    Component {
+        id: horizontalContent
+        RowLayout {
+            // Loader (contentItem above) doesn't stretch a loaded item to
+            // its own size on its own -- without this the RowLayout would
+            // just sit at its own implicit (icon + label natural width)
+            // size instead of the tile's actual bounds, and Label's own
+            // Layout.fillWidth below would have nothing real to fill.
+            anchors.fill: parent
+            // Left/right-only breathing room between the icon/label
+            // content and the selection/hover border drawn by `background`
+            // above -- independent of topPadding/bottomPadding/
+            // leftPadding/rightPadding (which flushPadding forces to 0,
+            // see the Binding blocks above) and of whatever the active
+            // style's own default padding is: a caller like ExplorerTree.qml
+            // still wants the icon to sit flush against the row's own
+            // tightly-computed height (no top/bottom margin here, so
+            // iconSize keeps fitting exactly), but the highlight border
+            // hugging the text right at its edges reads cramped either way,
+            // regardless of that caller's own row-height math.
+            anchors.leftMargin: StyleKit.Units.smallSpacing
+            anchors.rightMargin: StyleKit.Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
 
-            readonly property int resolvedIconSize: Math.max(0, Math.floor(Math.min(iconArea.width, iconArea.height)))
+            Item {
+                // RowLayout stretches a child to the row's full height by
+                // default unless it has its own Layout.alignment -- without
+                // this, this Item (meant to stay a fixed iconSize square)
+                // would instead stretch to whatever the row's actual
+                // available height is (which only ever happens to equal
+                // iconSize when the active style's own ItemDelegate padding
+                // is zeroed out via flushPadding), stretching the Icon
+                // below it (anchors.fill: parent) into a non-square shape
+                // any time real padding is present instead.
+                Layout.preferredWidth: root.iconSize
+                Layout.preferredHeight: root.iconSize
+                Layout.alignment: Qt.AlignVCenter
 
-            // Shown whenever there's no (attempted or successful)
-            // thumbnail -- directories always, files until/unless
-            // their thumbnail finishes loading.
-            Origami.Icon {
-                anchors.centerIn: parent
-                width: iconArea.resolvedIconSize
-                height: iconArea.resolvedIconSize
-                visible: root.isDir || thumbnail.status !== Image.Ready
-                source: root.iconName
-                color: root.colors.textColor
+                Origami.Icon {
+                    anchors.fill: parent
+                    visible: root.isDir || thumbnail.status !== Image.Ready
+                    source: root.iconName
+                    color: root.colors.textColor
+                }
+
+                Image {
+                    id: thumbnail
+                    anchors.fill: parent
+                    visible: !root.isDir && status === Image.Ready
+                    asynchronous: true
+                    fillMode: Image.PreserveAspectFit
+                    source: root.isDir ? "" : root.thumbnailSource
+                    sourceSize.width: root.iconSize
+                    sourceSize.height: root.iconSize
+                }
+
+                Origami.Icon {
+                    visible: root.isSymlink
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    width: parent.width * 0.5
+                    height: parent.height * 0.5
+                    source: root.isBrokenSymlink ? "emblem-warning" : "emblem-symbolic-link"
+                    color: root.isBrokenSymlink ? root.colors.negativeTextColor : root.colors.textColor
+                }
             }
 
-            Image {
-                id: thumbnail
-                anchors.centerIn: parent
-                width: iconArea.resolvedIconSize
-                height: iconArea.resolvedIconSize
-                visible: !root.isDir && status === Image.Ready
-                asynchronous: true
-                fillMode: Image.PreserveAspectFit
-                source: root.isDir ? "" : root.thumbnailSource
-                sourceSize.width: iconArea.resolvedIconSize
-                sourceSize.height: iconArea.resolvedIconSize
-            }
-
-            // Symlink badge, Dolphin-style: Icon has no emblem/overlay
-            // support of its own, so this is a second, smaller Icon
-            // pinned to the visible icon's own bottom-right corner --
-            // positioned relative to iconArea's center ± half of
-            // resolvedIconSize (not parent.right/bottom directly), since
-            // iconArea itself can be wider or taller than the square icon
-            // actually drawn inside it.
-            Origami.Icon {
-                visible: root.isSymlink
-                width: iconArea.resolvedIconSize * 0.5
-                height: iconArea.resolvedIconSize * 0.5
-                x: iconArea.width / 2 + iconArea.resolvedIconSize / 2 - width
-                y: iconArea.height / 2 + iconArea.resolvedIconSize / 2 - height
-                source: root.isBrokenSymlink ? "emblem-warning" : "emblem-symbolic-link"
-                color: root.isBrokenSymlink ? root.colors.negativeTextColor : root.colors.textColor
+            Origami.Label {
+                visible: root.showLabel
+                text: root.text
+                Layout.fillWidth: true
+                // Same reasoning as the icon Item's own Layout.alignment
+                // above -- without it, Label (Text's default
+                // verticalAlignment is AlignTop) would sit pinned to the
+                // top of the row's full stretched height instead of
+                // centered alongside the icon whenever real padding
+                // shrinks the row's available content height below its
+                // own full bounds.
+                Layout.alignment: Qt.AlignVCenter
+                elide: Text.ElideRight
             }
         }
+    }
 
-        Origami.Label {
-            visible: root.showLabel
-            text: root.text
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            maximumLineCount: 2
-            // Middle (not right) elision: wraps up to 2 lines, and once a
-            // name still doesn't fit past that, drops characters out of
-            // the middle of the *last* line rather than the tail -- for a
-            // typical "name.ext" file this leaves the extension (and a
-            // few characters before it) visible instead of always cutting
-            // it off, matching the common file-manager convention (Explorer/
-            // Finder/Dolphin all keep the extension visible on truncation).
-            elide: Text.ElideMiddle
+    Component {
+        id: verticalContent
+        ColumnLayout {
+            // Loader (contentItem above) doesn't stretch a loaded item to
+            // its own size on its own -- without this, this ColumnLayout
+            // would sit at its own implicit size instead of the tile's
+            // actual bounds (this used to be contentItem directly, with no
+            // Loader in between, where Control itself handled the sizing
+            // -- the horizontal/vertical mode switch above is what
+            // introduced the Loader indirection).
+            anchors.fill: parent
+            spacing: StyleKit.Units.smallSpacing
+
+            // Claims whatever space is left over after the (optional) Label
+            // below takes its own natural height -- the icon/thumbnail below
+            // is then sized to this Item's smaller dimension (see
+            // resolvedIconSize), so it grows or shrinks automatically
+            // with FileTile's own width/height instead of every caller
+            // computing a matching size itself. ExplorerGrid.qml and
+            // CollectionsView.qml both used to duplicate near-identical
+            // cellWidth-based iconSize math for this; letting FileTile figure
+            // it out from its own actual layout means a caller's cell-sizing
+            // knobs (Explorer's iconScale, Collections' gridIconScale/
+            // gridAspectRatio) just work without a second, parallel icon-size
+            // formula that has to be kept in sync by hand.
+            Item {
+                id: iconArea
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                readonly property int resolvedIconSize: Math.max(0, Math.floor(Math.min(iconArea.width, iconArea.height)))
+
+                // Shown whenever there's no (attempted or successful)
+                // thumbnail -- directories always, files until/unless
+                // their thumbnail finishes loading.
+                Origami.Icon {
+                    anchors.centerIn: parent
+                    width: iconArea.resolvedIconSize
+                    height: iconArea.resolvedIconSize
+                    visible: root.isDir || thumbnail.status !== Image.Ready
+                    source: root.iconName
+                    color: root.colors.textColor
+                }
+
+                Image {
+                    id: thumbnail
+                    anchors.centerIn: parent
+                    width: iconArea.resolvedIconSize
+                    height: iconArea.resolvedIconSize
+                    visible: !root.isDir && status === Image.Ready
+                    asynchronous: true
+                    fillMode: Image.PreserveAspectFit
+                    source: root.isDir ? "" : root.thumbnailSource
+                    sourceSize.width: iconArea.resolvedIconSize
+                    sourceSize.height: iconArea.resolvedIconSize
+                }
+
+                // Symlink badge, Dolphin-style: Icon has no emblem/overlay
+                // support of its own, so this is a second, smaller Icon
+                // pinned to the visible icon's own bottom-right corner --
+                // positioned relative to iconArea's center ± half of
+                // resolvedIconSize (not parent.right/bottom directly), since
+                // iconArea itself can be wider or taller than the square icon
+                // actually drawn inside it.
+                Origami.Icon {
+                    visible: root.isSymlink
+                    width: iconArea.resolvedIconSize * 0.5
+                    height: iconArea.resolvedIconSize * 0.5
+                    x: iconArea.width / 2 + iconArea.resolvedIconSize / 2 - width
+                    y: iconArea.height / 2 + iconArea.resolvedIconSize / 2 - height
+                    source: root.isBrokenSymlink ? "emblem-warning" : "emblem-symbolic-link"
+                    color: root.isBrokenSymlink ? root.colors.negativeTextColor : root.colors.textColor
+                }
+            }
+
+            Origami.Label {
+                visible: root.showLabel
+                text: root.text
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                // Middle (not right) elision: wraps up to 2 lines, and once a
+                // name still doesn't fit past that, drops characters out of
+                // the middle of the *last* line rather than the tail -- for a
+                // typical "name.ext" file this leaves the extension (and a
+                // few characters before it) visible instead of always cutting
+                // it off, matching the common file-manager convention (Explorer/
+                // Finder/Dolphin all keep the extension visible on truncation).
+                elide: Text.ElideMiddle
+            }
         }
     }
 

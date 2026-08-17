@@ -24,7 +24,7 @@ Item {
         radius: StyleKit.Units.cornerRadius
         color: "transparent"
         border.width: StyleKit.Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
+        border.color: root.colors.borderColor
     }
 
     readonly property real _optionWidth: StyleKit.Units.iconSizes.smallMedium + StyleKit.Units.largeSpacing

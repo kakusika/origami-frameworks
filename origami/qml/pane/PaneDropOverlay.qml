@@ -1,5 +1,4 @@
 import QtQuick
-import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
 // leaf全面を覆う透明なドロップ領域。ドラッグ中のポインタ位置に応じて

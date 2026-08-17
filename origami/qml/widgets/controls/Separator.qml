@@ -1,5 +1,4 @@
 import QtQuick
-import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
 // Thin vertical divider line for separating grouped content laid out in a

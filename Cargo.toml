@@ -1,11 +1,7 @@
 [workspace]
 resolver = "3"
 
-members = [
-  "origami",
-  "origami-kit/config",
-  "origami-gallery",
-]
+members = ["origami", "origami-kit/config", "origami-gallery"]
 
 default-members = ["origami"]
 

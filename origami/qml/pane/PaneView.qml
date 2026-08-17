@@ -1,5 +1,5 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Root of the generic pane system.
 //
@@ -1526,7 +1526,7 @@ Item {
         root.dragActive = false;
     }
 
-    PaneNode {
+    Origami.PaneNode {
         anchors.fill: parent
         node: root._displayNode
         controller: root

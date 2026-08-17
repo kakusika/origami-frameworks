@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blender-style number field: drag-to-scrub / click-to-edit + step arrows.
 Item {
@@ -13,16 +14,16 @@ Item {
     property string label: ""
     property int decimals: 0
 
-    property real dragThreshold: Units.smallSpacing
+    property real dragThreshold: StyleKit.Units.smallSpacing
     property bool editing: false
 
-    readonly property real arrowWidth: Units.gridUnit * 1.2
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property real arrowWidth: StyleKit.Units.gridUnit * 1.2
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     signal valueChangeRequested(real value)
 
-    implicitWidth: Units.gridUnit * 6
-    implicitHeight: Units.gridUnit * 1.4
+    implicitWidth: StyleKit.Units.gridUnit * 6
+    implicitHeight: StyleKit.Units.gridUnit * 1.4
 
     function _clamp(v) {
         return Math.min(control.to, Math.max(control.from, v));
@@ -58,9 +59,9 @@ Item {
     Rectangle {
         id: track
         anchors.fill: parent
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
         color: control.colors.backgroundColor
-        border.width: Units.borderWidth
+        border.width: StyleKit.Units.borderWidth
         border.color: control.colors.borderColor
         clip: true
 
@@ -70,8 +71,8 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: control.arrowWidth
-            topLeftRadius: Units.cornerRadius
-            bottomLeftRadius: Units.cornerRadius
+            topLeftRadius: StyleKit.Units.cornerRadius
+            bottomLeftRadius: StyleKit.Units.cornerRadius
             color: leftHover.hovered ? control.colors.hoverColor : "transparent"
 
             HoverHandler {
@@ -84,12 +85,12 @@ Item {
                 onTapped: control._step(-control.stepSize)
             }
 
-            Icon {
+            Origami.Icon {
                 anchors.centerIn: parent
                 source: "arrow-left-symbolic"
                 color: control.colors.textColor
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
                 opacity: control.value <= control.from ? 0.4 : 1.0
             }
         }
@@ -100,8 +101,8 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: control.arrowWidth
-            topRightRadius: Units.cornerRadius
-            bottomRightRadius: Units.cornerRadius
+            topRightRadius: StyleKit.Units.cornerRadius
+            bottomRightRadius: StyleKit.Units.cornerRadius
             color: rightHover.hovered ? control.colors.hoverColor : "transparent"
 
             HoverHandler {
@@ -114,17 +115,17 @@ Item {
                 onTapped: control._step(control.stepSize)
             }
 
-            Icon {
+            Origami.Icon {
                 anchors.centerIn: parent
                 source: "arrow-right-symbolic"
                 color: control.colors.textColor
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
                 opacity: control.value >= control.to ? 0.4 : 1.0
             }
         }
 
-        Label {
+        Origami.Label {
             anchors.centerIn: parent
             visible: !control.editing
             text: (control.label.length > 0 ? control.label + ": " : "") + control.value.toFixed(control.decimals)

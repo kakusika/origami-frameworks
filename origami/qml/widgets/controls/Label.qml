@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls as QQC2
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Themed drop-in for QQC2's Label. Provides semantic `type` variants:
 // plain | secondary | disabled | positive | negative | neutral.
@@ -14,9 +15,9 @@ QQC2.Label {
 
     // Which Theme.paletteFor() color set this label's default text color
     // is drawn from. Defaults to `view`.
-    property int colorSet: Origami.Theme.view
+    property int colorSet: StyleKit.Theme.view
 
-    readonly property var _colors: Origami.Theme.paletteFor(control.colorSet)
+    readonly property var _colors: StyleKit.Theme.paletteFor(control.colorSet)
 
     readonly property var _semanticColors: ({
             positive: control._colors.positiveTextColor,

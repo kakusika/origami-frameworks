@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Composite icon for a tab that stands in for a whole pane group (see
 // PaneDrawer.qml's _tabIcons()/PaneTabHeader.qml's iconNames): member
@@ -16,7 +17,7 @@ Item {
 
     readonly property bool _vertical: root.orientation === "vertical"
     readonly property int _maxCells: 4
-    readonly property real _cellSize: Units.iconSizes.small
+    readonly property real _cellSize: StyleKit.Units.iconSizes.small
     readonly property real _cellSpacing: 1
 
     readonly property var _cells: {
@@ -53,7 +54,7 @@ Item {
                 width: root._cellSize
                 height: root._cellSize
 
-                Icon {
+                Origami.Icon {
                     anchors.fill: parent
                     visible: cell.isIcon
                     color: root.color

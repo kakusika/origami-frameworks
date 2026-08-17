@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Shown by PaneLeaf.qml instead of PaneTabs when this leaf is the one
 // currently maximized (see PaneView.qml's maximizedLeafId) -- Blender's
@@ -13,15 +14,15 @@ Item {
     property var controller
     property int leafId: -1
 
-    height: Units.gridUnit * 1.6
+    height: StyleKit.Units.gridUnit * 1.6
     implicitHeight: height
 
-    HeaderBar {
+    Origami.HeaderBar {
         id: bar
         anchors.fill: parent
 
         start: [
-            IconButton {
+            Origami.IconButton {
                 height: bar.contentHeight
                 iconName: "go-previous"
                 onClicked: {

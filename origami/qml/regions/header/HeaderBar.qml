@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Generic, reusable header/toolbar shell: three content slots -- `start`
 // (pinned left), `center` (centered in the whole bar), and `end` (pinned
@@ -46,12 +47,12 @@ Item {
     // running into `center`.
     readonly property real centerWidth: row.centerWidth
 
-    height: Units.gridUnit * 1.6
+    height: StyleKit.Units.gridUnit * 1.6
     // See PaneTabBar.qml for why implicitHeight (not just height) must be
     // set for a plain Item to get its share of the parent ColumnLayout.
     implicitHeight: height
 
-    HeaderBarRow {
+    Origami.HeaderBarRow {
         id: row
         anchors.fill: parent
         start: root.start

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Pure action-menu button: shows a text label (e.g. PaneHeader.qml's
 // "ファイル"/"編集"/"表示") or an icon (e.g. SideTitleBar.qml's vertical
@@ -27,7 +28,7 @@ QQC2.ToolButton {
     // IconButton.qml/DropdownButton.qml use `iconName` too). Showing
     // both isn't supported -- callers only ever need one or the other.
     property string iconName: ""
-    property int iconSize: Units.iconSizes.medium
+    property int iconSize: StyleKit.Units.iconSizes.medium
 
     // Each entry is either a plain string (inert placeholder, no action)
     // or {text, onTriggered, enabled} (a real action; enabled defaults to
@@ -49,8 +50,8 @@ QQC2.ToolButton {
     property real leftRadius: 0
     property real rightRadius: 0
 
-    property int colorSet: Theme.header
-    readonly property var colors: Theme.paletteFor(root.colorSet)
+    property int colorSet: StyleKit.Theme.header
+    readonly property var colors: StyleKit.Theme.paletteFor(root.colorSet)
     readonly property alias open: menu.visible
 
     signal opened
@@ -63,12 +64,12 @@ QQC2.ToolButton {
         menu.close();
     }
 
-    implicitHeight: Units.gridUnit * 1.6
+    implicitHeight: StyleKit.Units.gridUnit * 1.6
     // Explicit rather than relying on Control's automatic
     // implicitContentWidth+padding sizing: the active QQC2 style's own
     // ToolButton implementation can otherwise enforce a wider default/
     // minimum button width than this content actually needs.
-    implicitWidth: (root.iconName !== "" ? iconItem.width : labelItem.implicitWidth) + Units.largeSpacing + Units.smallSpacing
+    implicitWidth: (root.iconName !== "" ? iconItem.width : labelItem.implicitWidth) + StyleKit.Units.largeSpacing + StyleKit.Units.smallSpacing
 
     background: Rectangle {
         color: menu.visible ? root.colors.highlightColor : (root.hovered ? root.colors.hoverColor : "transparent")
@@ -79,7 +80,7 @@ QQC2.ToolButton {
     }
 
     contentItem: Item {
-        Icon {
+        Origami.Icon {
             id: iconItem
             anchors.centerIn: parent
             visible: root.iconName !== ""
@@ -104,7 +105,7 @@ QQC2.ToolButton {
 
     onClicked: root.open ? root.requestClose() : root.requestOpen()
 
-    ThemedMenu {
+    Origami.ThemedMenu {
         id: menu
         menuItems: root.menuItems
         onOpened: root.opened()

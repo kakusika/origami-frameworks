@@ -1,6 +1,6 @@
 pragma Singleton
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Thin, read-mostly mirror of "what background image (if any) should
 // panes/the main window draw, and how opaque". The actual feature --
@@ -20,7 +20,7 @@ import la.cettila.Origami 1.0
 QtObject {
     id: backdrop
 
-    readonly property BackgroundState _state: BackgroundState {}
+    readonly property Origami.BackgroundState _state: Origami.BackgroundState {}
 
     // Absolute path to the picked background image, or "" if unset. Every
     // "is a background configured at all" ternary across the app

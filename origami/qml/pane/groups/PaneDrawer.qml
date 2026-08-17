@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Window
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Renders a "drawer" node (see PaneView.qml's class comment): a fixed-
 // size rail of icon-only tab buttons -- either a vertical column pinned
@@ -84,8 +85,8 @@ Item {
     // which fires no QML change notification. Fall back to the same
     // pixel defaults the overlay used before these became resizable/
     // persisted when the node has never been resized (field absent).
-    property real _overlayWidth: Units.gridUnit * 30
-    property real _overlayHeight: Units.gridUnit * 24
+    property real _overlayWidth: StyleKit.Units.gridUnit * 30
+    property real _overlayHeight: StyleKit.Units.gridUnit * 24
 
     function _setOverlayWidth(width) {
         root._overlayWidth = width;
@@ -119,8 +120,8 @@ Item {
         root.expanded = !root.node || root.node.expanded !== false;
         root.currentIndex = (root.node && root.node.currentIndex < root.node.children.length) ? root.node.currentIndex : 0;
         root._manualOrientation = (root.node && root.node.orientation === "horizontal") ? "horizontal" : "vertical";
-        root._overlayWidth = (root.node && root.node.overlayWidth > 0) ? root.node.overlayWidth : Units.gridUnit * 30;
-        root._overlayHeight = (root.node && root.node.overlayHeight > 0) ? root.node.overlayHeight : Units.gridUnit * 24;
+        root._overlayWidth = (root.node && root.node.overlayWidth > 0) ? root.node.overlayWidth : StyleKit.Units.gridUnit * 30;
+        root._overlayHeight = (root.node && root.node.overlayHeight > 0) ? root.node.overlayHeight : StyleKit.Units.gridUnit * 24;
     }
 
     onNodeChanged: root._refresh()
@@ -143,14 +144,14 @@ Item {
     // dimension to when this drawer is nested in a split -- see
     // PaneSplit.qml's collapsedFlags comment. Used as the rail's width
     // when vertical, height when horizontal.
-    readonly property real railSize: Units.collapsedDrawerSize
+    readonly property real railSize: StyleKit.Units.collapsedDrawerSize
 
     // Floor for overlayPopup's resizable dimension (see its own comment
     // below) -- keeps a careless drag from shrinking it down to
     // uselessness.
-    readonly property real _overlayMinSize: Units.gridUnit * 10
+    readonly property real _overlayMinSize: StyleKit.Units.gridUnit * 10
 
-    readonly property var bodyColors: Theme.paletteFor(Theme.view)
+    readonly property var bodyColors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // A drawer child isn't necessarily a bare "pane" (see this file's
     // class comment), so a nested split/tabs/drawer child has neither a
@@ -230,8 +231,8 @@ Item {
             return false;
         var pos = root.mapToItem(win.contentItem, 0, 0);
         if (root.horizontal)
-            return pos.y + root.railSize + Units.largeSpacing + root._overlayHeight > win.height;
-        return pos.x + root.railSize + Units.largeSpacing + root._overlayWidth > win.width;
+            return pos.y + root.railSize + StyleKit.Units.largeSpacing + root._overlayHeight > win.height;
+        return pos.x + root.railSize + StyleKit.Units.largeSpacing + root._overlayWidth > win.width;
     }
 
     readonly property var _groupMenuItems: [
@@ -295,7 +296,7 @@ Item {
     // comment) -- fully opaque here until the user actually picks one.
     Rectangle {
         anchors.fill: parent
-        color: PaneBackdrop.imagePath.length > 0 ? Qt.rgba(root.bodyColors.backgroundColor.r, root.bodyColors.backgroundColor.g, root.bodyColors.backgroundColor.b, PaneBackdrop.paneOpacity) : root.bodyColors.backgroundColor
+        color: Origami.PaneBackdrop.imagePath.length > 0 ? Qt.rgba(root.bodyColors.backgroundColor.r, root.bodyColors.backgroundColor.g, root.bodyColors.backgroundColor.b, Origami.PaneBackdrop.paneOpacity) : root.bodyColors.backgroundColor
     }
 
     // Rail -- vertical variant: fixed-width column pinned to the left
@@ -309,16 +310,16 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: root.railSize
-        spacing: Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
-        ToggleButton {
+        Origami.ToggleButton {
             anchors.horizontalCenter: parent.horizontalCenter
-            iconName: root.expanded ? "arrow-down" : "arrow-right"
+            iconName: root.expanded ? "chevron-down" : "chevron-right"
             checked: root.expanded
             onToggled: root._toggle()
         }
 
-        HamburgerButton {
+        Origami.HamburgerButton {
             anchors.horizontalCenter: parent.horizontalCenter
             width: root.railSize
             height: root.railSize
@@ -337,7 +338,7 @@ Item {
         Repeater {
             model: root.horizontal ? [] : (root.node ? root.node.children : [])
 
-            delegate: PaneTabHeader {
+            delegate: Origami.PaneTabHeader {
                 id: railTabV
                 required property var modelData
                 required property int index
@@ -371,16 +372,16 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         height: root.railSize
-        spacing: Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
-        ToggleButton {
+        Origami.ToggleButton {
             anchors.verticalCenter: parent.verticalCenter
-            iconName: root.expanded ? "arrow-down" : "arrow-right"
+            iconName: root.expanded ? "chevron-down" : "chevron-right"
             checked: root.expanded
             onToggled: root._toggle()
         }
 
-        HamburgerButton {
+        Origami.HamburgerButton {
             anchors.verticalCenter: parent.verticalCenter
             width: root.railSize
             height: root.railSize
@@ -392,7 +393,7 @@ Item {
         Repeater {
             model: root.horizontal ? (root.node ? root.node.children : []) : []
 
-            delegate: PaneTabHeader {
+            delegate: Origami.PaneTabHeader {
                 id: railTabH
                 required property var modelData
                 required property int index
@@ -431,10 +432,10 @@ Item {
         anchors.top: root.horizontal ? railHorizontal.bottom : parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.leftMargin: (root.framed && root.horizontal) ? Units.groupContentMargin : 0
-        anchors.topMargin: (root.framed && !root.horizontal) ? Units.groupContentMargin : 0
-        anchors.rightMargin: root.framed ? Units.groupContentMargin : 0
-        anchors.bottomMargin: root.framed ? Units.groupContentMargin : 0
+        anchors.leftMargin: (root.framed && root.horizontal) ? StyleKit.Units.groupContentMargin : 0
+        anchors.topMargin: (root.framed && !root.horizontal) ? StyleKit.Units.groupContentMargin : 0
+        anchors.rightMargin: root.framed ? StyleKit.Units.groupContentMargin : 0
+        anchors.bottomMargin: root.framed ? StyleKit.Units.groupContentMargin : 0
 
         // One PaneNode per child, kept alive the whole time bodyArea is
         // shown (not swapped in place) -- only the current one is
@@ -454,7 +455,7 @@ Item {
         Repeater {
             model: root.expanded && root.node ? root.node.children : []
 
-            delegate: PaneNode {
+            delegate: Origami.PaneNode {
                 id: cell
                 required property var modelData
                 required property int index
@@ -483,10 +484,10 @@ Item {
                 // own radius, unlike the old PaneStack.qml's multi-child
                 // bodyArea Repeater (which only rounded the first/last
                 // child's outer corners).
-                topLeftRadius: root.framed ? Units.cornerRadius : 0
-                topRightRadius: root.framed ? Units.cornerRadius : 0
-                bottomLeftRadius: root.framed ? Units.cornerRadius : 0
-                bottomRightRadius: root.framed ? Units.cornerRadius : 0
+                topLeftRadius: root.framed ? StyleKit.Units.cornerRadius : 0
+                topRightRadius: root.framed ? StyleKit.Units.cornerRadius : 0
+                bottomLeftRadius: root.framed ? StyleKit.Units.cornerRadius : 0
+                bottomRightRadius: root.framed ? StyleKit.Units.cornerRadius : 0
             }
         }
 
@@ -494,7 +495,7 @@ Item {
         // tabs (see PaneView.qml's _isGroupType() comment) -- closing
         // its last tab leaves it sitting empty instead, so this says so
         // rather than just showing blank space.
-        Label {
+        Origami.Label {
             anchors.centerIn: parent
             visible: root.node && root.node.children.length === 0
             type: "secondary"
@@ -505,9 +506,9 @@ Item {
             anchors.fill: parent
             z: 1
             visible: root.framed
-            radius: Units.cornerRadius
+            radius: StyleKit.Units.cornerRadius
             color: "transparent"
-            border.width: Units.borderWidth
+            border.width: StyleKit.Units.borderWidth
             border.color: Qt.rgba(root.bodyColors.textColor.r, root.bodyColors.textColor.g, root.bodyColors.textColor.b, 0.3)
         }
     }
@@ -557,7 +558,7 @@ Item {
         // this depends on qtwayland actually being present at runtime.
         popupType: QQC2.Popup.Item
 
-        readonly property real _margin: Units.largeSpacing
+        readonly property real _margin: StyleKit.Units.largeSpacing
 
         // Whether expanding the usual way (right of a vertical rail,
         // below a horizontal one) would overshoot the window edge on
@@ -593,7 +594,7 @@ Item {
                 property: "opacity"
                 from: 0.0
                 to: 1.0
-                duration: Units.shortDuration
+                duration: StyleKit.Units.shortDuration
                 easing.type: Easing.OutQuad
             }
         }
@@ -602,7 +603,7 @@ Item {
                 property: "opacity"
                 from: 1.0
                 to: 0.0
-                duration: Units.shortDuration
+                duration: StyleKit.Units.shortDuration
                 easing.type: Easing.InQuad
             }
         }
@@ -624,7 +625,7 @@ Item {
             Repeater {
                 model: overlayPopup.opened && root.node ? root.node.children : []
 
-                delegate: PaneNode {
+                delegate: Origami.PaneNode {
                     id: overlayCell
                     required property var modelData
                     required property int index
@@ -657,7 +658,7 @@ Item {
             // drag handles.
             Item {
                 id: overlayResizeHandle
-                readonly property real grabMargin: Units.smallSpacing * 1.5
+                readonly property real grabMargin: StyleKit.Units.smallSpacing * 1.5
 
                 // No anchors -- explicit x/y/width/height instead, same
                 // as PaneSplit.qml's own handleArea, so the two branches

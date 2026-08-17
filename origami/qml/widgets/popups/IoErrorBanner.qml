@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Dismissible strip for the `io_error` qproperty pattern shared by every
 // JSON save/load-backed view model (CalendarModel, BoardState,
@@ -33,14 +34,14 @@ Rectangle {
 
     height: errorLabel.implicitHeight + 16
     visible: message.length > 0
-    color: Qt.rgba(Origami.Theme.negativeTextColor.r, Origami.Theme.negativeTextColor.g, Origami.Theme.negativeTextColor.b, 0.25)
+    color: Qt.rgba(StyleKit.Theme.negativeTextColor.r, StyleKit.Theme.negativeTextColor.g, StyleKit.Theme.negativeTextColor.b, 0.25)
 
     Origami.Label {
         id: errorLabel
         anchors.left: parent.left
         anchors.right: closeErrorButton.left
         anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: Origami.Units.smallSpacing
+        anchors.margins: StyleKit.Units.smallSpacing
         type: "negative"
         wrapMode: Text.Wrap
     }
@@ -58,15 +59,15 @@ Rectangle {
         // color already comes from Theme.negativeTextColor, so its close
         // button should too rather than mismatching in native gray.
         background: Rectangle {
-            radius: Origami.Units.cornerRadius
-            color: closeErrorButton.hovered ? Qt.rgba(Origami.Theme.negativeTextColor.r, Origami.Theme.negativeTextColor.g, Origami.Theme.negativeTextColor.b, 0.2) : "transparent"
+            radius: StyleKit.Units.cornerRadius
+            color: closeErrorButton.hovered ? Qt.rgba(StyleKit.Theme.negativeTextColor.r, StyleKit.Theme.negativeTextColor.g, StyleKit.Theme.negativeTextColor.b, 0.2) : "transparent"
         }
 
         contentItem: QQC2.Label {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: closeErrorButton.text
-            color: Origami.Theme.negativeTextColor
+            color: StyleKit.Theme.negativeTextColor
         }
 
         onClicked: root.dismissed()

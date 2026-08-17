@@ -1,5 +1,6 @@
 import QtQuick
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Multi-line header: a top start/center/end row (HeaderBarRow.qml, the same
 // layout HeaderBar.qml itself uses) followed by zero or more additional
@@ -61,6 +62,7 @@ Item {
         Origami.HeaderBarRow {
             id: topRow
             width: column.width
+            height: implicitHeight
             start: root.start
             center: root.center
             end: root.end
@@ -81,10 +83,10 @@ Item {
             // match) means parent.width already *is* the correct,
             // available inner width -- no further arithmetic needed by
             // whatever row Item ends up here.
-            readonly property real _inset: root.extraRows.length > 0 ? Units.smallSpacing : 0
+            readonly property real _inset: root.extraRows.length > 0 ? StyleKit.Units.smallSpacing : 0
             x: extraRowsColumn._inset
             width: column.width - extraRowsColumn._inset * 2
-            spacing: Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
             // Vertical margin around the whole extra-rows block, matching
             // the top row's own inset (HeaderBarRow.contentHeight) -- the
             // top row gets its padding from centering each content item
@@ -99,8 +101,8 @@ Item {
             // zero children, so leaving these unconditional left every
             // single-row header (no extraRows at all) with a stray blank
             // gap below its one real row.
-            topPadding: root.extraRows.length > 0 ? Units.smallSpacing : 0
-            bottomPadding: root.extraRows.length > 0 ? Units.smallSpacing : 0
+            topPadding: root.extraRows.length > 0 ? StyleKit.Units.smallSpacing : 0
+            bottomPadding: root.extraRows.length > 0 ? StyleKit.Units.smallSpacing : 0
             data: root.extraRows
         }
     }

@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blender-style header shown above a leaf's content area (see
 // PaneLeaf.qml). Built on the generic MultiRowHeaderBar.qml shell --
@@ -48,14 +49,14 @@ import la.cettila.Origami 1.0
 // (e.g. Map's image-vs-OSM switch) -- a sibling of the pane-type switcher
 // rather than a generic toolbar button, so it belongs at that exact
 // position, not center/end.
-MultiRowHeaderBar {
+Origami.MultiRowHeaderBar {
     id: root
 
     // MultiRowHeaderBar/HeaderBar are pure layout with no background of
     // their own (see their class comments) -- this header is the one
     // caller that actually wants the themed look, so it owns the palette
     // lookup and the Rectangle below instead.
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     // Reads root._activeTab.item directly here (rather than depending on
     // it) wouldn't work: pane.item is a plain JS field set by
@@ -71,7 +72,7 @@ MultiRowHeaderBar {
 
     Component {
         id: paneWindowComponent
-        PaneWindow {}
+        Origami.PaneWindow {}
     }
 
     // "別ウィンドウで開く": a fresh instance of the active pane's own view
@@ -175,7 +176,7 @@ MultiRowHeaderBar {
     // menus all report through this one instance, so hovering across any
     // of them while another is open swaps which one is showing, not just
     // within HeaderMenuGroup's own menus.
-    readonly property QtObject _menuCoordinator: HeaderMenuCoordinator {}
+    readonly property QtObject _menuCoordinator: Origami.HeaderMenuCoordinator {}
 
     // Items already wired to _menuCoordinator (see _wireMenuCoordinator
     // below) -- guards against double-connecting the same view-supplied
@@ -266,7 +267,7 @@ MultiRowHeaderBar {
     // Shared by _menuGroupAvailableWidth below both to size HeaderMenuGroup
     // against the header's right edge and to size it against center's own
     // left edge.
-    readonly property real _startPrefixWidth: Units.smallSpacing + (grip.visible ? grip.width + Units.smallSpacing : 0) + (typeButton.visible ? typeButton.width + Units.smallSpacing : 0) + (modeSwitchSlot.width > 0 ? modeSwitchSlot.width + Units.smallSpacing : 0)
+    readonly property real _startPrefixWidth: StyleKit.Units.smallSpacing + (grip.visible ? grip.width + StyleKit.Units.smallSpacing : 0) + (typeButton.visible ? typeButton.width + StyleKit.Units.smallSpacing : 0) + (modeSwitchSlot.width > 0 ? modeSwitchSlot.width + StyleKit.Units.smallSpacing : 0)
 
     // How much horizontal room is left for HeaderMenuGroup, passed to its
     // own availableWidth so it can collapse into a single hamburger button
@@ -285,11 +286,11 @@ MultiRowHeaderBar {
     //   header's own right edge, which can be well after it has already
     //   visually run into center.
     readonly property real _menuGroupAvailableWidth: {
-        var rightEdgeBudget = Math.max(0, root.width - root._startPrefixWidth - Units.smallSpacing);
+        var rightEdgeBudget = Math.max(0, root.width - root._startPrefixWidth - StyleKit.Units.smallSpacing);
         if (root.centerWidth <= 0)
             return rightEdgeBudget;
         var centerLeftEdge = (root.width - root.centerWidth) / 2;
-        var centerEdgeBudget = Math.max(0, centerLeftEdge - root._startPrefixWidth - Units.smallSpacing);
+        var centerEdgeBudget = Math.max(0, centerLeftEdge - root._startPrefixWidth - StyleKit.Units.smallSpacing);
         return Math.min(rightEdgeBudget, centerEdgeBudget);
     }
 
@@ -352,7 +353,7 @@ MultiRowHeaderBar {
         z: -1
         anchors.fill: parent
         color: root.colors.backgroundColor
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
     }
 
     start: [
@@ -363,7 +364,7 @@ MultiRowHeaderBar {
         // small dot-grip look instead of the title+close row) -- it
         // gives a stable place to grab the pane's current view even
         // while PaneTabs's tab strip below is hidden (single-pane case).
-        PaneTabHeader {
+        Origami.PaneTabHeader {
             id: grip
             height: root.contentHeight
             compact: true
@@ -404,7 +405,7 @@ MultiRowHeaderBar {
         // ViewTypePickerButton.qml's own class comment) -- and choosing an
         // entry swaps this pane's view type in place via
         // controller.changePaneType().
-        ViewTypePickerButton {
+        Origami.ViewTypePickerButton {
             id: typeButton
             height: root.contentHeight
             visible: root._activeTab !== null && (root.controller ? (root.controller.viewTypeRegistry || []).length > 0 : false)
@@ -439,10 +440,10 @@ MultiRowHeaderBar {
         // runtime despite compiling cleanly).
         Row {
             id: modeSwitchSlot
-            spacing: Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
             data: root._modeSwitchItems
         },
-        HeaderMenuGroup {
+        Origami.HeaderMenuGroup {
             menus: root._effectiveMenus
             buttonHeight: root.contentHeight
             availableWidth: root._menuGroupAvailableWidth
@@ -469,7 +470,7 @@ MultiRowHeaderBar {
         // whatever the corner actually renders at, not the raw
         // (possibly huge) preset value -- plus a bit of breathing room
         // past the tangent point rather than touching it exactly.
-        readonly property real _inset: Math.min(Units.cornerRadius, root.height / 2) + Units.smallSpacing
+        readonly property real _inset: Math.min(StyleKit.Units.cornerRadius, root.height / 2) + StyleKit.Units.smallSpacing
 
         // Width-only Behavior (not a generic 幅+visible fade): grows
         // from/shrinks to a centered point, per request ("中心から伸びる
@@ -502,7 +503,7 @@ MultiRowHeaderBar {
 
         Behavior on width {
             NumberAnimation {
-                duration: Units.shortDuration
+                duration: StyleKit.Units.shortDuration
                 easing.type: Easing.OutCubic
             }
         }

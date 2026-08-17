@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Single on/off icon toggle with optional details popup button.
 Item {
@@ -14,16 +15,16 @@ Item {
 
     property Item detailsContent: null
     readonly property bool hasDetails: root.detailsContent !== null
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     implicitWidth: row.implicitWidth
-    implicitHeight: Units.gridUnit * 1.6
+    implicitHeight: StyleKit.Units.gridUnit * 1.6
 
     Rectangle {
         anchors.fill: parent
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
         color: "transparent"
-        border.width: Units.borderWidth
+        border.width: StyleKit.Units.borderWidth
         border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
     }
 
@@ -34,22 +35,22 @@ Item {
 
         QQC2.ToolButton {
             id: toggleButton
-            implicitWidth: Units.iconSizes.smallMedium + Units.largeSpacing
+            implicitWidth: StyleKit.Units.iconSizes.smallMedium + StyleKit.Units.largeSpacing
             height: root.height
 
-            contentItem: Icon {
+            contentItem: Origami.Icon {
                 anchors.centerIn: parent
                 color: root.checked ? root.colors.highlightedTextColor : root.colors.textColor
                 source: root.iconName
-                width: Units.iconSizes.smallMedium
-                height: Units.iconSizes.smallMedium
+                width: StyleKit.Units.iconSizes.smallMedium
+                height: StyleKit.Units.iconSizes.smallMedium
             }
 
             background: Rectangle {
-                topLeftRadius: Units.cornerRadius
-                bottomLeftRadius: Units.cornerRadius
-                topRightRadius: root.hasDetails ? 0 : Units.cornerRadius
-                bottomRightRadius: root.hasDetails ? 0 : Units.cornerRadius
+                topLeftRadius: StyleKit.Units.cornerRadius
+                bottomLeftRadius: StyleKit.Units.cornerRadius
+                topRightRadius: root.hasDetails ? 0 : StyleKit.Units.cornerRadius
+                bottomRightRadius: root.hasDetails ? 0 : StyleKit.Units.cornerRadius
                 color: root.checked ? root.colors.highlightColor : (toggleButton.hovered ? root.colors.hoverColor : "transparent")
             }
 
@@ -59,20 +60,20 @@ Item {
         QQC2.ToolButton {
             id: detailsButton
             visible: root.hasDetails
-            implicitWidth: Units.iconSizes.small + Units.smallSpacing * 2
+            implicitWidth: StyleKit.Units.iconSizes.small + StyleKit.Units.smallSpacing * 2
             height: root.height
 
-            contentItem: Icon {
+            contentItem: Origami.Icon {
                 anchors.centerIn: parent
                 color: root.colors.textColor
                 source: "arrow-down-symbolic"
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
             }
 
             background: Rectangle {
-                topRightRadius: Units.cornerRadius
-                bottomRightRadius: Units.cornerRadius
+                topRightRadius: StyleKit.Units.cornerRadius
+                bottomRightRadius: StyleKit.Units.cornerRadius
                 color: detailsPopup.visible ? root.colors.highlightColor : (detailsButton.hovered ? root.colors.hoverColor : "transparent")
 
                 Rectangle {
@@ -91,7 +92,7 @@ Item {
                 parent: detailsButton
                 closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutsideParent
                 x: detailsButton.width - width
-                y: detailsButton.height + Units.smallSpacing
+                y: detailsButton.height + StyleKit.Units.smallSpacing
 
                 onOpened: {
                     if (root.detailsContent) {
@@ -102,8 +103,8 @@ Item {
                 }
 
                 contentItem: Item {
-                    implicitWidth: root.detailsContent ? root.detailsContent.implicitWidth : Units.gridUnit * 10
-                    implicitHeight: root.detailsContent ? root.detailsContent.implicitHeight : Units.gridUnit * 6
+                    implicitWidth: root.detailsContent ? root.detailsContent.implicitWidth : StyleKit.Units.gridUnit * 10
+                    implicitHeight: root.detailsContent ? root.detailsContent.implicitHeight : StyleKit.Units.gridUnit * 6
                 }
             }
         }

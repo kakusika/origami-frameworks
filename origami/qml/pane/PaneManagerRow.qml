@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // One row of PaneManager.qml's tree view, recursively instantiating itself
 // for `node.children` (tabs/split/drawer all share the `{node}`/`{size,
@@ -21,7 +22,7 @@ Item {
     // already use).
     property int enclosingLeafId: -1
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // `width` is deliberately NOT self-computed from content (no
     // `implicitWidth: column.implicitWidth` here) -- every row at every
@@ -100,7 +101,7 @@ Item {
 
     Component {
         id: paneWindowComponent
-        PaneWindow {}
+        Origami.PaneWindow {}
     }
 
     // Mirrors PaneHeader.qml's _openActiveInNewWindow/_moveActiveToNewWindow
@@ -238,15 +239,15 @@ Item {
         Rectangle {
             id: rowRect
             width: column.width
-            height: root._isLeaf ? Units.gridUnit * 1.8 : Units.gridUnit * 1.4
-            radius: Units.cornerRadius
+            height: root._isLeaf ? StyleKit.Units.gridUnit * 1.8 : StyleKit.Units.gridUnit * 1.4
+            radius: StyleKit.Units.cornerRadius
             color: root._active ? Qt.rgba(root.colors.highlightColor.r, root.colors.highlightColor.g, root.colors.highlightColor.b, 0.15) : "transparent"
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: root.depth * Units.gridUnit + Units.smallSpacing
-                anchors.rightMargin: Units.smallSpacing
-                spacing: Units.smallSpacing
+                anchors.leftMargin: root.depth * StyleKit.Units.gridUnit + StyleKit.Units.smallSpacing
+                anchors.rightMargin: StyleKit.Units.smallSpacing
+                spacing: StyleKit.Units.smallSpacing
 
                 // Expand/collapse chevron -- reserved (but blank/inert) on
                 // every row, not just group rows with children, so icons/
@@ -257,10 +258,10 @@ Item {
                 // is what actually makes this read as a tree rather than
                 // a flat list.
                 Item {
-                    Layout.preferredWidth: Units.iconSizes.small
-                    Layout.preferredHeight: Units.iconSizes.small
+                    Layout.preferredWidth: StyleKit.Units.iconSizes.small
+                    Layout.preferredHeight: StyleKit.Units.iconSizes.small
 
-                    Icon {
+                    Origami.Icon {
                         anchors.fill: parent
                         visible: root._hasChildren
                         source: root._uiExpanded ? "arrow-down" : "arrow-right"
@@ -279,7 +280,7 @@ Item {
                 // compact grip dot would be (this is exactly how
                 // PaneTabBar.qml's own real tab strip renders each tab,
                 // just reused here as a row in this tree view instead).
-                PaneTabHeader {
+                Origami.PaneTabHeader {
                     Layout.fillWidth: true
                     Layout.preferredHeight: rowRect.height - 4
                     visible: root._isPane
@@ -295,22 +296,22 @@ Item {
                 // Group rows (tabs/split/drawer): plain icon+label, no
                 // drag handle -- see this file's own notes on why
                 // dragging a whole group isn't supported.
-                Icon {
+                Origami.Icon {
                     visible: !root._isPane && root._iconName !== ""
                     source: root._iconName
-                    width: Units.iconSizes.small
-                    height: Units.iconSizes.small
+                    width: StyleKit.Units.iconSizes.small
+                    height: StyleKit.Units.iconSizes.small
                     color: root.colors.textColor
                 }
 
-                Label {
+                Origami.Label {
                     visible: !root._isPane
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     text: root._label
                 }
 
-                HamburgerButton {
+                Origami.HamburgerButton {
                     Layout.preferredHeight: rowRect.height - 4
                     menuItems: root._menuItems
                 }
@@ -319,7 +320,7 @@ Item {
             // Drop target -- standalone-pane and tabs rows only (both
             // correspond to a real leafId; split/drawer nodes don't, see
             // `_isLeaf` above).
-            PaneDropOverlay {
+            Origami.PaneDropOverlay {
                 anchors.fill: parent
                 visible: root._isLeaf
                 leafId: root.node ? root.node.id : -1

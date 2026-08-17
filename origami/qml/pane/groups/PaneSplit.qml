@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // splitノードの表示。
 //
@@ -26,7 +27,7 @@ Item {
     readonly property bool horizontal: node && node.orientation === "horizontal"
     readonly property real minChildSize: root.horizontal ? 80 : 60
     // ドラッグの当たり判定の半幅。見た目の線の太さには影響しない。
-    readonly property real grabMargin: Units.smallSpacing * 1.5
+    readonly property real grabMargin: StyleKit.Units.smallSpacing * 1.5
 
     // 各子の割合(0〜1)。node.children[i].sizeはプレーンなJSオブジェクトの
     // フィールドで書き換えてもバインディングを再評価させないため、実際の
@@ -89,7 +90,7 @@ Item {
             if (root.collapsedFlags[i])
                 collapsedCount++;
         }
-        return Math.max(0, total - collapsedCount * Units.collapsedDrawerSize);
+        return Math.max(0, total - collapsedCount * StyleKit.Units.collapsedDrawerSize);
     }
 
     function _expandedSum() {
@@ -124,7 +125,7 @@ Item {
         }).length;
         for (var i = 0; i < children.length; i++) {
             if (root.collapsedFlags[i]) {
-                result.push(Units.collapsedDrawerSize);
+                result.push(StyleKit.Units.collapsedDrawerSize);
             } else if (expandedSum > 0) {
                 result.push((root.sizes[i] || 0) / expandedSum * remaining);
             } else {
@@ -148,7 +149,7 @@ Item {
     Repeater {
         model: root.node ? root.node.children : []
 
-        delegate: PaneNode {
+        delegate: Origami.PaneNode {
             id: cell
             required property var modelData
             required property int index

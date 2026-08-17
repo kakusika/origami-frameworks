@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blender-style view-type picker: a bordered button (visually identical to
 // DropdownButton.qml/HamburgerButton.qml, which this replaces at its two
@@ -26,7 +27,7 @@ import la.cettila.Origami 1.0
 // match on title/viewType/category (case-insensitive) and collapses the
 // grouped view to one flat match list, same as Blender's own editor-type
 // switcher -- see _rows below. Clearing the field restores the grouped
-// view. Up/Down arrow keys move a highlight through the current match
+// view. Up/Down chevron keys move a highlight through the current match
 // list; Enter activates whichever entry is highlighted (defaulting to the
 // first match if none has been touched yet), same as a native menu/
 // autocomplete would.
@@ -35,7 +36,7 @@ QQC2.ToolButton {
 
     // Same knob DropdownButton.qml/HamburgerButton.qml use.
     property string iconName: ""
-    property int iconSize: Units.iconSizes.small
+    property int iconSize: StyleKit.Units.iconSizes.small
 
     // Down-chevron affordance -- shown for PaneHeader.qml's "this displays
     // a current value" type-switcher (DropdownButton-style), hidden for
@@ -62,8 +63,8 @@ QQC2.ToolButton {
     property real popupX: 0
     property real popupY: root.height
 
-    property int colorSet: Theme.header
-    readonly property var colors: Theme.paletteFor(root.colorSet)
+    property int colorSet: StyleKit.Theme.header
+    readonly property var colors: StyleKit.Theme.paletteFor(root.colorSet)
     readonly property alias open: popup.visible
 
     signal opened
@@ -86,8 +87,8 @@ QQC2.ToolButton {
     // Same fix as DropdownButton.qml/HamburgerButton.qml.
     checked: popup.visible
 
-    implicitHeight: Units.gridUnit * 1.6
-    implicitWidth: contentRow.implicitWidth + Units.largeSpacing + 4
+    implicitHeight: StyleKit.Units.gridUnit * 1.6
+    implicitWidth: contentRow.implicitWidth + StyleKit.Units.largeSpacing + 4
 
     contentItem: Item {
         implicitWidth: contentRow.implicitWidth
@@ -98,7 +99,7 @@ QQC2.ToolButton {
             anchors.centerIn: parent
             spacing: 1
 
-            Icon {
+            Origami.Icon {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: root.iconName !== ""
                 color: root.colors.textColor
@@ -107,10 +108,10 @@ QQC2.ToolButton {
                 height: root.iconSize
             }
 
-            Icon {
+            Origami.Icon {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: root.showChevron
-                source: "arrow-down-symbolic"
+                source: "chevron-down"
                 color: root.colors.textColor
                 width: root.iconSize / 2
                 height: root.iconSize / 2
@@ -166,7 +167,7 @@ QQC2.ToolButton {
         root.open ? root.requestClose() : root.requestOpen();
     }
 
-    ViewTypePickerPopup {
+    Origami.ViewTypePickerPopup {
         id: popup
         parent: root
         categories: root.categories

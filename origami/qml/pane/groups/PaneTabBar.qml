@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // 1つのleafに属するタブの一覧を表示する横並びのバー。
 Item {
@@ -8,7 +9,7 @@ Item {
     property int leafId: -1
     property int currentIndex: 0
     property var controller
-    height: Units.gridUnit * 1.6
+    height: StyleKit.Units.gridUnit * 1.6
     // ColumnLayout(PaneLeaf.qml)の主軸(縦)サイズ計算は、Layout.preferredHeight
     // が無ければimplicitHeightにフォールバックする(heightプロパティ自体は
     // 見ない)。これを設定しないと、素のItemであるこのコンポーネントは
@@ -37,13 +38,13 @@ Item {
         }
         return total;
     }
-    readonly property real _availableStartWidth: root.width - bar.endWidth - Units.smallSpacing * 2
+    readonly property real _availableStartWidth: root.width - bar.endWidth - StyleKit.Units.smallSpacing * 2
     readonly property bool _iconOnly: root._fullTabsWidth > root._availableStartWidth
 
     signal tabClicked(int index)
     signal tabCloseRequested(int tabId)
 
-    HeaderBar {
+    Origami.HeaderBar {
         id: bar
         anchors.fill: parent
 
@@ -64,7 +65,7 @@ Item {
                 // spare room for an inline field, so this only ever shows
                 // as the compact icon button; tapping it still opens
                 // CollapsibleTextField's own popup for real typing.
-                CollapsibleTextField {
+                Origami.CollapsibleTextField {
                     id: searchField
                     height: bar.contentHeight
                     width: height
@@ -76,7 +77,7 @@ Item {
                     id: tabRepeater
                     model: root.node ? root.node.children : []
 
-                    delegate: PaneTabHeader {
+                    delegate: Origami.PaneTabHeader {
                         id: header
                         required property var modelData
                         required property int index
@@ -116,7 +117,7 @@ Item {
             // addPaneToTabs()). showChevron: false since this is a pure
             // action button, not a "current value" switcher -- no
             // selectedViewType either, for the same reason.
-            ViewTypePickerButton {
+            Origami.ViewTypePickerButton {
                 width: bar.contentHeight
                 height: bar.contentHeight
                 iconName: "tab-new-symbolic"
@@ -129,7 +130,7 @@ Item {
                         root.controller.addPaneToTabs(root.node.id, viewType, title);
                 }
             },
-            HamburgerButton {
+            Origami.HamburgerButton {
                 width: bar.contentHeight
                 height: bar.contentHeight
                 iconName: "application-menu-symbolic"

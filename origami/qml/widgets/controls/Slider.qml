@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blender-style value slider: a single filled bar with no separate
 // draggable handle knob, showing the current value as centered text.
@@ -36,18 +37,18 @@ Item {
     // Minimum pointer travel (px) before a press counts as a drag rather
     // than a click. Below this, releasing opens the text-edit field
     // instead of having scrubbed the value.
-    property real dragThreshold: Units.smallSpacing
+    property real dragThreshold: StyleKit.Units.smallSpacing
 
     property bool editing: false
 
     readonly property real visualPosition: control.to !== control.from ? (control.value - control.from) / (control.to - control.from) : 0
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     signal valueChangeRequested(real value)
 
-    implicitWidth: Units.gridUnit * 7
-    implicitHeight: Units.gridUnit * 1.4
+    implicitWidth: StyleKit.Units.gridUnit * 7
+    implicitHeight: StyleKit.Units.gridUnit * 1.4
 
     function _startEditing() {
         control.editing = true;
@@ -81,9 +82,9 @@ Item {
     Rectangle {
         id: track
         anchors.fill: parent
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
         color: control.colors.backgroundColor
-        border.width: Units.borderWidth
+        border.width: StyleKit.Units.borderWidth
         border.color: control.colors.borderColor
 
         // A rounded rectangle's actual silhouette pinches inward (lower
@@ -120,7 +121,7 @@ Item {
             Rectangle {
                 width: track.width - 2
                 height: parent.height
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
                 // No hover-driven shade -- only pressed (actually held
                 // down, whether that turns into a drag or a click)
                 // darkens it.
@@ -129,7 +130,7 @@ Item {
             }
         }
 
-        Label {
+        Origami.Label {
             anchors.centerIn: parent
             visible: !control.editing
             text: (control.label.length > 0 ? control.label + ": " : "") + control.value.toFixed(control.decimals)

@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Window-wide bar shell, fixed to the bottom. A themed HeaderBar wrapper
 // (see HeaderBar.qml's own class comment for the generic start/center/end
@@ -26,7 +27,7 @@ Rectangle {
     // this component is usable standalone with no wiring at all.
     property bool statusBarVisible: true
 
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
     color: root.colors.backgroundColor
 
     // Collapsing height to 0 when hidden, rather than a separate main.qml
@@ -45,7 +46,7 @@ Rectangle {
         color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.2)
     }
 
-    HeaderBar {
+    Origami.HeaderBar {
         id: headerBar
         anchors.left: parent.left
         anchors.right: parent.right

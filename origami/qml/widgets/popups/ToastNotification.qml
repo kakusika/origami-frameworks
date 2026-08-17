@@ -53,7 +53,7 @@ Item {
                 return root.colors.positiveTextColor;
             if (root.toastType === "negative")
                 return root.colors.negativeTextColor;
-            return Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3);
+            return root.colors.borderColor;
         }
 
         opacity: root.showing ? 0.95 : 0.0

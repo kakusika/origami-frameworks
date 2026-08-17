@@ -509,7 +509,7 @@ Item {
             radius: StyleKit.Units.cornerRadius
             color: "transparent"
             border.width: StyleKit.Units.borderWidth
-            border.color: Qt.rgba(root.bodyColors.textColor.r, root.bodyColors.textColor.g, root.bodyColors.textColor.b, 0.3)
+            border.color: root.bodyColors.borderColor
         }
     }
 

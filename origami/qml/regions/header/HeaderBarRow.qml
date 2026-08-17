@@ -1,5 +1,4 @@
 import QtQuick
-import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
 // Pure start/center/end row layout, no background -- the reusable core of

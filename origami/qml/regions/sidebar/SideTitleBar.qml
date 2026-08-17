@@ -120,7 +120,7 @@ Rectangle {
                     radius: StyleKit.Units.cornerRadius
                     color: root.tooltipColors.backgroundColor
                     border.width: StyleKit.Units.borderWidth
-                    border.color: Qt.rgba(root.tooltipColors.textColor.r, root.tooltipColors.textColor.g, root.tooltipColors.textColor.b, 0.3)
+                    border.color: root.tooltipColors.borderColor
 
                     implicitWidth: labelText.implicitWidth + StyleKit.Units.largeSpacing * 2
                     implicitHeight: labelText.implicitHeight + StyleKit.Units.smallSpacing * 2

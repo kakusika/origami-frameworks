@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Row of HeaderMenuButton.qml entries sharing "seamless hover switch"
 // behavior: hovering a sibling button while another's menu is already open
@@ -15,7 +16,7 @@ Row {
     // (plain strings for inert placeholders, or {text, onTriggered,
     // enabled} for real actions).
     property var menus: []
-    property real buttonHeight: Units.gridUnit * 1.6
+    property real buttonHeight: StyleKit.Units.gridUnit * 1.6
 
     // How much horizontal room the caller can actually give this group
     // before it must stop showing one button per menu. Infinity (never
@@ -37,7 +38,7 @@ Row {
     // group (e.g. PaneHeader.qml's view-type switcher) can pass in its
     // own shared instance instead to fold this group into that wider
     // hover-switch set.
-    property QtObject coordinator: HeaderMenuCoordinator {}
+    property QtObject coordinator: Origami.HeaderMenuCoordinator {}
 
     // Whether buttonsRow (below) would need more width than this group
     // has actually been given. Read off buttonsRow.implicitWidth rather
@@ -59,7 +60,7 @@ Row {
         Repeater {
             model: root.menus
 
-            delegate: HeaderMenuButton {
+            delegate: Origami.HeaderMenuButton {
                 id: menuButton
                 required property var modelData
                 required property int index
@@ -68,8 +69,8 @@ Row {
                 text: menuButton.modelData.text
                 menuItems: menuButton.modelData.items || []
 
-                leftRadius: Units.cornerRadius
-                rightRadius: Units.cornerRadius
+                leftRadius: StyleKit.Units.cornerRadius
+                rightRadius: StyleKit.Units.cornerRadius
                 // leftRadius: menuButton.index === 0 ? Units.cornerRadius : 0
                 // rightRadius: menuButton.index === root.menus.length - 1 ? Units.cornerRadius : 0
 
@@ -91,7 +92,7 @@ Row {
     // is already exactly the {text, items} shape ThemedMenu.qml
     // recognizes as a submenu entry, so it's passed straight through --
     // no flattening needed.
-    HamburgerButton {
+    Origami.HamburgerButton {
         id: collapsedButton
         visible: root._collapsed
         width: root.buttonHeight

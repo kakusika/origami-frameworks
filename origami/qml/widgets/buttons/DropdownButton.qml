@@ -1,19 +1,20 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 QQC2.ToolButton {
     id: root
 
     property string iconName: ""
-    property int iconSize: Units.iconSizes.small
+    property int iconSize: StyleKit.Units.iconSizes.small
     property var menuItems: []
 
     property real popupX: 0
     property real popupY: root.height
 
-    property int colorSet: Theme.header
-    readonly property var colors: Theme.paletteFor(root.colorSet)
+    property int colorSet: StyleKit.Theme.header
+    readonly property var colors: StyleKit.Theme.paletteFor(root.colorSet)
     readonly property alias open: menu.visible
 
     signal opened
@@ -33,8 +34,8 @@ QQC2.ToolButton {
     // affordance without this component owning any background paint.
     checked: menu.visible
 
-    implicitHeight: Units.gridUnit * 1.4
-    implicitWidth: contentRow.implicitWidth + Units.largeSpacing + 4
+    implicitHeight: StyleKit.Units.gridUnit * 1.4
+    implicitWidth: contentRow.implicitWidth + StyleKit.Units.largeSpacing + 4
 
     contentItem: Item {
         implicitWidth: contentRow.implicitWidth
@@ -47,9 +48,9 @@ QQC2.ToolButton {
 
             Row {
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: Units.smallSpacing
+                spacing: StyleKit.Units.smallSpacing
 
-                Icon {
+                Origami.Icon {
                     visible: root.iconName !== ""
                     anchors.verticalCenter: parent.verticalCenter
                     color: root.colors.textColor
@@ -58,7 +59,7 @@ QQC2.ToolButton {
                     height: root.iconSize
                 }
 
-                Label {
+                Origami.Label {
                     visible: root.text !== ""
                     anchors.verticalCenter: parent.verticalCenter
                     color: root.colors.textColor
@@ -66,19 +67,19 @@ QQC2.ToolButton {
                 }
             }
 
-            Icon {
+            Origami.Icon {
                 anchors.verticalCenter: parent.verticalCenter
                 color: root.colors.textColor
-                source: "arrow-down-symbolic"
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                source: "chevron-down"
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
             }
         }
     }
 
     onClicked: root.open ? root.requestClose() : root.requestOpen()
 
-    ThemedMenu {
+    Origami.ThemedMenu {
         id: menu
         menuItems: root.menuItems
         onOpened: root.opened()

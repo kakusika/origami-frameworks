@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blenderのプロパティエディタのパネルを模した、折りたたみ可能なセクション。
 // 角丸+枠線で1つのカプセルとして視覚的に独立させ、ヘッダー行(矢印+
@@ -48,7 +49,7 @@ Rectangle {
 
     // ページ本体(SettingsPage.qmlはTheme.viewを使う)と区別が付くよう、
     // 別のcolorSetを使う。
-    readonly property var colors: Origami.Theme.paletteFor(Origami.Theme.window)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.window)
 
     // Shared by body and the title label below, so both dim together when
     // the toggle is off -- the toggle itself and the expand/collapse arrow
@@ -57,19 +58,19 @@ Rectangle {
 
     default property alias content: body.data
 
-    implicitWidth: Origami.Units.gridUnit * 16
-    implicitHeight: header.height + (root.expanded ? body.implicitHeight + Origami.Units.smallSpacing : 0)
+    implicitWidth: StyleKit.Units.gridUnit * 16
+    implicitHeight: header.height + (root.expanded ? body.implicitHeight + StyleKit.Units.smallSpacing : 0)
     height: root.implicitHeight
 
-    radius: Origami.Units.cornerRadius
+    radius: StyleKit.Units.cornerRadius
     color: root.colors.backgroundColor
-    border.width: Origami.Units.borderWidth
+    border.width: StyleKit.Units.borderWidth
     border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.2)
     clip: true
 
     Behavior on implicitHeight {
         NumberAnimation {
-            duration: Origami.Units.shortDuration
+            duration: StyleKit.Units.shortDuration
             easing.type: Easing.OutQuad
         }
     }
@@ -79,8 +80,8 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Origami.Units.gridUnit * 1.6
-        radius: Origami.Units.cornerRadius
+        height: StyleKit.Units.gridUnit * 1.6
+        radius: StyleKit.Units.cornerRadius
         color: headerHover.hovered ? root.colors.hoverColor : "transparent"
 
         // MouseArea handles expand/collapse on clicking the header background,
@@ -100,14 +101,14 @@ Rectangle {
             id: leadingRow
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: Origami.Units.smallSpacing
-            spacing: Origami.Units.smallSpacing
+            anchors.leftMargin: StyleKit.Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
 
             Origami.Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                source: root.expanded ? "arrow-down" : "arrow-right"
-                width: Origami.Units.iconSizes.small
-                height: Origami.Units.iconSizes.small
+                source: root.expanded ? "chevron-down" : "chevron-right"
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
                 color: root.colors.textColor
             }
 
@@ -121,14 +122,14 @@ Rectangle {
 
             Origami.Label {
                 anchors.verticalCenter: parent.verticalCenter
-                colorSet: Origami.Theme.window
+                colorSet: StyleKit.Theme.window
                 text: root.title
                 font.bold: true
                 opacity: root.toggleEnabled ? 1.0 : 0.5
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: Origami.Units.shortDuration
+                        duration: StyleKit.Units.shortDuration
                     }
                 }
             }
@@ -138,8 +139,8 @@ Rectangle {
             id: trailingRow
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.rightMargin: Origami.Units.smallSpacing
-            spacing: Origami.Units.smallSpacing
+            anchors.rightMargin: StyleKit.Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
             visible: root.showTemplate
 
             Origami.DropdownButton {
@@ -156,9 +157,9 @@ Rectangle {
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: Origami.Units.smallSpacing
+        anchors.margins: StyleKit.Units.smallSpacing
         anchors.topMargin: 0
-        spacing: Origami.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
         visible: root.expanded
 
         // The toggle above governs whether this section's own settings
@@ -170,7 +171,7 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Origami.Units.shortDuration
+                duration: StyleKit.Units.shortDuration
             }
         }
     }

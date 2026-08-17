@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // leaf全面を覆う透明なドロップ領域。ドラッグ中のポインタ位置に応じて
 // 上下左右の縁(分割)か中央(タブとして統合)かを判定し、対応する
@@ -22,7 +23,7 @@ DropArea {
 
     property var _dragSource: null
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // hoverZoneは自前で保持せず、常に_dragSource(dragProxy)側の状態から
     // 導出する。dragProxy側はPaneTabHeader.onReleased/onCanceledでドラッグ

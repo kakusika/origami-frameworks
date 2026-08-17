@@ -1,5 +1,6 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // 1つのタブヘッダー。ドラッグの起点。
 //
@@ -71,8 +72,8 @@ Rectangle {
     // horizontally (see IconStack.qml's own class comment), so this has
     // to read the actual iconStack width rather than assume a single
     // icon's worth like the ordinary case.
-    readonly property real _iconAreaWidth: root._composite ? iconStack.width : (root._singleIconName !== "" ? Units.iconSizes.small : 0)
-    readonly property real fullWidth: root.compact ? root.width : (root._iconAreaWidth > 0 ? root._iconAreaWidth + Units.smallSpacing : 0) + titleMetrics.implicitWidth + Units.largeSpacing * 2
+    readonly property real _iconAreaWidth: root._composite ? iconStack.width : (root._singleIconName !== "" ? StyleKit.Units.iconSizes.small : 0)
+    readonly property real fullWidth: root.compact ? root.width : (root._iconAreaWidth > 0 ? root._iconAreaWidth + StyleKit.Units.smallSpacing : 0) + titleMetrics.implicitWidth + StyleKit.Units.largeSpacing * 2
 
     // 押してからこのpx数だけ動かすまでは、ただのクリックとして扱い
     // ドラッグを開始しない(短いクリックでも半透明のドラッグ像が一瞬
@@ -93,25 +94,25 @@ Rectangle {
 
     // アクティブなタブは中身(View配色)と同じ背景にして地続きに見せ、
     // 非アクティブなタブは親(PaneTabBar、Header配色)に馴染ませる。
-    readonly property var colors: Theme.paletteFor(root.active ? Theme.view : Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(root.active ? StyleKit.Theme.view : StyleKit.Theme.header)
 
     // Compact width hugs the dot grid itself (just a little breathing
     // room, no side padding to match a normal tab) so the grip reads as a
     // narrow vertical strip instead of a squarish button.
-    width: root.compact ? dotGrid.implicitWidth + Units.smallSpacing : contentRow.implicitWidth + Units.largeSpacing * 2
+    width: root.compact ? dotGrid.implicitWidth + StyleKit.Units.smallSpacing : contentRow.implicitWidth + StyleKit.Units.largeSpacing * 2
     // Baseline height comfortably fits one icon's worth of vertical
     // padding. A composite that stacks vertically (IconStack's own
     // `orientation`, PaneDrawer.qml's vertical rail) can grow taller
     // than one icon -- when it does, the tab grows with it instead of
     // clipping/overflowing past its own bounds, using the same padding
     // the single-icon case already has room for.
-    readonly property real _iconAreaHeight: root._composite ? iconStack.height : Units.iconSizes.small
-    height: Math.max(Units.gridUnit * 1.6, root._iconAreaHeight + (Units.gridUnit * 1.6 - Units.iconSizes.small))
+    readonly property real _iconAreaHeight: root._composite ? iconStack.height : StyleKit.Units.iconSizes.small
+    height: Math.max(StyleKit.Units.gridUnit * 1.6, root._iconAreaHeight + (StyleKit.Units.gridUnit * 1.6 - StyleKit.Units.iconSizes.small))
 
-    topLeftRadius: Units.cornerRadius
-    topRightRadius: Units.cornerRadius
-    bottomLeftRadius: Units.cornerRadius
-    bottomRightRadius: Units.cornerRadius
+    topLeftRadius: StyleKit.Units.cornerRadius
+    topRightRadius: StyleKit.Units.cornerRadius
+    bottomLeftRadius: StyleKit.Units.cornerRadius
+    bottomRightRadius: StyleKit.Units.cornerRadius
 
     // No fill at rest, active or not -- only a hover highlight (the
     // active tab is already distinguished by its own accent line below,
@@ -153,39 +154,22 @@ Rectangle {
     }
 
     // Grip glyph shown instead of the title+close row below when compact.
-    // Custom-drawn dots rather than an icon name, so it always renders
-    // regardless of the active icon theme (same reasoning as PaneSplit.qml's
-    // plain Rectangle-based handle).
-    Grid {
+    Origami.DragHandle {
         id: dotGrid
         visible: root.compact
         anchors.centerIn: parent
-        columns: 2
-        rowSpacing: 2
-        columnSpacing: 2
-
-        Repeater {
-            model: 6
-
-            delegate: Rectangle {
-                width: 3
-                height: 3
-                radius: 1.5
-                color: root.colors.textColor
-                opacity: 0.6
-            }
-        }
+        color: root.colors.textColor
     }
 
     Row {
         id: contentRow
         visible: !root.compact
         anchors.fill: parent
-        anchors.leftMargin: Units.largeSpacing
-        anchors.rightMargin: Units.smallSpacing
-        spacing: Units.smallSpacing
+        anchors.leftMargin: StyleKit.Units.largeSpacing
+        anchors.rightMargin: StyleKit.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
-        Icon {
+        Origami.Icon {
             anchors.verticalCenter: parent.verticalCenter
             visible: !root._composite && root._singleIconName !== ""
             // Symbolic icons are the only ones IconImage actually
@@ -195,8 +179,8 @@ Rectangle {
             color: root.colors.textColor
             opacity: root.active ? 1.0 : 0.7
             source: root._singleIconName
-            width: Units.iconSizes.small
-            height: Units.iconSizes.small
+            width: StyleKit.Units.iconSizes.small
+            height: StyleKit.Units.iconSizes.small
         }
 
         // A group tab (iconNames has more than one entry -- see that
@@ -206,7 +190,7 @@ Rectangle {
         // comment) -- deliberately no width/height override here, since
         // it needs to grow past one icon's footprint along the tabs'
         // own flow axis as more member icons are shown.
-        IconStack {
+        Origami.IconStack {
             id: iconStack
             anchors.verticalCenter: parent.verticalCenter
             visible: root._composite
@@ -228,7 +212,7 @@ Rectangle {
 
     // Closing a tab is a right-click action instead of a dedicated close
     // button, so the tab strip stays uncluttered (see contextMenu below).
-    ThemedMenu {
+    Origami.ThemedMenu {
         id: contextMenu
 
         menuItems: [
@@ -393,7 +377,7 @@ Rectangle {
                 height: root.height
                 color: root.colors.highlightColor
                 opacity: 0.85
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
 
                 Text {
                     anchors.centerIn: parent

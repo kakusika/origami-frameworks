@@ -7,8 +7,6 @@ fn main() {
     CxxQtBuilder::new_qml_module(
         QmlModule::new("la.cettila.Origami")
             .qml_files([
-                QmlFile::from("qml/theme/Units.qml").singleton(true),
-                QmlFile::from("qml/theme/Theme.qml").singleton(true),
                 QmlFile::from("qml/pane/PaneContext.qml").singleton(true),
                 QmlFile::from("qml/pane/PaneBackdrop.qml").singleton(true),
                 QmlFile::from("qml/pane/PaneWindowRegistry.qml").singleton(true),
@@ -43,6 +41,7 @@ fn main() {
                 "qml/widgets/buttons/ToggleGroup.qml",
                 //[ Widgets - controls ]
                 "qml/widgets/controls/ColorSwatch.qml",
+                "qml/widgets/controls/DragHandle.qml",
                 "qml/widgets/controls/Icon.qml",
                 "qml/widgets/controls/IconStack.qml",
                 "qml/widgets/controls/Label.qml",

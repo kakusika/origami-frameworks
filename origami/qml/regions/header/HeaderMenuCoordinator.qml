@@ -1,5 +1,5 @@
 import QtQuick
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Shared "seamless hover switch" state for a group of menu-opening
 // buttons: hovering a sibling button while another's menu is already open

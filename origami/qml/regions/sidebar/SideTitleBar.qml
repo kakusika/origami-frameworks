@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Vertical, icon-only bar meant to replace a traditional horizontal menu
 // bar (File/Edit/View...). Hovering anywhere over the bar (not necessarily
@@ -34,10 +35,10 @@ Rectangle {
     // matching PaneHeader.qml's menu buttons.
     property var _openMenu: null
 
-    implicitWidth: Units.gridUnit * 2.4
+    implicitWidth: StyleKit.Units.gridUnit * 2.4
 
-    readonly property var colors: Theme.paletteFor(Theme.header)
-    readonly property var tooltipColors: Theme.paletteFor(Theme.tooltip)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
+    readonly property var tooltipColors: StyleKit.Theme.paletteFor(StyleKit.Theme.tooltip)
     color: root.colors.backgroundColor
 
     // Tracks the mouse being anywhere over the bar, not just over one
@@ -60,13 +61,13 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: Units.smallSpacing
-        spacing: Units.smallSpacing
+        anchors.margins: StyleKit.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
         Repeater {
             model: root.menus
 
-            delegate: HeaderMenuButton {
+            delegate: Origami.HeaderMenuButton {
                 id: menuButton
 
                 // Captured once so the nested Repeater below (which has its
@@ -76,7 +77,7 @@ Rectangle {
                 width: parent.width
                 height: width
                 iconName: menuButton.entry.icon
-                iconSize: Units.iconSizes.medium
+                iconSize: StyleKit.Units.iconSizes.medium
                 menuItems: menuButton.entry.items || []
                 // Pops out to the side (to the right of the icon) rather
                 // than downward like a regular menu bar.
@@ -116,13 +117,13 @@ Rectangle {
                     visible: barHover.hovered
                     z: 1000
 
-                    radius: Units.cornerRadius
+                    radius: StyleKit.Units.cornerRadius
                     color: root.tooltipColors.backgroundColor
-                    border.width: Units.borderWidth
+                    border.width: StyleKit.Units.borderWidth
                     border.color: Qt.rgba(root.tooltipColors.textColor.r, root.tooltipColors.textColor.g, root.tooltipColors.textColor.b, 0.3)
 
-                    implicitWidth: labelText.implicitWidth + Units.largeSpacing * 2
-                    implicitHeight: labelText.implicitHeight + Units.smallSpacing * 2
+                    implicitWidth: labelText.implicitWidth + StyleKit.Units.largeSpacing * 2
+                    implicitHeight: labelText.implicitHeight + StyleKit.Units.smallSpacing * 2
                     // Plain Rectangle-derived items, unlike Control, don't
                     // auto-bind width/height to implicitWidth/implicitHeight,
                     // so without this the label stays zero-sized and never
@@ -143,13 +144,13 @@ Rectangle {
                     // property access, which QML does track reactively.
                     readonly property real buttonRight: menuButton.parent.x + menuButton.x + menuButton.width
                     readonly property real buttonTop: menuButton.parent.y + menuButton.y
-                    x: buttonRight + Units.smallSpacing
+                    x: buttonRight + StyleKit.Units.smallSpacing
                     y: buttonTop + (menuButton.height - implicitHeight) / 2
 
-                    Label {
+                    Origami.Label {
                         id: labelText
                         anchors.centerIn: parent
-                        colorSet: Theme.tooltip
+                        colorSet: StyleKit.Theme.tooltip
                         text: menuButton.entry.text
                     }
                 }

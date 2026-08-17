@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Window
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Theme-reactive replacement for a plain QQC2.Menu.
 QQC2.Menu {
     id: root
 
     property var menuItems: []
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     property bool _everOpened: false
     onAboutToShow: root._everOpened = true
@@ -20,7 +21,7 @@ QQC2.Menu {
     property bool detachedWindow: false
     popupType: root.detachedWindow ? QQC2.Popup.Window : QQC2.Popup.Item
 
-    padding: Units.smallSpacing
+    padding: StyleKit.Units.smallSpacing
 
     // No background override -- left to the active QQC2 style's own
     // popup-panel chrome.
@@ -55,9 +56,9 @@ QQC2.Menu {
             // distinctly on its own.
 
             contentItem: Row {
-                spacing: Units.smallSpacing
-                leftPadding: Units.smallSpacing
-                rightPadding: Units.smallSpacing
+                spacing: StyleKit.Units.smallSpacing
+                leftPadding: StyleKit.Units.smallSpacing
+                rightPadding: StyleKit.Units.smallSpacing
 
                 Text {
                     text: wrapItem.text
@@ -65,12 +66,12 @@ QQC2.Menu {
                     color: wrapItem.highlighted ? root.colors.highlightedTextColor : root.colors.textColor
                 }
 
-                Icon {
+                Origami.Icon {
                     visible: wrapItem.subMenu !== null
                     color: wrapItem.highlighted ? root.colors.highlightedTextColor : root.colors.textColor
                     source: "arrow-right-symbolic"
-                    width: Units.iconSizes.small
-                    height: Units.iconSizes.small
+                    width: StyleKit.Units.iconSizes.small
+                    height: StyleKit.Units.iconSizes.small
                 }
             }
         }
@@ -129,21 +130,21 @@ QQC2.Menu {
             // first click). Not safe to change without also reworking
             // how selection here interacts with `onTriggered` below.
             background: Rectangle {
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
                 color: (menuItem.highlighted || menuItem._selected) ? root.colors.highlightColor : "transparent"
             }
 
             contentItem: Row {
-                spacing: Units.smallSpacing
-                leftPadding: Units.smallSpacing
-                rightPadding: Units.smallSpacing
+                spacing: StyleKit.Units.smallSpacing
+                leftPadding: StyleKit.Units.smallSpacing
+                rightPadding: StyleKit.Units.smallSpacing
 
-                Icon {
+                Origami.Icon {
                     visible: menuItem._iconName !== ""
                     color: root.colors.textColor
                     source: menuItem._iconName
-                    width: Units.iconSizes.small
-                    height: Units.iconSizes.small
+                    width: StyleKit.Units.iconSizes.small
+                    height: StyleKit.Units.iconSizes.small
                 }
 
                 Text {
@@ -167,7 +168,7 @@ QQC2.Menu {
         active: root._everOpened
         model: root._submenuEntries
 
-        delegate: ThemedSubMenu {
+        delegate: Origami.ThemedSubMenu {
             id: submenu
             required property var modelData
 

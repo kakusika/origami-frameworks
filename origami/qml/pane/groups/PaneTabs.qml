@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Renders the tab strip for a "tabs" node (see PaneView.qml). Only ever
 // shown for an actual "tabs" node: a standalone "pane" node is never
@@ -23,10 +24,10 @@ Item {
     signal tabCloseRequested(int tabId)
 
     visible: !!(root.node && root.node.type === "tabs")
-    height: Units.gridUnit * 1.6
+    height: StyleKit.Units.gridUnit * 1.6
     implicitHeight: height
 
-    PaneTabBar {
+    Origami.PaneTabBar {
         anchors.fill: parent
         node: root.node
         leafId: root.leafId

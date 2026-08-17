@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // A generic confirmation / message dialog popup.
 // Provides standard title, message, confirm/cancel buttons, and destructive action styling.
@@ -15,18 +16,18 @@ QQC2.Popup {
     property bool isDestructive: false
     property bool showCancel: true
 
-    readonly property var colors: Origami.Theme.paletteFor(Origami.Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     signal confirmed
     signal cancelled
 
     ColumnLayout {
-        spacing: Origami.Units.largeSpacing
-        implicitWidth: Origami.Units.gridUnit * 16
+        spacing: StyleKit.Units.largeSpacing
+        implicitWidth: StyleKit.Units.gridUnit * 16
 
         Origami.Label {
             font.bold: true
-            font.pointSize: Origami.Units.gridUnit * 0.75
+            font.pointSize: StyleKit.Units.gridUnit * 0.75
             text: root.title
             Layout.fillWidth: true
             elide: Text.ElideRight
@@ -45,7 +46,7 @@ QQC2.Popup {
 
         RowLayout {
             Layout.alignment: Qt.AlignRight
-            spacing: Origami.Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
 
             Origami.ActionButton {
                 visible: root.showCancel
@@ -61,7 +62,7 @@ QQC2.Popup {
                 highlighted: true
                 // Render negative/danger highlight if destructive
                 background: Rectangle {
-                    radius: Origami.Units.cornerRadius
+                    radius: StyleKit.Units.cornerRadius
                     color: root.isDestructive ? root.colors.negativeTextColor : root.colors.highlightColor
                 }
                 onClicked: {

@@ -1,19 +1,20 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Window
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Leaf-only counterpart to ThemedMenu.qml.
 QQC2.Menu {
     id: root
 
     property var menuItems: []
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     cascade: true
     modal: false
     dim: false
-    padding: Units.smallSpacing
+    padding: StyleKit.Units.smallSpacing
 
     property bool detachedWindow: false
     popupType: detachedWindow ? QQC2.Popup.Window : QQC2.Popup.Item
@@ -47,21 +48,21 @@ QQC2.Menu {
             // conflict as ThemedMenu.qml's Instantiator MenuItem, see its
             // comment for why this isn't a safe mechanical delete.
             background: Rectangle {
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
                 color: (menuItem.highlighted || menuItem._selected) ? root.colors.highlightColor : "transparent"
             }
 
             contentItem: Row {
-                spacing: Units.smallSpacing
-                leftPadding: Units.smallSpacing
-                rightPadding: Units.smallSpacing
+                spacing: StyleKit.Units.smallSpacing
+                leftPadding: StyleKit.Units.smallSpacing
+                rightPadding: StyleKit.Units.smallSpacing
 
-                Icon {
+                Origami.Icon {
                     visible: menuItem._iconName !== ""
                     color: root.colors.textColor
                     source: menuItem._iconName
-                    width: Units.iconSizes.small
-                    height: Units.iconSizes.small
+                    width: StyleKit.Units.iconSizes.small
+                    height: StyleKit.Units.iconSizes.small
                 }
 
                 Text {

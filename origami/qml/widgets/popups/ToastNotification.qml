@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Floating toast overlay item. Listens to ToastBus and displays smooth transient messages.
 Item {
@@ -9,7 +10,7 @@ Item {
 
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
     anchors.bottom: parent ? parent.bottom : undefined
-    anchors.bottomMargin: Units.largeSpacing * 2
+    anchors.bottomMargin: StyleKit.Units.largeSpacing * 2
     z: 9999
 
     property string message: ""
@@ -17,10 +18,10 @@ Item {
     property string toastType: "info"
     property bool showing: false
 
-    readonly property var colors: Theme.paletteFor(Theme.tooltip)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.tooltip)
 
     Connections {
-        target: ToastBus
+        target: Origami.ToastBus
         function onShowToast(msg, icon, type, durationMs) {
             root.message = msg;
             root.iconName = icon;
@@ -42,11 +43,11 @@ Item {
         id: banner
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        implicitWidth: layout.implicitWidth + Units.largeSpacing * 2
-        implicitHeight: Units.gridUnit * 2
-        radius: Units.cornerRadius
+        implicitWidth: layout.implicitWidth + StyleKit.Units.largeSpacing * 2
+        implicitHeight: StyleKit.Units.gridUnit * 2
+        radius: StyleKit.Units.cornerRadius
         color: root.colors.backgroundColor
-        border.width: Units.borderWidth
+        border.width: StyleKit.Units.borderWidth
         border.color: {
             if (root.toastType === "success")
                 return root.colors.positiveTextColor;
@@ -60,14 +61,14 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Units.shortDuration
+                duration: StyleKit.Units.shortDuration
                 easing.type: Easing.OutCubic
             }
         }
 
         Behavior on scale {
             NumberAnimation {
-                duration: Units.shortDuration
+                duration: StyleKit.Units.shortDuration
                 easing.type: Easing.OutBack
             }
         }
@@ -75,23 +76,23 @@ Item {
         RowLayout {
             id: layout
             anchors.fill: parent
-            anchors.leftMargin: Units.largeSpacing
-            anchors.rightMargin: Units.largeSpacing
-            spacing: Units.smallSpacing
+            anchors.leftMargin: StyleKit.Units.largeSpacing
+            anchors.rightMargin: StyleKit.Units.largeSpacing
+            spacing: StyleKit.Units.smallSpacing
 
-            Icon {
+            Origami.Icon {
                 source: root.iconName
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
                 color: root.colors.textColor
             }
 
-            Label {
+            Origami.Label {
                 text: root.message
-                colorSet: Theme.tooltip
+                colorSet: StyleKit.Theme.tooltip
             }
 
-            IconButton {
+            Origami.IconButton {
                 iconName: "window-close-symbolic"
                 onClicked: root.showing = false
             }

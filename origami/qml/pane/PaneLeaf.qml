@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Renders an area: either a standalone "pane" node (just its own view),
 // or a "tabs" node (tab strip switching between its pane children, plus
@@ -67,7 +68,7 @@ Item {
     // pane/tabs node.
     property var _panes: []
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // Whether this leaf is the one currently maximized (see PaneView.qml's
     // maximizedLeafId) -- filling the whole PaneView in place of the
@@ -209,7 +210,7 @@ Item {
     // window-filling Image show through the pane content area.
     Rectangle {
         anchors.fill: parent
-        color: PaneBackdrop.imagePath.length > 0 ? Qt.rgba(root.colors.backgroundColor.r, root.colors.backgroundColor.g, root.colors.backgroundColor.b, PaneBackdrop.paneOpacity) : root.colors.backgroundColor
+        color: Origami.PaneBackdrop.imagePath.length > 0 ? Qt.rgba(root.colors.backgroundColor.r, root.colors.backgroundColor.g, root.colors.backgroundColor.b, Origami.PaneBackdrop.paneOpacity) : root.colors.backgroundColor
         topLeftRadius: root.topLeftRadius
         topRightRadius: root.topRightRadius
         bottomLeftRadius: root.bottomLeftRadius
@@ -241,10 +242,10 @@ Item {
         // this doesn't depend on Loader's item-not-yet-loaded timing).
         Loader {
             Layout.fillWidth: true
-            Layout.preferredHeight: Units.gridUnit * 1.6
+            Layout.preferredHeight: StyleKit.Units.gridUnit * 1.6
             active: root.maximized
             visible: root.maximized
-            sourceComponent: PaneMaximizeBar {
+            sourceComponent: Origami.PaneMaximizeBar {
                 controller: root.controller
                 leafId: root.node ? root.node.id : -1
             }
@@ -260,10 +261,10 @@ Item {
         // this case.
         Loader {
             Layout.fillWidth: true
-            Layout.preferredHeight: Units.gridUnit * 1.6
+            Layout.preferredHeight: StyleKit.Units.gridUnit * 1.6
             active: !root.maximized && !!(root.node && root.node.type === "tabs")
             visible: active
-            sourceComponent: PaneTabs {
+            sourceComponent: Origami.PaneTabs {
                 node: root.node
                 leafId: root.node ? root.node.id : -1
                 currentIndex: root.currentIndex
@@ -282,7 +283,7 @@ Item {
             id: groupArea
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.margins: (root.framed || root.maximized) ? Units.groupContentMargin : 0
+            Layout.margins: (root.framed || root.maximized) ? StyleKit.Units.groupContentMargin : 0
             // No top margin: the tab strip above already provides the
             // visual gap, so adding one here would double it up.
             Layout.topMargin: 0
@@ -291,7 +292,7 @@ Item {
                 anchors.fill: parent
                 spacing: 0
 
-                PaneHeader {
+                Origami.PaneHeader {
                     id: paneHeader
                     Layout.fillWidth: true
                     node: root.node
@@ -327,7 +328,7 @@ Item {
                     // _isGroupType() comment) -- closing its last tab
                     // leaves it sitting empty instead, so this says so
                     // rather than just showing blank space.
-                    Label {
+                    Origami.Label {
                         anchors.centerIn: parent
                         visible: root.node && root.node.type === "tabs" && root.node.children.length === 0
                         type: "secondary"
@@ -344,9 +345,9 @@ Item {
                 anchors.fill: parent
                 z: 1
                 visible: root.framed || root.maximized
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
                 color: "transparent"
-                border.width: Units.borderWidth
+                border.width: StyleKit.Units.borderWidth
                 border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
             }
 
@@ -358,15 +359,15 @@ Item {
                 anchors.fill: parent
                 z: 2
                 visible: root._hasError
-                radius: Units.cornerRadius
+                radius: StyleKit.Units.cornerRadius
                 color: "transparent"
-                border.width: Units.borderWidth * 2
-                border.color: Theme.negativeTextColor
+                border.width: StyleKit.Units.borderWidth * 2
+                border.color: StyleKit.Theme.negativeTextColor
             }
         }
     }
 
-    PaneDropOverlay {
+    Origami.PaneDropOverlay {
         anchors.fill: parent
         leafId: root.node ? root.node.id : -1
         controller: root.controller

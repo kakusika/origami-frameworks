@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Popup content for ViewTypePickerButton.qml -- a pinned search field at
 // the top plus a category-grouped, filtered list below. Kept as its own
@@ -19,7 +20,7 @@ QQC2.Popup {
 
     signal viewTypeSelected(string viewType, string title)
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // Same modal/dim pairing ThemedMenu.qml uses, and for the same reason
     // (see its own comment): without modal: true, a press on this popup's
@@ -129,10 +130,10 @@ QQC2.Popup {
         root.close();
     }
 
-    width: Units.gridUnit * 18
+    width: StyleKit.Units.gridUnit * 18
 
-    readonly property real _maxListHeight: Units.gridUnit * 18
-    readonly property real _minListHeight: Units.gridUnit * 2.4
+    readonly property real _maxListHeight: StyleKit.Units.gridUnit * 18
+    readonly property real _minListHeight: StyleKit.Units.gridUnit * 2.4
     // Fits the list to its own content up to _maxListHeight (beyond which
     // listView below scrolls instead), floored at _minListHeight so the
     // "no matches" empty state (centered in that same area) always has
@@ -140,10 +141,10 @@ QQC2.Popup {
     // near-zero-height sliver when _rows is empty.
     readonly property real _listAreaHeight: Math.min(root._maxListHeight, Math.max(root._minListHeight, listView.contentHeight))
 
-    height: searchField.height + Units.smallSpacing + root._listAreaHeight + root.topPadding + root.bottomPadding
+    height: searchField.height + StyleKit.Units.smallSpacing + root._listAreaHeight + root.topPadding + root.bottomPadding
 
     contentItem: Column {
-        spacing: Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
         QQC2.TextField {
             id: searchField
@@ -181,14 +182,14 @@ QQC2.Popup {
                     readonly property bool _highlighted: rowDelegate.index === root._highlightIndex || rowDelegate._selected
 
                     width: listView.width
-                    height: rowDelegate._isHeader ? headerLabel.implicitHeight + Units.smallSpacing : Units.gridUnit * 1.6
+                    height: rowDelegate._isHeader ? headerLabel.implicitHeight + StyleKit.Units.smallSpacing : StyleKit.Units.gridUnit * 1.6
 
-                    Label {
+                    Origami.Label {
                         id: headerLabel
                         visible: rowDelegate._isHeader
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
-                        anchors.leftMargin: Units.smallSpacing
+                        anchors.leftMargin: StyleKit.Units.smallSpacing
                         type: "secondary"
                         text: rowDelegate._isHeader ? rowDelegate.modelData.text : ""
                     }
@@ -196,22 +197,22 @@ QQC2.Popup {
                     Rectangle {
                         visible: !rowDelegate._isHeader
                         anchors.fill: parent
-                        radius: Units.cornerRadius
+                        radius: StyleKit.Units.cornerRadius
                         color: rowDelegate._highlighted ? root.colors.highlightColor : "transparent"
 
                         Row {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: Units.smallSpacing
-                            spacing: Units.smallSpacing
+                            anchors.leftMargin: StyleKit.Units.smallSpacing
+                            spacing: StyleKit.Units.smallSpacing
 
-                            Icon {
+                            Origami.Icon {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: !rowDelegate._isHeader && (rowDelegate._entry.icon || "") !== ""
                                 color: rowDelegate._highlighted ? root.colors.highlightedTextColor : root.colors.textColor
                                 source: rowDelegate._isHeader ? "" : (rowDelegate._entry.icon || "")
-                                width: Units.iconSizes.small
-                                height: Units.iconSizes.small
+                                width: StyleKit.Units.iconSizes.small
+                                height: StyleKit.Units.iconSizes.small
                             }
 
                             Text {
@@ -235,7 +236,7 @@ QQC2.Popup {
                 }
             }
 
-            Label {
+            Origami.Label {
                 anchors.centerIn: parent
                 visible: root._rows.length === 0
                 type: "secondary"

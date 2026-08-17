@@ -1,5 +1,6 @@
 import QtQuick
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Pure start/center/end row layout, no background -- the reusable core of
 // HeaderBar.qml, factored out so MultiRowHeaderBar.qml can stack one of
@@ -41,30 +42,30 @@ Item {
     // No explicit `height:` binding (only implicitHeight) so a parent can
     // freely override sizing (e.g. via anchors.fill) without fighting a
     // conflicting binding on the same property.
-    implicitHeight: Origami.Units.gridUnit * 1.6
+    implicitHeight: StyleKit.Units.gridUnit * 1.6
 
     Row {
         id: startRow
         anchors.left: parent.left
-        anchors.leftMargin: Origami.Units.smallSpacing
+        anchors.leftMargin: StyleKit.Units.smallSpacing
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Origami.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
         data: root.start
     }
 
     Row {
         id: centerRow
         anchors.centerIn: parent
-        spacing: Origami.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
         data: root.center
     }
 
     Row {
         id: endRow
         anchors.right: parent.right
-        anchors.rightMargin: Origami.Units.smallSpacing
+        anchors.rightMargin: StyleKit.Units.smallSpacing
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Origami.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
         data: root.end
     }
 }

@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Full color picker popup with preset swatch palette, HSV sliders, hex field, and preview.
 QQC2.Popup {
@@ -48,9 +49,9 @@ QQC2.Popup {
     }
 
     ColumnLayout {
-        spacing: Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
-        Label {
+        Origami.Label {
             font.bold: true
             text: "Color Picker"
         }
@@ -58,27 +59,27 @@ QQC2.Popup {
         // Color preview bar
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Units.gridUnit * 1.5
-            radius: Units.cornerRadius
+            Layout.preferredHeight: StyleKit.Units.gridUnit * 1.5
+            radius: StyleKit.Units.cornerRadius
             color: popup.selectedColor
-            border.width: Units.borderWidth
+            border.width: StyleKit.Units.borderWidth
             border.color: Qt.rgba(0, 0, 0, 0.2)
         }
 
         // Preset palette swatches
         GridLayout {
             columns: 5
-            rowSpacing: Units.smallSpacing / 2
-            columnSpacing: Units.smallSpacing / 2
+            rowSpacing: StyleKit.Units.smallSpacing / 2
+            columnSpacing: StyleKit.Units.smallSpacing / 2
 
             Repeater {
                 model: popup.presetColors
 
                 delegate: Rectangle {
                     required property string modelData
-                    width: Units.gridUnit * 1.2
-                    height: Units.gridUnit * 1.2
-                    radius: Units.cornerRadius / 2
+                    width: StyleKit.Units.gridUnit * 1.2
+                    height: StyleKit.Units.gridUnit * 1.2
+                    radius: StyleKit.Units.cornerRadius / 2
                     color: modelData
                     border.width: popup.selectedColor.toString() === modelData ? 2 : 1
                     border.color: popup.selectedColor.toString() === modelData ? popup.colors.highlightColor : Qt.rgba(0, 0, 0, 0.2)
@@ -92,18 +93,18 @@ QQC2.Popup {
             }
         }
 
-        Separator {
+        Origami.Separator {
             Layout.fillWidth: true
         }
 
         // Sliders for Hue, Saturation, Value
         RowLayout {
-            spacing: Units.smallSpacing
-            Label {
+            spacing: StyleKit.Units.smallSpacing
+            Origami.Label {
                 text: "H"
-                Layout.preferredWidth: Units.gridUnit * 0.8
+                Layout.preferredWidth: StyleKit.Units.gridUnit * 0.8
             }
-            Slider {
+            Origami.Slider {
                 Layout.fillWidth: true
                 from: 0
                 to: 1
@@ -116,12 +117,12 @@ QQC2.Popup {
         }
 
         RowLayout {
-            spacing: Units.smallSpacing
-            Label {
+            spacing: StyleKit.Units.smallSpacing
+            Origami.Label {
                 text: "S"
-                Layout.preferredWidth: Units.gridUnit * 0.8
+                Layout.preferredWidth: StyleKit.Units.gridUnit * 0.8
             }
-            Slider {
+            Origami.Slider {
                 Layout.fillWidth: true
                 from: 0
                 to: 1
@@ -134,12 +135,12 @@ QQC2.Popup {
         }
 
         RowLayout {
-            spacing: Units.smallSpacing
-            Label {
+            spacing: StyleKit.Units.smallSpacing
+            Origami.Label {
                 text: "V"
-                Layout.preferredWidth: Units.gridUnit * 0.8
+                Layout.preferredWidth: StyleKit.Units.gridUnit * 0.8
             }
-            Slider {
+            Origami.Slider {
                 Layout.fillWidth: true
                 from: 0
                 to: 1
@@ -153,8 +154,8 @@ QQC2.Popup {
 
         // Hex Code Field
         RowLayout {
-            spacing: Units.smallSpacing
-            Label {
+            spacing: StyleKit.Units.smallSpacing
+            Origami.Label {
                 text: "Hex"
             }
             QQC2.TextField {
@@ -173,14 +174,14 @@ QQC2.Popup {
         // Action Buttons
         RowLayout {
             Layout.alignment: Qt.AlignRight
-            spacing: Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
 
-            ActionButton {
+            Origami.ActionButton {
                 text: "Cancel"
                 onClicked: popup.close()
             }
 
-            ActionButton {
+            Origami.ActionButton {
                 text: "OK"
                 highlighted: true
                 onClicked: {

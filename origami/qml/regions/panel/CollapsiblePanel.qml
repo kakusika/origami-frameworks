@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Blender-style dockable side panel: shows arbitrary content when expanded,
 // and collapses to a thin strip with a single arrow button when hidden.
@@ -32,7 +33,7 @@ Item {
     // PaneDrawer.qml's own translucent body background uses. Kept as plain
     // `property color` (not `readonly`) so a caller can still override
     // either, same as before this tracked the theme.
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
     property color panelColor: Qt.rgba(root.colors.backgroundColor.r, root.colors.backgroundColor.g, root.colors.backgroundColor.b, 0.8)
     property color handleColor: root.panelColor
 
@@ -52,7 +53,7 @@ Item {
 
     // Collapsed: a small edge tab with a single arrow button that re-expands
     // the panel, mirroring Blender's collapsed sidebar handle.
-    IconButton {
+    Origami.IconButton {
         id: collapsedHandle
         visible: !root.expanded
         anchors.top: parent.top
@@ -64,7 +65,7 @@ Item {
 
         background: Rectangle {
             color: root.handleColor
-            radius: Units.cornerRadius
+            radius: StyleKit.Units.cornerRadius
         }
     }
 
@@ -78,9 +79,9 @@ Item {
         anchors.right: parent.right
         implicitHeight: contentColumn.implicitHeight + collapseButton.height + 16
         color: root.panelColor
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
 
-        IconButton {
+        Origami.IconButton {
             id: collapseButton
             anchors.top: parent.top
             anchors.right: root.dockedRight ? parent.right : undefined
@@ -95,8 +96,8 @@ Item {
             anchors.top: collapseButton.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: Units.smallSpacing
-            spacing: Units.smallSpacing
+            anchors.margins: StyleKit.Units.smallSpacing
+            spacing: StyleKit.Units.smallSpacing
         }
     }
 }

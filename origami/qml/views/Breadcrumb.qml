@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Clickable path breadcrumb: splits `path` into segments and renders one
 // button per segment, each jumping straight to that ancestor directory
@@ -28,7 +29,7 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
-    readonly property var colors: Theme.paletteFor(Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // The visible root's label + every path component below it, each
     // carrying the absolute path clicking it should jump to. E.g. with
@@ -94,7 +95,7 @@ Item {
                         onClicked: root.navigated(modelData.path)
                     }
 
-                    Label {
+                    Origami.Label {
                         text: "/"
                         visible: index < root.segments.length - 1
                     }

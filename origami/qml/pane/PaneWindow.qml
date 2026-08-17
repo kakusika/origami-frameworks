@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
 
 // Generic top-level window for hosting a single pane's content outside the
 // pane tree. Two mutually exclusive ways to populate it, set via
@@ -58,8 +58,8 @@ QQC2.ApplicationWindow {
         root.raise();
         root.requestActivate();
 
-        PaneWindowRegistry.registerWindow(root, root.title, root.paneViewType);
+        Origami.PaneWindowRegistry.registerWindow(root, root.title, root.paneViewType);
     }
 
-    Component.onDestruction: PaneWindowRegistry.unregisterWindow(root)
+    Component.onDestruction: Origami.PaneWindowRegistry.unregisterWindow(root)
 }

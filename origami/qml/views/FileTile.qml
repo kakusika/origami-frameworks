@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // One grid cell representing a file or directory entry: an icon (or, for
 // callers that opt in via `thumbnailSource`, a thumbnail preview once it
@@ -88,7 +89,7 @@ QQC2.ItemDelegate {
     // not just another modifier combination on the same one.
     signal contextMenuRequested(real x, real y)
 
-    readonly property var colors: Origami.Theme.paletteFor(Origami.Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
 
     // The default style-drawn background is an opaque rectangle that
     // would paint over the grid's own background -- same stock Kirigami/
@@ -99,17 +100,17 @@ QQC2.ItemDelegate {
     background: Rectangle {
         anchors.fill: parent
         anchors.margins: 2
-        radius: Origami.Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
         color: root.selected ? Qt.rgba(root.colors.highlightColor.r, root.colors.highlightColor.g, root.colors.highlightColor.b, 0.3) : "transparent"
         // down (AbstractButton's own press state) no longer updates once
         // tapArea below owns real press handling -- tapArea.pressed
         // stands in for it.
-        border.width: (root.hovered || tapArea.pressed || root.selected) ? Origami.Units.borderWidth : 0
+        border.width: (root.hovered || tapArea.pressed || root.selected) ? StyleKit.Units.borderWidth : 0
         border.color: root.colors.highlightColor
     }
 
     contentItem: ColumnLayout {
-        spacing: Origami.Units.smallSpacing
+        spacing: StyleKit.Units.smallSpacing
 
         // Claims whatever space is left over after the (optional) Label
         // below takes its own natural height -- the icon/thumbnail below
@@ -139,6 +140,7 @@ QQC2.ItemDelegate {
                 height: iconArea.resolvedIconSize
                 visible: root.isDir || thumbnail.status !== Image.Ready
                 source: root.iconName
+                color: root.colors.textColor
             }
 
             Image {
@@ -168,6 +170,7 @@ QQC2.ItemDelegate {
                 x: iconArea.width / 2 + iconArea.resolvedIconSize / 2 - width
                 y: iconArea.height / 2 + iconArea.resolvedIconSize / 2 - height
                 source: root.isBrokenSymlink ? "emblem-warning" : "emblem-symbolic-link"
+                color: root.isBrokenSymlink ? root.colors.negativeTextColor : root.colors.textColor
             }
         }
 

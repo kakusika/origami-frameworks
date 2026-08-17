@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
-import la.cettila.Origami 1.0
+import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 // Segmented toggle control.
 Item {
@@ -13,20 +14,20 @@ Item {
 
     property Item detailsContent: null
     readonly property bool hasDetails: root.detailsContent !== null
-    readonly property var colors: Theme.paletteFor(Theme.header)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     implicitWidth: row.implicitWidth
-    implicitHeight: Units.gridUnit * 1.6
+    implicitHeight: StyleKit.Units.gridUnit * 1.6
 
     Rectangle {
         anchors.fill: parent
-        radius: Units.cornerRadius
+        radius: StyleKit.Units.cornerRadius
         color: "transparent"
-        border.width: Units.borderWidth
+        border.width: StyleKit.Units.borderWidth
         border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.3)
     }
 
-    readonly property real _optionWidth: Units.iconSizes.smallMedium + Units.largeSpacing
+    readonly property real _optionWidth: StyleKit.Units.iconSizes.smallMedium + StyleKit.Units.largeSpacing
 
     readonly property int _activeIndex: {
         for (let i = 0; i < root.options.length; i++) {
@@ -42,10 +43,10 @@ Item {
         x: root._activeIndex >= 0 ? root._activeIndex * root._optionWidth : 0
         width: root._optionWidth
         height: root.height
-        topLeftRadius: root._activeIndex === 0 ? Units.cornerRadius : 0
-        bottomLeftRadius: root._activeIndex === 0 ? Units.cornerRadius : 0
-        topRightRadius: (!root.hasDetails && root._activeIndex === root.options.length - 1) ? Units.cornerRadius : 0
-        bottomRightRadius: (!root.hasDetails && root._activeIndex === root.options.length - 1) ? Units.cornerRadius : 0
+        topLeftRadius: root._activeIndex === 0 ? StyleKit.Units.cornerRadius : 0
+        bottomLeftRadius: root._activeIndex === 0 ? StyleKit.Units.cornerRadius : 0
+        topRightRadius: (!root.hasDetails && root._activeIndex === root.options.length - 1) ? StyleKit.Units.cornerRadius : 0
+        bottomRightRadius: (!root.hasDetails && root._activeIndex === root.options.length - 1) ? StyleKit.Units.cornerRadius : 0
         color: root.colors.highlightColor
 
         Behavior on x {
@@ -73,19 +74,19 @@ Item {
                 implicitWidth: root._optionWidth
                 height: root.height
 
-                contentItem: Icon {
+                contentItem: Origami.Icon {
                     anchors.centerIn: parent
                     color: optionButton.isActive ? root.colors.highlightedTextColor : root.colors.textColor
                     source: optionButton.modelData.iconName || ""
-                    width: Units.iconSizes.smallMedium
-                    height: Units.iconSizes.smallMedium
+                    width: StyleKit.Units.iconSizes.smallMedium
+                    height: StyleKit.Units.iconSizes.smallMedium
                 }
 
                 background: Rectangle {
-                    topLeftRadius: optionButton.index === 0 ? Units.cornerRadius : 0
-                    bottomLeftRadius: optionButton.index === 0 ? Units.cornerRadius : 0
-                    topRightRadius: (!root.hasDetails && optionButton.index === root.options.length - 1) ? Units.cornerRadius : 0
-                    bottomRightRadius: (!root.hasDetails && optionButton.index === root.options.length - 1) ? Units.cornerRadius : 0
+                    topLeftRadius: optionButton.index === 0 ? StyleKit.Units.cornerRadius : 0
+                    bottomLeftRadius: optionButton.index === 0 ? StyleKit.Units.cornerRadius : 0
+                    topRightRadius: (!root.hasDetails && optionButton.index === root.options.length - 1) ? StyleKit.Units.cornerRadius : 0
+                    bottomRightRadius: (!root.hasDetails && optionButton.index === root.options.length - 1) ? StyleKit.Units.cornerRadius : 0
                     color: (optionButton.hovered && !optionButton.isActive) ? root.colors.hoverColor : "transparent"
 
                     Rectangle {
@@ -105,20 +106,20 @@ Item {
         QQC2.ToolButton {
             id: detailsButton
             visible: root.hasDetails
-            implicitWidth: Units.iconSizes.small + Units.smallSpacing * 2
+            implicitWidth: StyleKit.Units.iconSizes.small + StyleKit.Units.smallSpacing * 2
             height: root.height
 
-            contentItem: Icon {
+            contentItem: Origami.Icon {
                 anchors.centerIn: parent
                 color: root.colors.textColor
-                source: "arrow-down-symbolic"
-                width: Units.iconSizes.small
-                height: Units.iconSizes.small
+                source: "chevron-down"
+                width: StyleKit.Units.iconSizes.small
+                height: StyleKit.Units.iconSizes.small
             }
 
             background: Rectangle {
-                topRightRadius: Units.cornerRadius
-                bottomRightRadius: Units.cornerRadius
+                topRightRadius: StyleKit.Units.cornerRadius
+                bottomRightRadius: StyleKit.Units.cornerRadius
                 color: detailsPopup.visible ? root.colors.highlightColor : (detailsButton.hovered ? root.colors.hoverColor : "transparent")
 
                 Rectangle {
@@ -137,7 +138,7 @@ Item {
                 parent: detailsButton
                 closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutsideParent
                 x: detailsButton.width - width
-                y: detailsButton.height + Units.smallSpacing
+                y: detailsButton.height + StyleKit.Units.smallSpacing
 
                 onOpened: {
                     if (root.detailsContent) {
@@ -148,8 +149,8 @@ Item {
                 }
 
                 contentItem: Item {
-                    implicitWidth: root.detailsContent ? root.detailsContent.implicitWidth : Units.gridUnit * 10
-                    implicitHeight: root.detailsContent ? root.detailsContent.implicitHeight : Units.gridUnit * 6
+                    implicitWidth: root.detailsContent ? root.detailsContent.implicitWidth : StyleKit.Units.gridUnit * 10
+                    implicitHeight: root.detailsContent ? root.detailsContent.implicitHeight : StyleKit.Units.gridUnit * 6
                 }
             }
         }

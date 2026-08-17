@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import la.cettila.Origami 1.0 as Origami
+import StyleKit 1.0 as StyleKit
 
 QQC2.ScrollView {
     id: root
@@ -289,8 +290,8 @@ QQC2.ScrollView {
                             spacing: 12
                             Origami.Icon {
                                 source: "dialog-information-symbolic"
-                                width: Origami.Units.iconSizes.medium
-                                height: Origami.Units.iconSizes.medium
+                                width: StyleKit.Units.iconSizes.medium
+                                height: StyleKit.Units.iconSizes.medium
                             }
                             Origami.IconStack {
                                 iconNames: ["document-open-symbolic", "edit-find-symbolic", "preferences-system-symbolic"]

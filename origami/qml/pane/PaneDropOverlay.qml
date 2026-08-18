@@ -60,7 +60,18 @@ DropArea {
     function _zoneFor(x, y, drag) {
         if (drag.source && drag.source.leafId === root.leafId && root.controller && root.controller.isStandalonePane(root.leafId))
             return "";
-        return root._rawZoneFor(x, y);
+        var raw = root._rawZoneFor(x, y);
+        // A "tabs" group's children are always bare panes -- a toolbar
+        // leaf must never join/create one (see PaneView.qml's
+        // requestDrop()/insertTab() own center-zone guards), so suppress
+        // just the "center" highlight whenever either side of the pairing
+        // is a toolbar: the leaf being dragged (drag.source.leafId, same
+        // standalone-leaf-id shape the isStandalonePane check above
+        // already relies on) or this drop target itself. Otherwise the
+        // highlight would promise a drop that then silently no-ops.
+        if (raw === "center" && root.controller && ((drag.source && root.controller.isToolbarPane(drag.source.leafId)) || root.controller.isToolbarPane(root.leafId)))
+            return "";
+        return raw;
     }
 
     // drawerEdge carves out a thin sliver right at the very top/bottom

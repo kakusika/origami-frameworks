@@ -1,5 +1,5 @@
-- パレット
-- アクセント
+- FileTileのコンテンツを自動計算にする
+- ToggleButtonをroundbuttonへ。ToggleButtonにwithdetailみたいなの追加？
 
 #[ Gallery ]
 

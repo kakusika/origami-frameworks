@@ -34,39 +34,50 @@ Item {
     // レイアウト計算はこちら(ジェニュインなQMLプロパティ)を経由する。
     // node自体が差し替わった(木の再構築)ときだけnodeから読み直す。
     //
-    // Collapsed "drawer" children keep their entry here untouched (it
-    // still records their relative share for when they're re-expanded
-    // later) -- collapse/expand never rewrites this array. Only
-    // effectiveSizes below (the actual pixel sizes) treats them
-    // differently.
+    // Fixed-size children (a collapsed "drawer", or a "toolbar" -- see
+    // PaneNode.qml's fixedSizePx) keep their entry here untouched (it
+    // still records their relative share for when a collapsed drawer is
+    // later re-expanded) -- effectiveSizes below (the actual pixel sizes)
+    // is what treats them differently.
     property var sizes: []
 
-    // Index-aligned with node.children: true where that child is a
-    // currently-collapsed "drawer" (see PaneNode.qml's collapsedDrawer).
-    // Populated by each PaneNode delegate's own onCollapsedDrawerChanged/
-    // Component.onCompleted below, since node.children[i].node.expanded
-    // itself has no change notification to bind to directly.
+    // Index-aligned with node.children: each child's own fixedSizePx (0
+    // if it takes a proportional share like an ordinary pane, otherwise
+    // the fixed px size it should occupy along this split's axis instead
+    // -- see PaneNode.qml's own property for the two cases that currently
+    // produce a nonzero value here). Populated by each PaneNode delegate's
+    // own onFixedSizePxChanged/Component.onCompleted below, since neither
+    // node.children[i].node.expanded (drawer) nor node.type (toolbar)
+    // itself has a change notification to bind to directly here.
     //
-    // A collapsed drawer child's own rail is fixed-size along one axis
-    // and full-size along the other -- which axis depends on its
-    // orientation, forced (for a drawer that's a direct child of THIS
-    // split) to whichever shape keeps that fixed axis aligned with this
-    // split's own resize axis (see PaneDrawer.qml's class comment on
+    // A fixed-size child occupies this size along one axis and the split's
+    // full size along the other -- which axis depends on orientation,
+    // forced (for a drawer that's a direct child of THIS split) to
+    // whichever shape keeps that fixed axis aligned with this split's own
+    // resize axis (see PaneDrawer.qml's class comment on
     // splitOrientation/effectiveOrientation: a horizontal split forces a
     // vertical/fixed-width rail, a vertical split forces a horizontal/
-    // fixed-height rail). Because of that forced pairing, a collapsed
-    // drawer child's fixed dimension always matches this split's own
-    // sizing axis regardless of orientation, so effectiveSizes/_remaining/
-    // _expandedSum below apply the fixed-size treatment unconditionally
-    // whenever this is true for a given child.
-    property var collapsedFlags: []
+    // fixed-height rail; PaneToolbar.qml's own splitOrientation/
+    // effectiveOrientation mirror the exact same forcing). Either way the
+    // fixed px value itself (StyleKit.Units.collapsedDrawerSize/
+    // toolbarSize) is the same regardless of which axis it ends up
+    // applied to, so PaneSplit.qml itself never needs to know or care
+    // which orientation a given fixed-size child is actually in -- only
+    // PaneNode.qml's fixedSizePx (the number) and each leaf's own layout
+    // (which axis its *content* reads as "the short one") do. Because of
+    // that, a fixed child's px size here always applies along this
+    // split's own sizing axis regardless of this
+    // split's orientation, so effectiveSizes/_remaining/_expandedSum below
+    // apply the fixed-size treatment unconditionally whenever this is
+    // nonzero for a given child.
+    property var fixedSizes: []
 
-    function _setCollapsed(index, value) {
-        var next = root.collapsedFlags.slice();
+    function _setFixed(index, px) {
+        var next = root.fixedSizes.slice();
         while (next.length <= index)
-            next.push(false);
-        next[index] = value;
-        root.collapsedFlags = next;
+            next.push(0);
+        next[index] = px;
+        root.fixedSizes = next;
     }
 
     function _refreshSizes() {
@@ -75,9 +86,9 @@ Item {
         }) : [];
         // Stale otherwise: a tree rebuild recreates every PaneNode
         // delegate below (fresh onCompleted calls repopulate this
-        // correctly), but until then this avoids reading old flags
+        // correctly), but until then this avoids reading old sizes
         // against a new child list.
-        root.collapsedFlags = [];
+        root.fixedSizes = [];
     }
 
     onNodeChanged: root._refreshSizes()
@@ -85,12 +96,10 @@ Item {
 
     function _remaining() {
         var total = root.horizontal ? root.width : root.height;
-        var collapsedCount = 0;
-        for (var i = 0; i < root.collapsedFlags.length; i++) {
-            if (root.collapsedFlags[i])
-                collapsedCount++;
-        }
-        return Math.max(0, total - collapsedCount * StyleKit.Units.collapsedDrawerSize);
+        var fixedTotal = 0;
+        for (var i = 0; i < root.fixedSizes.length; i++)
+            fixedTotal += root.fixedSizes[i] || 0;
+        return Math.max(0, total - fixedTotal);
     }
 
     function _expandedSum() {
@@ -98,21 +107,19 @@ Item {
             return 0;
         var sum = 0;
         for (var i = 0; i < root.node.children.length; i++) {
-            if (!root.collapsedFlags[i])
+            if (!root.fixedSizes[i])
                 sum += root.sizes[i] || 0;
         }
         return sum;
     }
 
-    // Actual pixel size of each child along the split's axis. A collapsed
-    // drawer child gets a fixed Units.collapsedDrawerSize -- see
-    // collapsedFlags' own comment above for why that's always this
-    // split's own sizing axis, regardless of this split's orientation.
-    // The remaining space (total minus every collapsed child's fixed
-    // size) is split among the non-collapsed children in proportion to
-    // their raw `sizes` fraction relative to each other (i.e. normalized
-    // against just their own sum, not the full 1.0 budget those
-    // fractions add up to across *all* children).
+    // Actual pixel size of each child along the split's axis. A
+    // fixed-size child (see fixedSizes' own comment above) gets exactly
+    // its own fixedSizePx. The remaining space (total minus every
+    // fixed-size child's own share) is split among the rest in proportion
+    // to their raw `sizes` fraction relative to each other (i.e.
+    // normalized against just their own sum, not the full 1.0 budget
+    // those fractions add up to across *all* children).
     readonly property var effectiveSizes: {
         var result = [];
         if (!root.node)
@@ -120,12 +127,12 @@ Item {
         var children = root.node.children;
         var remaining = root._remaining();
         var expandedSum = root._expandedSum();
-        var expandedCount = children.length - root.collapsedFlags.filter(function (c) {
-            return c;
+        var expandedCount = children.length - root.fixedSizes.filter(function (c) {
+            return !!c;
         }).length;
         for (var i = 0; i < children.length; i++) {
-            if (root.collapsedFlags[i]) {
-                result.push(StyleKit.Units.collapsedDrawerSize);
+            if (root.fixedSizes[i]) {
+                result.push(root.fixedSizes[i]);
             } else if (expandedSum > 0) {
                 result.push((root.sizes[i] || 0) / expandedSum * remaining);
             } else {
@@ -163,8 +170,8 @@ Item {
             controller: root.controller
             splitOrientation: root.node ? root.node.orientation : ""
 
-            onCollapsedDrawerChanged: root._setCollapsed(cell.index, cell.collapsedDrawer)
-            Component.onCompleted: root._setCollapsed(cell.index, cell.collapsedDrawer)
+            onFixedSizePxChanged: root._setFixed(cell.index, cell.fixedSizePx)
+            Component.onCompleted: root._setFixed(cell.index, cell.fixedSizePx)
         }
     }
 
@@ -177,13 +184,13 @@ Item {
 
             readonly property real boundary: root._offset(index + 1)
 
-            // Nothing meaningful to drag against a fixed-size collapsed
-            // neighbor -- hides the handle and (since invisible items
-            // don't receive input) disables its MouseArea too. See
-            // collapsedFlags' own comment above for why a collapsed
-            // drawer child is always fixed-size along this split's axis
+            // Nothing meaningful to drag against a fixed-size neighbor
+            // (a collapsed drawer or a toolbar) -- hides the handle and
+            // (since invisible items don't receive input) disables its
+            // MouseArea too. See fixedSizes' own comment above for why a
+            // fixed-size child's size is always along this split's axis
             // regardless of orientation.
-            visible: !(root.collapsedFlags[handleArea.index] || root.collapsedFlags[handleArea.index + 1])
+            visible: !(root.fixedSizes[handleArea.index] || root.fixedSizes[handleArea.index + 1])
 
             x: root.horizontal ? handleArea.boundary - root.grabMargin : 0
             y: root.horizontal ? 0 : handleArea.boundary - root.grabMargin

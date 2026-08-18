@@ -23,7 +23,7 @@ import StyleKit 1.0 as StyleKit
 // axis: a horizontal split (side-by-side cells, resized along width)
 // forces a vertical/fixed-width rail, a vertical split (stacked cells,
 // resized along height) forces a horizontal/fixed-height rail -- see
-// PaneSplit.qml's collapsedFlags comment for why that pairing matters.
+// PaneSplit.qml's fixedSizes comment for why that pairing matters.
 // The manual hamburger menu item is disabled in that case (same
 // enabled-false-while-static-text idiom `_groupMenuItems`'s own "タブに
 // 変更" entry already uses for canConvertDrawerToTabs).
@@ -65,6 +65,19 @@ Item {
     property bool framed: false
 
     property bool expanded: true
+
+    // Fixed size of this drawer cell along its parent split's axis, in px,
+    // or 0 when expanded (proportional share, same as an ordinary pane).
+    // Read by PaneNode.qml and forwarded to PaneSplit.qml.
+    //
+    // Collapsed → occupies exactly `railSize` px (the icon-only rail that
+    // stays visible). Expanded → 0, meaning PaneSplit gives this cell its
+    // usual proportional share from `node.children[i].size`.
+    //
+    // Because this is a real QML property with change notification,
+    // PaneSplit.qml's `onFixedSizePxChanged` handler fires automatically
+    // whenever the drawer is toggled, with no extra wiring needed.
+    readonly property real fixedSizePx: root.expanded ? 0 : root.railSize
 
     // Set by PaneNode.qml's passthrough (see PaneSplit.qml's Repeater
     // delegate) to the enclosing split's own orientation, or "" if this
@@ -142,7 +155,7 @@ Item {
 
     // Same constant PaneSplit.qml shrinks a collapsed cell's fixed
     // dimension to when this drawer is nested in a split -- see
-    // PaneSplit.qml's collapsedFlags comment. Used as the rail's width
+    // PaneSplit.qml's fixedSizes comment. Used as the rail's width
     // when vertical, height when horizontal.
     readonly property real railSize: StyleKit.Units.collapsedDrawerSize
 

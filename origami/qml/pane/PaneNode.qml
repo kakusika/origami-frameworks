@@ -1,16 +1,19 @@
 import QtQuick
+import StyleKit 1.0 as StyleKit
 
 // Recursive dispatcher that shows PaneSplit/PaneDrawer/PaneLeaf depending on
 // node.type, and decides whether that node gets a "this is a group" frame
 // (margin + border) at all.
 //
 // That decision is written as an exclusion -- every node type except
-// "split" (a purely structural divider) and "pane" (a bare standalone
-// view) is framed -- rather than an allow-list of the group types that
-// currently exist ("tabs", "drawer"). Since PaneNode is the single place
-// every node in the tree passes through, this is the only place the
-// decision needs to live: a future group type is framed automatically,
-// with no other file to update.
+// "split" (a purely structural divider), "pane" (a bare standalone
+// view), and "toolbar" (also a bare single view, just fixed-size and
+// routed to PaneToolbar.qml instead of PaneLeaf.qml -- see PaneSplit.qml's
+// own fixed-size handling) is framed -- rather than an allow-list of the
+// group types that currently exist ("tabs", "drawer"). Since PaneNode is
+// the single place every node in the tree passes through, this is the
+// only place the decision needs to live: a future group type is framed
+// automatically, with no other file to update.
 //
 // PaneNode only decides *whether*, not *where*: the actual margin/border
 // is drawn by whichever component gets loaded (PaneLeaf.qml/PaneDrawer.qml),
@@ -86,15 +89,29 @@ Loader {
 
     readonly property string _prefix: "qrc:/qt/qml/la/cettila/Origami/qml/pane/"
 
-    // Whether this node is a "drawer" group that's currently collapsed,
-    // derived from the loaded PaneDrawer.qml instance's own local
-    // `expanded` property -- a real QML property with change
-    // notification, unlike `node.expanded` itself (a plain JS field
-    // mutated in place with no notification, see PaneView.qml's
-    // setDrawerExpanded()). PaneSplit.qml reads this (via its PaneNode
-    // delegate) to give a collapsed drawer cell a fixed size instead of
-    // its usual proportional split share.
-    readonly property bool collapsedDrawer: !!(root.item && root.node && root.node.type === "drawer" && root.item.hasOwnProperty("expanded") && root.item.expanded === false)
+    // Whether the loaded item declares a `fixedSizePx` property (duck-
+    // typed: PaneToolbar.qml and PaneDrawer.qml both do; PaneLeaf.qml and
+    // PaneSplit.qml don't). When true, `fixedSizePx` below reflects
+    // whatever the item currently reports -- including live changes (e.g.
+    // a drawer toggling between 0 and collapsedDrawerSize as it
+    // expands/collapses). When false, `fixedSizePx` is 0 and the cell
+    // takes a proportional share.
+    property bool _itemHasFixedSize: false
+    property real _itemFixedSizePx: 0
+
+    // This cell's own fixed size along its parent split's axis, in px, or
+    // 0 if it should take a proportional share like an ordinary pane
+    // instead. Sourced entirely from the loaded item's own `fixedSizePx`
+    // property (if it declares one) so each node type controls its own
+    // sizing policy:
+    //   - PaneToolbar: always fixed (StyleKit.Units.toolbarSize or
+    //     node.props.fixedSize override)
+    //   - PaneDrawer:  fixed when collapsed (railSize), 0 when expanded
+    //   - PaneLeaf / PaneSplit: no property → always 0 (proportional)
+    // Any future node type that wants a fixed or stateful size just needs
+    // to declare `fixedSizePx` on itself; PaneNode and PaneSplit need no
+    // further changes.
+    readonly property real fixedSizePx: root._itemHasFixedSize ? root._itemFixedSizePx : 0
 
     source: {
         if (!node)
@@ -103,6 +120,8 @@ Loader {
             return root._prefix + "groups/PaneSplit.qml";
         if (node.type === "drawer")
             return root._prefix + "groups/PaneDrawer.qml";
+        if (node.type === "toolbar")
+            return root._prefix + "PaneToolbar.qml";
         return root._prefix + "PaneLeaf.qml";
     }
 
@@ -126,7 +145,7 @@ Loader {
         });
         if (item.hasOwnProperty("framed"))
             item.framed = Qt.binding(function () {
-                return !!root.node && root.node.type !== "split" && root.node.type !== "pane" && !root.ancestorFramed;
+                return !!root.node && root.node.type !== "split" && root.node.type !== "pane" && root.node.type !== "toolbar" && !root.ancestorFramed;
             });
         if (item.hasOwnProperty("splitOrientation"))
             item.splitOrientation = Qt.binding(function () {
@@ -145,6 +164,32 @@ Loader {
             item.bottomRightRadius = Qt.binding(function () {
                 return root.bottomRightRadius;
             });
+        }
+        // Duck-typed fixed-size: if the loaded item declares `fixedSizePx`
+        // (PaneToolbar, PaneDrawer), mirror it into _itemFixedSizePx so
+        // `fixedSizePx` above (and therefore PaneSplit's layout) updates
+        // automatically whenever the item's own value changes (e.g. a
+        // drawer toggling between 0 and railSize). Items without the
+        // property (PaneLeaf, PaneSplit) leave _itemHasFixedSize false so
+        // `fixedSizePx` stays 0 -- no type-name checks needed anywhere.
+        if (item.hasOwnProperty("fixedSizePx")) {
+            root._itemHasFixedSize = true;
+            root._itemFixedSizePx = Qt.binding(function () {
+                return root.item ? root.item.fixedSizePx : 0;
+            });
+        } else {
+            root._itemHasFixedSize = false;
+            root._itemFixedSizePx = 0;
+        }
+    }
+
+    // When the Loader unloads (source set to "" or node.type changes and
+    // a new load starts), clear the fixed-size mirror so `fixedSizePx`
+    // doesn't hold a stale value while the new item is loading.
+    onStatusChanged: {
+        if (root.status !== Loader.Ready) {
+            root._itemHasFixedSize = false;
+            root._itemFixedSizePx = 0;
         }
     }
 }

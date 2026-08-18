@@ -18,6 +18,7 @@ fn main() {
                 "qml/pane/PaneView.qml",
                 "qml/pane/PaneNode.qml",
                 "qml/pane/PaneLeaf.qml",
+                "qml/pane/PaneToolbar.qml",
                 "qml/pane/PaneHeader.qml",
                 "qml/pane/PaneWindow.qml",
                 "qml/pane/PaneManager.qml",

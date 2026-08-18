@@ -305,9 +305,7 @@ QQC2.ItemDelegate {
 
                 Image {
                     id: thumbnail
-                    anchors.centerIn: parent
-                    width: iconArea.resolvedIconSize
-                    height: iconArea.resolvedIconSize
+                    anchors.fill: parent
                     visible: !root.isDir && status === Image.Ready
                     asynchronous: true
                     fillMode: Image.PreserveAspectFit

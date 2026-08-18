@@ -230,7 +230,7 @@ Item {
         if (!area)
             return null;
         var pane = null;
-        if (area.type === "pane")
+        if (area.type === "pane" || area.type === "toolbar")
             pane = area;
         else if (area.type === "tabs")
             pane = (area.currentIndex < area.children.length) ? area.children[area.currentIndex].node : null;
@@ -254,12 +254,12 @@ Item {
     function _restoreNode(saved) {
         if (!saved)
             return null;
-        if (saved.type === "pane") {
+        if (saved.type === "pane" || saved.type === "toolbar") {
             var component = root.componentRegistry[saved.viewType];
             if (!component)
                 return null;
             return {
-                type: "pane",
+                type: saved.type,
                 id: root._genId(),
                 title: saved.title,
                 component: component,
@@ -372,7 +372,7 @@ Item {
     function _serializeNode(node) {
         if (!node)
             return null;
-        if (node.type === "pane") {
+        if (node.type === "pane" || node.type === "toolbar") {
             // Look the materialized Item up by id via _itemCache rather
             // than trusting node.item: any pane nested under a "split"
             // arrives here as a QVariantMap-converted copy of the real
@@ -383,7 +383,7 @@ Item {
             // by id precisely so lookups don't depend on object identity.
             var materializedItem = root._itemCache[node.id];
             return {
-                type: "pane",
+                type: node.type,
                 viewType: node.viewType,
                 title: node.title,
                 props: (materializedItem && materializedItem.paneSerialize) ? materializedItem.paneSerialize() : {}
@@ -428,9 +428,9 @@ Item {
     }
 
     function _cloneNode(node) {
-        if (node.type === "pane") {
+        if (node.type === "pane" || node.type === "toolbar") {
             return {
-                type: "pane",
+                type: node.type,
                 id: node.id,
                 title: node.title,
                 component: node.component,
@@ -524,7 +524,7 @@ Item {
     // shared header) still needs to descend into node.children to find
     // it, exactly like "split" already does.
     function _findArea(node, areaId) {
-        if (node.type === "pane" || node.type === "tabs")
+        if (node.type === "pane" || node.type === "tabs" || node.type === "toolbar")
             return node.id === areaId ? node : null;
         if (node.type === "drawer" && node.id === areaId)
             return node;
@@ -688,10 +688,11 @@ Item {
         if (!area)
             return null;
 
-        if (area.type === "pane") {
+        if (area.type === "pane" || area.type === "toolbar") {
             if (area.id !== paneId)
                 return null;
             return {
+                type: area.type,
                 id: area.id,
                 title: area.title,
                 component: area.component,
@@ -713,10 +714,12 @@ Item {
         var removedNode = area.children.splice(idx, 1)[0].node;
         if (area.currentIndex >= area.children.length)
             area.currentIndex = Math.max(0, area.children.length - 1);
-        // Same plain shape as the standalone-pane branch above (no
-        // "type"): callers always rebuild an actual node via _paneNode()/
-        // _tabsChild() rather than reusing this directly.
+        // Same shape as the standalone-pane branch above, `type` included
+        // (unlike everything else here) so _paneNode()/_tabsChild() can
+        // rebuild the exact same node kind rather than always "pane" --
+        // see _paneNode()'s own comment.
         return {
+            type: removedNode.type,
             id: removedNode.id,
             title: removedNode.title,
             component: removedNode.component,
@@ -780,8 +783,15 @@ Item {
     // viewType/item/props), and the {node: ...} wrapper "tabs" children
     // use around one.
     function _paneNode(pane) {
+        // pane.type survives a drag/drop round trip (see _removePane()'s
+        // own type: field) so a "toolbar" leaf comes back as "toolbar",
+        // not silently downgraded to a plain "pane" -- defaults to "pane"
+        // for every other caller here that builds a bare `{id, title,
+        // component, viewType, item, props}` literal with no type field
+        // of its own (addPaneToTabs(), Component.onCompleted's initial
+        // panes, etc).
         return {
-            type: "pane",
+            type: pane.type || "pane",
             id: pane.id,
             title: pane.title,
             component: pane.component,
@@ -804,7 +814,18 @@ Item {
     // tab out of a group alongside its siblings).
     function isStandalonePane(areaId) {
         var area = root._findArea(root.tree, areaId);
-        return !!area && area.type === "pane";
+        return !!area && (area.type === "pane" || area.type === "toolbar");
+    }
+
+    // Whether areaId is a standalone "toolbar" area. Used by
+    // PaneDropOverlay.qml to suppress its center-zone drop highlight
+    // while dragging a toolbar -- a toolbar leaf can never join/create a
+    // "tabs" group (see requestDrop()'s own center-zone guard), so
+    // showing that highlight would promise a drop that then silently
+    // no-ops.
+    function isToolbarPane(areaId) {
+        var area = root._findArea(root.tree, areaId);
+        return !!area && area.type === "toolbar";
     }
 
     // Moves paneId (currently in area sourceAreaId) to sit relative to
@@ -829,7 +850,7 @@ Item {
             if (zone === "center")
                 return;
             var selfArea = root._findArea(root.tree, sourceAreaId);
-            if (selfArea && selfArea.type === "pane")
+            if (selfArea && (selfArea.type === "pane" || selfArea.type === "toolbar"))
                 return;
         }
 
@@ -838,7 +859,7 @@ Item {
         var sourceArea = root._findArea(newTree, sourceAreaId);
         if (!sourceArea)
             return;
-        var wasStandalone = sourceArea.type === "pane";
+        var wasStandalone = sourceArea.type === "pane" || sourceArea.type === "toolbar";
 
         // Captured now, before newTree is touched any further, so it still
         // points at the source's *original* slot even after the dropped
@@ -860,12 +881,26 @@ Item {
             var targetArea = root._findArea(newTree, targetAreaId);
             if (!targetArea)
                 return;
+            // A "tabs" group's children are always bare panes -- a
+            // toolbar leaf must never become one, in either direction
+            // (dragged onto a tabs strip, or dragged onto/receiving a
+            // plain pane that would otherwise get wrapped into a brand
+            // new "tabs" group alongside it). `pane` was already spliced
+            // out of newTree by _removePane() above, but newTree is only
+            // ever committed to root.tree at this function's very end
+            // (see its class comment on clone+reassign), so returning
+            // here leaves the real tree untouched -- same no-op shape as
+            // every other early return in this function.
             if (targetArea.type === "tabs") {
+                if (pane.type === "toolbar")
+                    return;
                 targetArea.children.push(root._tabsChild(pane));
                 targetArea.currentIndex = targetArea.children.length - 1;
             } else {
                 var foundPane = root._find(newTree, targetAreaId, null, -1);
                 if (!foundPane)
+                    return;
+                if (pane.type === "toolbar" || foundPane.node.type === "toolbar")
                     return;
                 var newGroup = {
                     type: "tabs",
@@ -1016,7 +1051,7 @@ Item {
         var area = root._findArea(newTree, areaId);
         if (!area)
             return null;
-        var wasStandalone = area.type === "pane";
+        var wasStandalone = area.type === "pane" || area.type === "toolbar";
 
         var pane = root._removePane(newTree, areaId, paneId);
         if (!pane)
@@ -1032,6 +1067,7 @@ Item {
         root.tree = newTree;
 
         return {
+            type: pane.type,
             title: pane.title,
             component: pane.component,
             viewType: pane.viewType,
@@ -1049,6 +1085,7 @@ Item {
             return;
         var newTree = root._cloneNode(root.tree);
         var pane = {
+            type: paneData.type || "pane",
             id: root._genId(),
             title: paneData.title,
             component: paneData.component,
@@ -1061,12 +1098,19 @@ Item {
             var targetArea = root._findArea(newTree, targetAreaId);
             if (!targetArea)
                 return;
+            // Same toolbar-can-never-join/create-a-"tabs"-group guard as
+            // requestDrop()'s own identical center-zone branch -- see its
+            // comment.
             if (targetArea.type === "tabs") {
+                if (pane.type === "toolbar")
+                    return;
                 targetArea.children.push(root._tabsChild(pane));
                 targetArea.currentIndex = targetArea.children.length - 1;
             } else {
                 var foundPane = root._find(newTree, targetAreaId, null, -1);
                 if (!foundPane)
+                    return;
+                if (pane.type === "toolbar" || foundPane.node.type === "toolbar")
                     return;
                 var newGroup = {
                     type: "tabs",
@@ -1345,7 +1389,7 @@ Item {
         if (!area)
             return;
 
-        if (area.type === "pane") {
+        if (area.type === "pane" || area.type === "toolbar") {
             if (area.id !== paneId)
                 return;
             if (newTree.type !== "split" && newTree.type !== "drawer") {

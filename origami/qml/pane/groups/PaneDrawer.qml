@@ -325,6 +325,19 @@ Item {
         width: root.railSize
         spacing: StyleKit.Units.smallSpacing
 
+        // Grab handle for dragging/moving this entire drawer node
+        Origami.PaneGrip {
+            id: drawerGripV
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            horizontal: true
+            visible: !(root.controller && root.controller.layoutLocked)
+            title: root.node ? (root.node.title || "ドロワー") : ""
+            tabId: root.node ? root.node.id : -1
+            leafId: root.node ? root.node.id : -1
+            controller: root.controller
+        }
+
         Origami.ToggleButton {
             anchors.horizontalCenter: parent.horizontalCenter
             iconName: root.expanded ? "chevron-down" : "chevron-right"
@@ -386,6 +399,19 @@ Item {
         anchors.top: parent.top
         height: root.railSize
         spacing: StyleKit.Units.smallSpacing
+
+        // Grab handle for dragging/moving this entire drawer node
+        Origami.PaneGrip {
+            id: drawerGripH
+            anchors.verticalCenter: parent.verticalCenter
+            height: parent.height
+            horizontal: false
+            visible: !(root.controller && root.controller.layoutLocked)
+            title: root.node ? (root.node.title || "ドロワー") : ""
+            tabId: root.node ? root.node.id : -1
+            leafId: root.node ? root.node.id : -1
+            controller: root.controller
+        }
 
         Origami.ToggleButton {
             anchors.verticalCenter: parent.verticalCenter

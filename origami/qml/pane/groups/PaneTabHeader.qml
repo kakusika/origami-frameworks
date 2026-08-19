@@ -18,12 +18,6 @@ Rectangle {
     property bool active: false
     property var controller
 
-    // Renders as a small grip glyph instead of the title+close row, with
-    // no close button. Used by PaneTabs.qml for the drag handle pinned
-    // to the pane's top-left corner: same drag/drop mechanics as a normal
-    // tab header below, just a different, fixed-size look.
-    property bool compact: false
-
     // Freedesktop icon name shown before the title (empty = no icon).
     // Looked up by the caller from controller.iconRegistry, same as
     // PaneHeader.qml's own _activeIcon.
@@ -54,31 +48,18 @@ Rectangle {
 
     // When true, hides the title text and shrinks the tab down to just
     // its icon -- used by PaneTabBar.qml when the pane is too narrow for
-    // every tab to show its full title. No effect when compact (that
-    // mode never shows a title to begin with).
+    // every tab to show its full title.
     property bool iconOnly: false
 
     // Width this tab would take with its title shown, regardless of the
     // current iconOnly value -- used by PaneTabBar.qml to detect whether
     // the full tab row would actually overflow the available space (see
-    // its own _iconOnly comment). Deliberately independent of iconOnly so
-    // that binding doesn't create a feedback loop through it. Mirrors the
-    // `width:` formula below, but measures the title via titleMetrics
-    // (below) instead of contentRow.implicitWidth, since contentRow is a
-    // Row and Row excludes invisible children (label when iconOnly) from
-    // its own implicitWidth -- exactly the mechanism iconOnly relies on
-    // to shrink the visible tab, which is not what we want to measure here.
-    // Composite icons grow past one icon's width when they line up
-    // horizontally (see IconStack.qml's own class comment), so this has
-    // to read the actual iconStack width rather than assume a single
-    // icon's worth like the ordinary case.
+    // its own _iconOnly comment).
     readonly property real _iconAreaWidth: root._composite ? iconStack.width : (root._singleIconName !== "" ? StyleKit.Units.iconSizes.small : 0)
-    readonly property real fullWidth: root.compact ? root.width : (root._iconAreaWidth > 0 ? root._iconAreaWidth + StyleKit.Units.smallSpacing : 0) + titleMetrics.implicitWidth + StyleKit.Units.largeSpacing * 2
+    readonly property real fullWidth: (_iconAreaWidth > 0 ? _iconAreaWidth + StyleKit.Units.smallSpacing : 0) + titleMetrics.implicitWidth + StyleKit.Units.largeSpacing * 2
 
     // 押してからこのpx数だけ動かすまでは、ただのクリックとして扱い
-    // ドラッグを開始しない(短いクリックでも半透明のドラッグ像が一瞬
-    // 出てしまっていた問題を解消するための、動きの大きさによる判定)。
-    // プラットフォーム標準のドラッグ開始距離をそのまま使う。
+    // ドラッグを開始しない。
     property real dragThreshold: Qt.styleHints.startDragDistance
 
     property bool _hovered: false
@@ -96,16 +77,7 @@ Rectangle {
     // 非アクティブなタブは親(PaneTabBar、Header配色)に馴染ませる。
     readonly property var colors: StyleKit.Theme.paletteFor(root.active ? StyleKit.Theme.view : StyleKit.Theme.header)
 
-    // Compact width hugs the dot grid itself (just a little breathing
-    // room, no side padding to match a normal tab) so the grip reads as a
-    // narrow vertical strip instead of a squarish button.
-    width: root.compact ? dotGrid.implicitWidth + StyleKit.Units.smallSpacing : contentRow.implicitWidth + StyleKit.Units.largeSpacing * 2
-    // Baseline height comfortably fits one icon's worth of vertical
-    // padding. A composite that stacks vertically (IconStack's own
-    // `orientation`, PaneDrawer.qml's vertical rail) can grow taller
-    // than one icon -- when it does, the tab grows with it instead of
-    // clipping/overflowing past its own bounds, using the same padding
-    // the single-icon case already has room for.
+    width: contentRow.implicitWidth + StyleKit.Units.largeSpacing * 2
     readonly property real _iconAreaHeight: root._composite ? iconStack.height : StyleKit.Units.iconSizes.small
     height: Math.max(StyleKit.Units.gridUnit * 1.6, root._iconAreaHeight + (StyleKit.Units.gridUnit * 1.6 - StyleKit.Units.iconSizes.small))
 
@@ -114,29 +86,23 @@ Rectangle {
     bottomLeftRadius: StyleKit.Units.cornerRadius
     bottomRightRadius: StyleKit.Units.cornerRadius
 
-    // No fill at rest, active or not -- only a hover highlight (the
-    // active tab is already distinguished by its own accent line below,
-    // see the Rectangle right after this one).
-    color: root.compact ? (root._hovered ? root.colors.hoverColor : "transparent") : (root.active ? "transparent" : (root._hovered ? root.colors.hoverColor : "transparent"))
+    // No fill at rest, active or not -- only a hover highlight.
+    color: root.active ? "transparent" : (root._hovered ? root.colors.hoverColor : "transparent")
 
     HoverHandler {
         onHoveredChanged: root._hovered = hovered
     }
 
-    // Off-screen, used only to measure fullWidth above -- see that
-    // property's comment for why this can't just read label.implicitWidth.
+    // Off-screen, used only to measure fullWidth above.
     Text {
         id: titleMetrics
         visible: false
         text: root.title
     }
 
-    // アクティブタブの目印になるアクセントライン(Breeze系のアプリで
-    // 見慣れた、現在選択中のタブを示す表現)。compactなグリップは
-    // 「選択中のタブ」を示す必要がない(タブ一覧の一部ではない)ので出さない。
-    // activeEdge (see its own comment) picks which of these two draws.
+    // アクティブタブの目印になるアクセントライン
     Rectangle {
-        visible: root.active && !root.compact && root.activeEdge === "bottom"
+        visible: root.active && root.activeEdge === "bottom"
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -145,7 +111,7 @@ Rectangle {
     }
 
     Rectangle {
-        visible: root.active && !root.compact && root.activeEdge === "right"
+        visible: root.active && root.activeEdge === "right"
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -153,17 +119,8 @@ Rectangle {
         color: root.colors.highlightColor
     }
 
-    // Grip glyph shown instead of the title+close row below when compact.
-    Origami.DragHandle {
-        id: dotGrid
-        visible: root.compact
-        anchors.centerIn: parent
-        color: root.colors.textColor
-    }
-
     Row {
         id: contentRow
-        visible: !root.compact
         anchors.fill: parent
         anchors.leftMargin: StyleKit.Units.largeSpacing
         anchors.rightMargin: StyleKit.Units.smallSpacing

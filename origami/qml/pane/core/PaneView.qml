@@ -265,7 +265,11 @@ Item {
                 component: component,
                 viewType: saved.viewType,
                 item: null,
-                props: saved.props || {}
+                props: saved.props || {},
+                // Restore layout attribute from top-level field (see
+                // _serializeNode's comment). Falls back to 0 (absent)
+                // so PaneToolbar uses its StyleKit default.
+                fixedSize: saved.fixedSize || 0
             };
         }
         if (saved.type === "tabs") {
@@ -372,7 +376,7 @@ Item {
     function _serializeNode(node) {
         if (!node)
             return null;
-        if (node.type === "pane" || node.type === "toolbar") {
+        if (node.type === "toolbar") {
             // Look the materialized Item up by id via _itemCache rather
             // than trusting node.item: any pane nested under a "split"
             // arrives here as a QVariantMap-converted copy of the real
@@ -381,6 +385,23 @@ Item {
             // `pane.item = ...` write lands on that copy, never on the
             // canonical node this function is walking. _itemCache is keyed
             // by id precisely so lookups don't depend on object identity.
+            var materializedToolbar = root._itemCache[node.id];
+            var result = {
+                type: node.type,
+                viewType: node.viewType,
+                title: node.title,
+                props: (materializedToolbar && materializedToolbar.paneSerialize) ? materializedToolbar.paneSerialize() : {}
+            };
+            // Layout attribute -- saved at the top level of the node
+            // (not inside props, which is view UI state) so it survives
+            // round-trips through serializeTree/restoreTree regardless of
+            // whether the view implements paneSerialize. Omitted when
+            // 0/absent to keep the YAML tidy.
+            if (node.fixedSize > 0)
+                result.fixedSize = node.fixedSize;
+            return result;
+        }
+        if (node.type === "pane") {
             var materializedItem = root._itemCache[node.id];
             return {
                 type: node.type,
@@ -436,7 +457,8 @@ Item {
                 component: node.component,
                 viewType: node.viewType,
                 item: node.item,
-                props: node.props
+                props: node.props,
+                fixedSize: node.fixedSize || 0
             };
         }
         if (node.type === "tabs") {
@@ -698,8 +720,12 @@ Item {
                 component: area.component,
                 viewType: area.viewType,
                 item: area.item,
-                props: area.props
+                props: area.props,
+                fixedSize: area.fixedSize || 0
             };
+        }
+        if ((area.type === "drawer" || area.type === "tabs") && area.id === paneId) {
+            return root._cloneNode(area);
         }
 
         var idx = -1;
@@ -714,19 +740,7 @@ Item {
         var removedNode = area.children.splice(idx, 1)[0].node;
         if (area.currentIndex >= area.children.length)
             area.currentIndex = Math.max(0, area.children.length - 1);
-        // Same shape as the standalone-pane branch above, `type` included
-        // (unlike everything else here) so _paneNode()/_tabsChild() can
-        // rebuild the exact same node kind rather than always "pane" --
-        // see _paneNode()'s own comment.
-        return {
-            type: removedNode.type,
-            id: removedNode.id,
-            title: removedNode.title,
-            component: removedNode.component,
-            viewType: removedNode.viewType,
-            item: removedNode.item,
-            props: removedNode.props
-        };
+        return root._cloneNode(removedNode);
     }
 
     // Removes a standalone pane (areaId) entirely from whichever split
@@ -783,14 +797,10 @@ Item {
     // viewType/item/props), and the {node: ...} wrapper "tabs" children
     // use around one.
     function _paneNode(pane) {
-        // pane.type survives a drag/drop round trip (see _removePane()'s
-        // own type: field) so a "toolbar" leaf comes back as "toolbar",
-        // not silently downgraded to a plain "pane" -- defaults to "pane"
-        // for every other caller here that builds a bare `{id, title,
-        // component, viewType, item, props}` literal with no type field
-        // of its own (addPaneToTabs(), Component.onCompleted's initial
-        // panes, etc).
-        return {
+        if (pane.type === "drawer" || pane.type === "tabs" || pane.type === "split") {
+            return root._cloneNode(pane);
+        }
+        var node = {
             type: pane.type || "pane",
             id: pane.id,
             title: pane.title,
@@ -799,6 +809,9 @@ Item {
             item: pane.item,
             props: pane.props
         };
+        if (pane.fixedSize > 0)
+            node.fixedSize = pane.fixedSize;
+        return node;
     }
     function _tabsChild(pane) {
         return {
@@ -850,7 +863,7 @@ Item {
             if (zone === "center")
                 return;
             var selfArea = root._findArea(root.tree, sourceAreaId);
-            if (selfArea && (selfArea.type === "pane" || selfArea.type === "toolbar"))
+            if (selfArea && (selfArea.type === "pane" || selfArea.type === "toolbar" || selfArea.type === "drawer" || selfArea.type === "tabs"))
                 return;
         }
 
@@ -859,7 +872,7 @@ Item {
         var sourceArea = root._findArea(newTree, sourceAreaId);
         if (!sourceArea)
             return;
-        var wasStandalone = sourceArea.type === "pane" || sourceArea.type === "toolbar";
+        var wasStandalone = sourceArea.type === "pane" || sourceArea.type === "toolbar" || ((sourceArea.type === "drawer" || sourceArea.type === "tabs") && sourceAreaId === paneId);
 
         // Captured now, before newTree is touched any further, so it still
         // points at the source's *original* slot even after the dropped

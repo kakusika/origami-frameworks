@@ -30,7 +30,7 @@ Item {
     // collapse at all.
     readonly property real _tabRowSpacing: 1 // matches the Row in `start` below
     readonly property real _fullTabsWidth: {
-        var total = searchField.width;
+        var total = searchField.width + (groupGrip.visible ? groupGrip.width + root._tabRowSpacing : 0);
         for (var i = 0; i < tabRepeater.count; i++) {
             var item = tabRepeater.itemAt(i);
             if (item)
@@ -44,7 +44,7 @@ Item {
     signal tabClicked(int index)
     signal tabCloseRequested(int tabId)
 
-    Origami.HeaderBar {
+    Origami.Bar {
         id: bar
         anchors.fill: parent
 
@@ -55,6 +55,17 @@ Item {
             // that spacing without affecting the hamburger in `end`.
             Row {
                 spacing: 1
+
+                // Grab handle for dragging/moving this whole tabs group in the pane tree
+                Origami.PaneGrip {
+                    id: groupGrip
+                    height: bar.contentHeight
+                    visible: !(root.controller && root.controller.layoutLocked)
+                    title: root.node ? (root.node.title || "タブグループ") : ""
+                    tabId: root.leafId
+                    leafId: root.leafId
+                    controller: root.controller
+                }
 
                 // Placeholder for an eventual tab-search/filter feature --
                 // not yet wired to real filtering (same scope boundary as

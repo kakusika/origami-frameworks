@@ -284,7 +284,6 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: rowRect.height - 4
                     visible: root._isPane
-                    compact: false
                     tabId: root.node ? root.node.id : -1
                     leafId: root.enclosingLeafId
                     controller: root.controller

@@ -5,6 +5,9 @@ pub mod pane_tree;
 
 pub use ayame::apply_theme;
 
+#[used]
+pub static KEEP_AYAME_ICONS_LINKED: &[(&str, &str)] = ayame::cxxqt_object::KEEP_AYAME_ICONS_LINKED;
+
 pub fn apply_saved_theme_mode() {
     let vault_root = std::path::Path::new(origami_config::workspace::DEFAULT_VAULT_ROOT);
     let mode = origami_config::settings::load_theme_mode(vault_root);

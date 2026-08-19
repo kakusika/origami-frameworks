@@ -11,6 +11,8 @@ unsafe extern "C" {
 }
 
 fn main() {
+    cxx_qt::init_crate!(ayame);
+    cxx_qt::init_crate!(origami);
     cxx_qt::init_crate!(origami_gallery);
 
     let _tracy_client = tracy_client::Client::start();

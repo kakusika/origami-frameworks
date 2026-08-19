@@ -126,10 +126,23 @@ Item {
     // toggling its own viewMode) silently applied to nothing visible.
     property var _itemCache: ({})
 
-    Component.onCompleted: {
-        var restored = root.initialTree ? root._restoreNode(root.initialTree) : null;
+    function restoreTree(savedTree) {
+        var restored = savedTree ? root._restoreNode(savedTree) : null;
         if (restored) {
             root.tree = restored;
+            return true;
+        }
+        return false;
+    }
+
+    onInitialTreeChanged: {
+        if (root.initialTree) {
+            root.restoreTree(root.initialTree);
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.restoreTree(root.initialTree)) {
             return;
         }
         // Each initialTabs entry starts out as its own standalone pane,
@@ -448,134 +461,24 @@ Item {
         };
     }
 
+    PaneTreeOps {
+        id: treeOps
+    }
+
     function _cloneNode(node) {
-        if (node.type === "pane" || node.type === "toolbar") {
-            return {
-                type: node.type,
-                id: node.id,
-                title: node.title,
-                component: node.component,
-                viewType: node.viewType,
-                item: node.item,
-                props: node.props,
-                fixedSize: node.fixedSize || 0
-            };
-        }
-        if (node.type === "tabs") {
-            return {
-                type: "tabs",
-                id: node.id,
-                currentIndex: node.currentIndex,
-                children: node.children.map(function (c) {
-                    return {
-                        node: root._cloneNode(c.node)
-                    };
-                })
-            };
-        }
-        if (node.type === "drawer") {
-            return {
-                type: "drawer",
-                id: node.id,
-                expanded: node.expanded,
-                orientation: node.orientation,
-                overlayWidth: node.overlayWidth,
-                overlayHeight: node.overlayHeight,
-                currentIndex: node.currentIndex,
-                children: node.children.map(function (c) {
-                    return {
-                        node: root._cloneNode(c.node)
-                    };
-                })
-            };
-        }
-        return {
-            type: "split",
-            id: node.id,
-            orientation: node.orientation,
-            children: node.children.map(function (c) {
-                return {
-                    size: c.size,
-                    node: root._cloneNode(c.node)
-                };
-            })
-        };
+        return treeOps.cloneNode(node);
     }
 
-    // Finds the node with node.id === targetId anywhere under a split
-    // tree. If found, returns the node itself, its parent split node
-    // (null if it's the tree's own root), its parent's children array,
-    // and its index within that array. Only descends into "split"
-    // children -- "tabs" children are individual panes, not separately
-    // addressable drop areas (see _findArea below for that).
     function _find(node, targetId, parentChildren, indexInParent, parentNode) {
-        if (!node)
-            return null;
-        if (node.id === targetId) {
-            return {
-                node: node,
-                parentNode: parentNode || null,
-                parentChildren: parentChildren,
-                index: indexInParent
-            };
-        }
-        if (node.type === "split" || node.type === "drawer") {
-            for (var i = 0; i < node.children.length; i++) {
-                var found = root._find(node.children[i].node, targetId, node.children, i, node);
-                if (found)
-                    return found;
-            }
-        }
-        return null;
+        return treeOps.findNode(node, targetId, parentChildren, indexInParent, parentNode);
     }
 
-    // Finds the "pane"/"tabs"/"drawer" node whose *own* id is areaId --
-    // i.e. the area a PaneLeaf/PaneDrawer/PaneDropOverlay instance
-    // represents (leafId in those components). Never matches an
-    // individual pane nested inside a "tabs" or "drawer" node's
-    // children; those are addressed by paneId within the resolved area
-    // instead (see _removePane).
-    //
-    // "drawer" is checked separately from "pane"/"tabs" (falling through
-    // to the generic children-descent below when its own id doesn't
-    // match) rather than being folded into the same early-return branch:
-    // unlike "tabs", a drawer's children aren't restricted to bare panes
-    // (see PaneDrawer.qml's class comment), so a drop targeting some
-    // *nested* area inside one of this drawer's own children (reached
-    // through that child's own PaneLeaf/PaneDrawer, not this drawer's
-    // shared header) still needs to descend into node.children to find
-    // it, exactly like "split" already does.
     function _findArea(node, areaId) {
-        if (node.type === "pane" || node.type === "tabs" || node.type === "toolbar")
-            return node.id === areaId ? node : null;
-        if (node.type === "drawer" && node.id === areaId)
-            return node;
-        for (var i = 0; i < node.children.length; i++) {
-            var found = root._findArea(node.children[i].node, areaId);
-            if (found)
-                return found;
-        }
-        return null;
+        return treeOps.findArea(node, areaId);
     }
 
-    // Finds the "pane" node whose own id is paneId, anywhere in the tree --
-    // including nested inside a "tabs" node's children, unlike _find()
-    // (which only descends into "split"/"drawer" and stops at a "tabs"
-    // node's own id). Needed by changePaneType(): the pane being switched
-    // may be one tab among several in a group, not just a standalone area.
     function _findPane(node, paneId) {
-        if (!node)
-            return null;
-        if (node.type === "pane")
-            return node.id === paneId ? node : null;
-        if (node.children) {
-            for (var i = 0; i < node.children.length; i++) {
-                var found = root._findPane(node.children[i].node, paneId);
-                if (found)
-                    return found;
-            }
-        }
-        return null;
+        return treeOps.findPane(node, paneId);
     }
 
     // Switches the pane identified by paneId to a different view type in

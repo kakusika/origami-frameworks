@@ -19,6 +19,7 @@ fn main() {
                 "qml/pane/core/PaneNode.qml",
                 "qml/pane/core/PaneLeaf.qml",
                 "qml/pane/core/PaneDropOverlay.qml",
+                "qml/pane/core/PaneTreeOps.qml",
                 //[ Pane - header ]
                 "qml/pane/header/PaneToolbar.qml",
                 "qml/pane/header/PaneHeader.qml",
@@ -86,5 +87,6 @@ fn main() {
     .qt_module("Quick")
     .qt_module("QuickControls2")
     .build()
+    .reexport_dependency("ayame")
     .export();
 }

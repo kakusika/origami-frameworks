@@ -34,7 +34,7 @@ Rectangle {
     // change, is enough: main.qml's PaneView already derives its bottom
     // margin from `statusBar.height`.
     visible: root.statusBarVisible
-    height: root.visible ? headerBar.height : 0
+    height: root.visible ? bar.height : 0
     implicitHeight: height
 
     // Separator against PaneView, which sits above this bar.
@@ -46,8 +46,8 @@ Rectangle {
         color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.2)
     }
 
-    Origami.HeaderBar {
-        id: headerBar
+    Origami.Bar {
+        id: bar
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter

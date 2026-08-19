@@ -7,25 +7,31 @@ fn main() {
     CxxQtBuilder::new_qml_module(
         QmlModule::new("la.cettila.Origami")
             .qml_files([
-                QmlFile::from("qml/pane/PaneContext.qml").singleton(true),
-                QmlFile::from("qml/pane/PaneBackdrop.qml").singleton(true),
-                QmlFile::from("qml/pane/PaneWindowRegistry.qml").singleton(true),
+                QmlFile::from("qml/pane/core/PaneContext.qml").singleton(true),
+                QmlFile::from("qml/pane/core/PaneBackdrop.qml").singleton(true),
+                QmlFile::from("qml/pane/window/PaneWindowRegistry.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ErrorBus.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ToastBus.qml").singleton(true),
             ])
             .qml_files([
-                //[ Pane ]
-                "qml/pane/PaneView.qml",
-                "qml/pane/PaneNode.qml",
-                "qml/pane/PaneLeaf.qml",
-                "qml/pane/PaneToolbar.qml",
-                "qml/pane/PaneHeader.qml",
-                "qml/pane/PaneWindow.qml",
-                "qml/pane/PaneManager.qml",
-                "qml/pane/PaneManagerRow.qml",
-                "qml/pane/PaneDropOverlay.qml",
-                "qml/pane/ViewTypePickerButton.qml",
-                "qml/pane/ViewTypePickerPopup.qml",
+                //[ Pane - core ]
+                "qml/pane/core/PaneView.qml",
+                "qml/pane/core/PaneNode.qml",
+                "qml/pane/core/PaneLeaf.qml",
+                "qml/pane/core/PaneDropOverlay.qml",
+                //[ Pane - header ]
+                "qml/pane/header/PaneToolbar.qml",
+                "qml/pane/header/PaneHeader.qml",
+                "qml/pane/header/PaneGrip.qml",
+                //[ Pane - window ]
+                "qml/pane/window/PaneWindow.qml",
+                //[ Pane - manager ]
+                "qml/pane/manager/PaneManager.qml",
+                "qml/pane/manager/PaneManagerRow.qml",
+                //[ Pane - picker ]
+                "qml/pane/picker/ViewTypePickerButton.qml",
+                "qml/pane/picker/ViewTypePickerPopup.qml",
+                //[ Pane - groups ]
                 "qml/pane/groups/PaneSplit.qml",
                 "qml/pane/groups/PaneDrawer.qml",
                 "qml/pane/groups/PaneTabs.qml",
@@ -65,12 +71,12 @@ fn main() {
                 "qml/views/CollapsibleSection.qml",
                 "qml/views/CollapsibleTextField.qml",
                 //[ Regions ]
-                "qml/regions/header/HeaderBar.qml",
-                "qml/regions/header/HeaderBarRow.qml",
+                "qml/regions/bar/Bar.qml",
+                "qml/regions/bar/BarRow.qml",
+                "qml/regions/bar/MultiRowBar.qml",
                 "qml/regions/header/HeaderMenuButton.qml",
                 "qml/regions/header/HeaderMenuCoordinator.qml",
                 "qml/regions/header/HeaderMenuGroup.qml",
-                "qml/regions/header/MultiRowHeaderBar.qml",
                 "qml/regions/panel/CollapsiblePanel.qml",
                 "qml/regions/sidebar/SideTitleBar.qml",
                 "qml/regions/statusbar/StatusBar.qml",

@@ -37,13 +37,17 @@ Item {
     // px. Read by PaneNode.qml and forwarded to PaneSplit.qml so it gives
     // this cell an exact pixel allocation rather than a proportional share.
     //
-    // Prefers node.props.fixedSize when present, so workspace.yaml can
-    // override the default per-toolbar:
-    //   props:
-    //     fixedSize: 28
-    // Falls back to StyleKit.Units.toolbarSize when absent.
-    readonly property real fixedSizePx: (!!root.node && !!root.node.props && root.node.props.fixedSize > 0)
-        ? root.node.props.fixedSize
+    // Prefers node.fixedSize (a top-level node field, not inside props --
+    // props is view UI state serialized by paneSerialize; fixedSize is a
+    // layout attribute of the node itself). Falls back to
+    // StyleKit.Units.toolbarSize when absent/zero.
+    //
+    // Set in workspace.yaml as a sibling of type/viewType/title:
+    //   type: toolbar
+    //   viewType: statusbar
+    //   fixedSize: 18
+    readonly property real fixedSizePx: (!!root.node && root.node.fixedSize > 0)
+        ? root.node.fixedSize
         : StyleKit.Units.toolbarSize
 
     // Whether this leaf should actually materialize/show its content --
@@ -92,7 +96,7 @@ Item {
     // showing, not whatever node points at by then.
     property var _pane: null
 
-    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.view)
+    readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
 
     onNodeChanged: {
         root._pane = root.node;
@@ -153,9 +157,32 @@ Item {
         color: Origami.PaneBackdrop.imagePath.length > 0 ? Qt.rgba(root.colors.backgroundColor.r, root.colors.backgroundColor.g, root.colors.backgroundColor.b, Origami.PaneBackdrop.paneOpacity) : root.colors.backgroundColor
     }
 
+    // Grab handle for dragging/moving this toolbar node in the pane tree.
+    Origami.PaneGrip {
+        id: grip
+        visible: !(root.controller && root.controller.layoutLocked)
+        title: root.node ? (root.node.title || "") : ""
+        tabId: root.node ? root.node.id : -1
+        leafId: root.node ? root.node.id : -1
+        controller: root.controller
+        horizontal: !root.horizontal
+
+        height: root.horizontal ? parent.height : StyleKit.Units.gridUnit * 1.6
+        width: root.horizontal ? StyleKit.Units.gridUnit * 1.6 : parent.width
+
+        anchors.left: root.horizontal ? parent.left : undefined
+        anchors.top: root.horizontal ? undefined : parent.top
+        anchors.verticalCenter: root.horizontal ? parent.verticalCenter : undefined
+        anchors.horizontalCenter: root.horizontal ? undefined : parent.horizontalCenter
+        z: 10
+    }
+
     Item {
         id: contentArea
-        anchors.fill: parent
+        anchors.left: (root.horizontal && grip.visible) ? grip.right : parent.left
+        anchors.top: (!root.horizontal && grip.visible) ? grip.bottom : parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         // Same reasoning as PaneLeaf.qml's own contentArea: a custom
         // Vulkan-rendered view (unlikely for a toolbar, but not
         // categorically excluded) can paint past its own item bounds.

@@ -2,19 +2,19 @@ import QtQuick
 import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
-// Multi-line header: a top start/center/end row (HeaderBarRow.qml, the same
-// layout HeaderBar.qml itself uses) followed by zero or more additional
+// Multi-line bar/header: a top start/center/end row (BarRow.qml, the same
+// layout Bar.qml itself uses) followed by zero or more additional
 // rows stacked below it. Unlike the top row, extra rows have no
 // start/center/end split -- just plain left-to-right placement -- and the
 // caller decides exactly what goes in each one; this component never
 // redistributes or wraps items across rows itself (no automatic flow
 // layout based on available width). Pure layout, no background of its own
-// -- same reasoning as HeaderBar.qml's own class comment; PaneHeader.qml
+// -- same reasoning as Bar.qml's own class comment; PaneHeader.qml
 // (today's only caller) draws its own Theme.header background behind it.
 //
 // Usage:
 //
-//   MultiRowHeaderBar {
+//   MultiRowBar {
 //       start: [ IconButton { iconName: "document-new" } ]
 //       end: [ HeaderMenuGroup { menus: [...] } ]
 //       extraRows: [
@@ -31,7 +31,7 @@ import StyleKit 1.0 as StyleKit
 Item {
     id: root
 
-    // Top row's start/center/end slots -- same meaning as HeaderBar.qml.
+    // Top row's start/center/end slots -- same meaning as Bar.qml.
     property list<QtObject> start
     property list<QtObject> center
     property list<QtObject> end
@@ -43,11 +43,11 @@ Item {
     property list<QtObject> extraRows
 
     // Height every row's own content should size itself to -- same
-    // meaning and value as HeaderBar.qml's contentHeight, exposed here so
+    // meaning and value as Bar.qml's contentHeight, exposed here so
     // extraRows items can size consistently with the top row.
     readonly property real contentHeight: topRow.contentHeight
 
-    // Forwards the top row's own centerWidth (see HeaderBarRow.qml's class
+    // Forwards the top row's own centerWidth (see BarRow.qml's class
     // comment) so a caller can work out how much room `start`/`end`
     // actually have before running into `center`.
     readonly property real centerWidth: topRow.centerWidth
@@ -59,7 +59,7 @@ Item {
         id: column
         anchors.fill: parent
 
-        Origami.HeaderBarRow {
+        Origami.BarRow {
             id: topRow
             width: column.width
             height: implicitHeight

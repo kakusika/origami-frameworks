@@ -17,7 +17,7 @@ Item {
     height: StyleKit.Units.gridUnit * 1.6
     implicitHeight: height
 
-    Origami.HeaderBar {
+    Origami.Bar {
         id: bar
         anchors.fill: parent
 

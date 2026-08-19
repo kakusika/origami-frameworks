@@ -49,7 +49,7 @@ import StyleKit 1.0 as StyleKit
 // (e.g. Map's image-vs-OSM switch) -- a sibling of the pane-type switcher
 // rather than a generic toolbar button, so it belongs at that exact
 // position, not center/end.
-Origami.MultiRowHeaderBar {
+Origami.MultiRowBar {
     id: root
 
     // MultiRowHeaderBar/HeaderBar are pure layout with no background of
@@ -357,35 +357,16 @@ Origami.MultiRowHeaderBar {
     }
 
     start: [
-        // Grip handle for the pane's active tab, pinned to the header's
-        // top-left corner. Dragging it moves that tab exactly like
-        // dragging its own tab-bar header would (PaneTabHeader.qml's
-        // `compact` mode shares the same drag/drop mechanics, just a
-        // small dot-grip look instead of the title+close row) -- it
-        // gives a stable place to grab the pane's current view even
-        // while PaneTabs's tab strip below is hidden (single-pane case).
-        Origami.PaneTabHeader {
+        // Grip handle for the pane's active tab, pinned to the header's top-left corner.
+        Origami.PaneGrip {
             id: grip
             height: root.contentHeight
-            compact: true
-            // Hidden while layout is locked (LayoutLockSettings), since it
-            // exists only to grab-and-move the pane.
             visible: root._activeTab !== null && !(root.controller && root.controller.layoutLocked)
             title: root._activeTab ? root._activeTab.title : ""
             tabId: root._activeTab ? root._activeTab.id : -1
             leafId: root.leafId
-            active: true
             controller: root.controller
 
-            // Right-clicking the grip still opens PaneTabHeader's own
-            // "閉じる" context menu (compact only hides the drag glyph's
-            // look, not that menu -- see PaneTabHeader.qml's own
-            // `compact` comment). Without this handler closeRequested()
-            // had nowhere to go, so the menu item did nothing. Same call
-            // shape as PaneLeaf.qml's own tab-bar wiring
-            // (`controller.closeTab(node.id, tabId)`); leafId here is
-            // always root.node.id (see PaneLeaf.qml's own leafId
-            // bindings), so it stands in for the areaId.
             onCloseRequested: {
                 if (root.controller && root._activeTab)
                     root.controller.closeTab(root.leafId, root._activeTab.id);

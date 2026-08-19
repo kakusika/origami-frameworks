@@ -2,10 +2,10 @@ import QtQuick
 import StyleKit 1.0 as StyleKit
 
 // Pure start/center/end row layout, no background -- the reusable core of
-// HeaderBar.qml, factored out so MultiRowHeaderBar.qml can stack one of
+// Bar.qml, factored out so MultiRowBar.qml can stack one of
 // these as its top row without drawing a second, redundant background
 // underneath it. Not meant to be used directly outside those two --
-// HeaderBar.qml for a single-line header, MultiRowHeaderBar.qml for a
+// Bar.qml for a single-line bar, MultiRowBar.qml for a
 // multi-line one.
 Item {
     id: root
@@ -18,7 +18,7 @@ Item {
     // `height` directly, so bordered/backgrounded children (a
     // DropdownButton, a highlighted menu button, ...) don't touch this
     // row's own top/bottom edges. The single source of truth for this --
-    // HeaderBar.qml and MultiRowHeaderBar.qml both forward their own
+    // Bar.qml and MultiRowBar.qml both forward their own
     // `contentHeight` to this one instead of recomputing the same "-4"
     // themselves.
     readonly property real contentHeight: root.height - 4

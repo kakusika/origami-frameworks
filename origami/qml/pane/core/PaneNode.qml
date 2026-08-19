@@ -121,8 +121,8 @@ Loader {
         if (node.type === "drawer")
             return root._prefix + "groups/PaneDrawer.qml";
         if (node.type === "toolbar")
-            return root._prefix + "PaneToolbar.qml";
-        return root._prefix + "PaneLeaf.qml";
+            return root._prefix + "header/PaneToolbar.qml";
+        return root._prefix + "core/PaneLeaf.qml";
     }
 
     onLoaded: {

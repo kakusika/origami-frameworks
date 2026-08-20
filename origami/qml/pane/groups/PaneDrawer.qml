@@ -388,6 +388,85 @@ Item {
         }
     }
 
+    DropArea {
+        id: railDropV
+        visible: !root.horizontal
+        anchors.fill: railVertical
+        keys: ["pane-tab"]
+        z: 50
+
+        property int targetIndex: -1
+        property real lineY: -1
+
+        function updateIndex(drag) {
+            if (!root.node || !root.node.children)
+                return;
+            var dragSource = drag.source;
+            if (!dragSource)
+                return;
+
+            var localPos = railDropV.mapFromItem(root, drag.x, drag.y);
+            var bestIdx = 0;
+            var bestY = 0;
+            var children = root.node.children || [];
+            var count = children.length;
+
+            var found = false;
+            for (var i = 0; i < count; i++) {
+                var tabItem = railVertical.children[i + 3];
+                if (!tabItem || !tabItem.mapToItem)
+                    continue;
+                var tabPos = tabItem.mapToItem(railDropV, 0, 0);
+                var midY = tabPos.y + tabItem.height / 2;
+                if (localPos.y < midY) {
+                    bestIdx = i;
+                    bestY = tabPos.y;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found && count > 0) {
+                var lastItem = railVertical.children[count + 2];
+                if (lastItem && lastItem.mapToItem) {
+                    var lastPos = lastItem.mapToItem(railDropV, 0, 0);
+                    bestIdx = count;
+                    bestY = lastPos.y + lastItem.height;
+                }
+            }
+
+            railDropV.targetIndex = bestIdx;
+            railDropV.lineY = bestY;
+
+            dragSource.hoverController = root.controller;
+            dragSource.hoverLeafId = root.node ? root.node.id : -1;
+            dragSource.hoverZone = "header";
+            dragSource.hoverTargetIndex = bestIdx;
+        }
+
+        onPositionChanged: drag => {
+            drag.accept();
+            railDropV.updateIndex(drag);
+        }
+        onEntered: drag => {
+            drag.accept();
+            railDropV.updateIndex(drag);
+        }
+        onExited: {
+            railDropV.targetIndex = -1;
+            railDropV.lineY = -1;
+        }
+
+        Rectangle {
+            visible: railDropV.containsDrag && railDropV.lineY >= 0
+            y: railDropV.lineY - 1.5
+            x: 2
+            height: 3
+            width: parent.width - 4
+            color: StyleKit.Theme.paletteFor(StyleKit.Theme.header).positiveTextColor
+            z: 100
+        }
+    }
+
     // Rail -- horizontal variant: same content as railVertical above,
     // just fixed-height and pinned to the top edge, spanning the full
     // width.
@@ -453,6 +532,85 @@ Item {
                         root.controller.closeTab(root.node.id, railTabH.tabId);
                 }
             }
+        }
+    }
+
+    DropArea {
+        id: railDropH
+        visible: root.horizontal
+        anchors.fill: railHorizontal
+        keys: ["pane-tab"]
+        z: 50
+
+        property int targetIndex: -1
+        property real lineX: -1
+
+        function updateIndex(drag) {
+            if (!root.node || !root.node.children)
+                return;
+            var dragSource = drag.source;
+            if (!dragSource)
+                return;
+
+            var localPos = railDropH.mapFromItem(root, drag.x, drag.y);
+            var bestIdx = 0;
+            var bestX = 0;
+            var children = root.node.children || [];
+            var count = children.length;
+
+            var found = false;
+            for (var i = 0; i < count; i++) {
+                var tabItem = railHorizontal.children[i + 3];
+                if (!tabItem || !tabItem.mapToItem)
+                    continue;
+                var tabPos = tabItem.mapToItem(railDropH, 0, 0);
+                var midX = tabPos.x + tabItem.width / 2;
+                if (localPos.x < midX) {
+                    bestIdx = i;
+                    bestX = tabPos.x;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found && count > 0) {
+                var lastItem = railHorizontal.children[count + 2];
+                if (lastItem && lastItem.mapToItem) {
+                    var lastPos = lastItem.mapToItem(railDropH, 0, 0);
+                    bestIdx = count;
+                    bestX = lastPos.x + lastItem.width;
+                }
+            }
+
+            railDropH.targetIndex = bestIdx;
+            railDropH.lineX = bestX;
+
+            dragSource.hoverController = root.controller;
+            dragSource.hoverLeafId = root.node ? root.node.id : -1;
+            dragSource.hoverZone = "header";
+            dragSource.hoverTargetIndex = bestIdx;
+        }
+
+        onPositionChanged: drag => {
+            drag.accept();
+            railDropH.updateIndex(drag);
+        }
+        onEntered: drag => {
+            drag.accept();
+            railDropH.updateIndex(drag);
+        }
+        onExited: {
+            railDropH.targetIndex = -1;
+            railDropH.lineX = -1;
+        }
+
+        Rectangle {
+            visible: railDropH.containsDrag && railDropH.lineX >= 0
+            x: railDropH.lineX - 1.5
+            y: 2
+            width: 3
+            height: parent.height - 4
+            color: StyleKit.Theme.paletteFor(StyleKit.Theme.header).positiveTextColor
+            z: 100
         }
     }
 
@@ -709,7 +867,8 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    cursorShape: root.horizontal ? Qt.SplitVCursor : Qt.SplitHCursor
+                    enabled: !(root.controller && root.controller.resizeLocked)
+                    cursorShape: (root.controller && root.controller.resizeLocked) ? Qt.ArrowCursor : (root.horizontal ? Qt.SplitVCursor : Qt.SplitHCursor)
                     hoverEnabled: false
 
                     property real startPos: 0

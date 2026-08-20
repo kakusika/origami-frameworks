@@ -175,6 +175,42 @@ Item {
         }
     }
 
+    function _buildCategoryMenuItems(boundaryIndex) {
+        if (!root.controller)
+            return [];
+        var categories = root.controller.viewTypeCategories || [];
+        var registry = root.controller.viewTypeRegistry || [];
+
+        if (categories.length > 0) {
+            return categories.map(function (cat) {
+                return {
+                    text: cat.category,
+                    items: (cat.items || []).map(function (item) {
+                        return {
+                            text: item.title,
+                            icon: item.icon || "",
+                            onTriggered: function () {
+                                if (root.controller && root.node)
+                                    root.controller.insertPaneAtSplitBoundary(root.node.id, boundaryIndex, item.viewType, item.title);
+                            }
+                        };
+                    })
+                };
+            });
+        } else {
+            return registry.map(function (item) {
+                return {
+                    text: item.title,
+                    icon: item.icon || "",
+                    onTriggered: function () {
+                        if (root.controller && root.node)
+                            root.controller.insertPaneAtSplitBoundary(root.node.id, boundaryIndex, item.viewType, item.title);
+                    }
+                };
+            });
+        }
+    }
+
     Repeater {
         model: root.node ? Math.max(0, root.node.children.length - 1) : 0
 
@@ -184,13 +220,7 @@ Item {
 
             readonly property real boundary: root._offset(index + 1)
 
-            // Nothing meaningful to drag against a fixed-size neighbor
-            // (a collapsed drawer or a toolbar) -- hides the handle and
-            // (since invisible items don't receive input) disables its
-            // MouseArea too. See fixedSizes' own comment above for why a
-            // fixed-size child's size is always along this split's axis
-            // regardless of orientation.
-            visible: !(root.fixedSizes[handleArea.index] || root.fixedSizes[handleArea.index + 1])
+            visible: true
 
             x: root.horizontal ? handleArea.boundary - root.grabMargin : 0
             y: root.horizontal ? 0 : handleArea.boundary - root.grabMargin
@@ -198,17 +228,28 @@ Item {
             height: root.horizontal ? root.height : root.grabMargin * 2
             z: 1
 
+            readonly property bool isFixedNeighbor: !!(root.fixedSizes[handleArea.index] || root.fixedSizes[handleArea.index + 1])
+            readonly property bool canResize: !handleArea.isFixedNeighbor && !(root.controller && root.controller.resizeLocked)
+
             MouseArea {
+                id: mouseArea
                 anchors.fill: parent
-                enabled: !(root.controller && root.controller.resizeLocked)
-                cursorShape: root.horizontal ? Qt.SplitHCursor : Qt.SplitVCursor
-                hoverEnabled: false
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                enabled: true
+                cursorShape: handleArea.canResize ? (root.horizontal ? Qt.SplitHCursor : Qt.SplitVCursor) : Qt.ArrowCursor
+                hoverEnabled: true
 
                 property real startPos: 0
                 property real startSizeA: 0
                 property real startSizeB: 0
 
                 onPressed: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        contextMenu.popup();
+                        return;
+                    }
+                    if (!handleArea.canResize)
+                        return;
                     var p = handleArea.mapToItem(root, mouse.x, mouse.y);
                     startPos = root.horizontal ? p.x : p.y;
                     startSizeA = root.sizes[handleArea.index];
@@ -216,16 +257,8 @@ Item {
                 }
 
                 onPositionChanged: mouse => {
-                    if (!pressed)
+                    if (!pressed || !handleArea.canResize)
                         return;
-                    // The two dragged children are only ever rendered
-                    // across `remaining` px (not the split's full size)
-                    // once some sibling elsewhere is collapsed, and
-                    // their combined fraction budget is `expandedSum`
-                    // (not the full 1.0) -- both plain 1:1 (remaining ===
-                    // total, expandedSum === 1) when nothing is
-                    // collapsed, same as before. Derived from
-                    // effectiveSize = (size / expandedSum) * remaining.
                     var remaining = root._remaining();
                     var expandedSum = root._expandedSum();
                     if (remaining <= 0 || expandedSum <= 0)
@@ -254,6 +287,102 @@ Item {
 
                     if (root.controller && root.node && root.node.id !== undefined)
                         root.controller.setSplitSizes(root.node.id, next);
+                }
+            }
+
+            Origami.ThemedMenu {
+                id: contextMenu
+
+                menuItems: [
+                    {
+                        text: "バーを挿入",
+                        items: [
+                            {
+                                text: "ステータスバー",
+                                onTriggered: function () {
+                                    if (root.controller && root.node)
+                                        root.controller.insertPaneAtSplitBoundary(root.node.id, handleArea.index, "statusbar", "ステータスバー");
+                                }
+                            },
+                            {
+                                text: "コマンドバー",
+                                onTriggered: function () {
+                                    if (root.controller && root.node)
+                                        root.controller.insertPaneAtSplitBoundary(root.node.id, handleArea.index, "commandbar", "コマンドバー");
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        text: "ペインを挿入",
+                        items: root._buildCategoryMenuItems(handleArea.index)
+                    }
+                ]
+            }
+
+            readonly property var colors: StyleKit.Theme.paletteFor(StyleKit.Theme.header)
+            readonly property bool _interactive: mouseArea.containsMouse || mouseArea.pressed
+
+            // Split divider line (visible & highlighted on hover even for collapsed drawers)
+            Rectangle {
+                id: dividerLine
+                anchors.centerIn: parent
+                width: root.horizontal ? (handleArea._interactive ? 2 : 1) : parent.width
+                height: root.horizontal ? parent.height : (handleArea._interactive ? 2 : 1)
+                color: handleArea._interactive ? handleArea.colors.highlightColor : handleArea.colors.borderColor
+                opacity: handleArea._interactive ? 1.0 : 0.4
+                Behavior on color { ColorAnimation { duration: StyleKit.Units.shortDuration } }
+                Behavior on opacity { NumberAnimation { duration: StyleKit.Units.shortDuration } }
+            }
+
+            // 3-dot Grip handle (uses normal textColor, border uses highlightColor on hover when resizable)
+            Item {
+                id: gripDots
+                anchors.centerIn: parent
+                width: root.horizontal ? 10 : 28
+                height: root.horizontal ? 28 : 10
+                opacity: (handleArea._interactive && handleArea.canResize) ? 1.0 : 0.0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: StyleKit.Units.shortDuration } }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 5
+                    color: handleArea.colors.backgroundColor
+                    border.color: handleArea._interactive ? handleArea.colors.highlightColor : handleArea.colors.borderColor
+                    border.width: 1
+                    opacity: 0.95
+                    Behavior on color { ColorAnimation { duration: StyleKit.Units.shortDuration } }
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 2
+                    visible: !root.horizontal
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 4
+                            height: 4
+                            radius: 2
+                            color: handleArea.colors.textColor
+                        }
+                    }
+                }
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 2
+                    visible: root.horizontal
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 4
+                            height: 4
+                            radius: 2
+                            color: handleArea.colors.textColor
+                        }
+                    }
                 }
             }
         }

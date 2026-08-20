@@ -141,6 +141,12 @@ Item {
         }
     }
 
+    onComponentRegistryChanged: {
+        if (root.initialTree) {
+            root.restoreTree(root.initialTree);
+        }
+    }
+
     Component.onCompleted: {
         if (root.restoreTree(root.initialTree)) {
             return;
@@ -742,6 +748,177 @@ Item {
     function isToolbarPane(areaId) {
         var area = root._findArea(root.tree, areaId);
         return !!area && area.type === "toolbar";
+    }
+
+    // Moves paneId to targetAreaId inserted specifically at targetIndex in the target group.
+    function requestDropAtIndex(sourceAreaId, paneId, targetAreaId, targetIndex) {
+        if (!root.tree || sourceAreaId < 0 || targetAreaId < 0)
+            return;
+
+        var newTree = root._cloneNode(root.tree);
+        var sourceArea = root._findArea(newTree, sourceAreaId);
+        var targetArea = root._findArea(newTree, targetAreaId);
+        if (!sourceArea || !targetArea)
+            return;
+
+        var wasStandalone = sourceArea.type === "pane" || sourceArea.type === "toolbar" || ((sourceArea.type === "drawer" || sourceArea.type === "tabs") && sourceAreaId === paneId);
+        var sourceSlot = wasStandalone ? root._find(newTree, sourceAreaId, null, -1) : null;
+
+        var pane = root._removePane(newTree, sourceAreaId, paneId);
+        if (!pane)
+            return;
+
+        if (!root._isGroupType(targetArea.type)) {
+            var foundPane = root._find(newTree, targetAreaId, null, -1);
+            if (foundPane) {
+                var firstChild = root._tabsChild(foundPane.node);
+                var secondChild = root._tabsChild(pane);
+                var childrenArr = (targetIndex <= 0) ? [secondChild, firstChild] : [firstChild, secondChild];
+                var newGroup = {
+                    type: "tabs",
+                    id: root._genId(),
+                    currentIndex: (targetIndex <= 0) ? 0 : 1,
+                    children: childrenArr
+                };
+                if (foundPane.parentChildren === null) {
+                    newTree = newGroup;
+                } else {
+                    foundPane.parentChildren[foundPane.index] = {
+                        size: foundPane.parentChildren[foundPane.index].size,
+                        node: newGroup
+                    };
+                }
+            }
+        } else {
+            if (pane.type === "toolbar" && targetArea.type === "tabs")
+                return;
+            if (targetIndex < 0)
+                targetIndex = 0;
+            if (targetIndex > targetArea.children.length)
+                targetIndex = targetArea.children.length;
+
+            targetArea.children.splice(targetIndex, 0, root._tabsChild(pane));
+            targetArea.currentIndex = targetIndex;
+        }
+
+        if (wasStandalone && sourceSlot && sourceSlot.parentNode) {
+            sourceSlot.parentChildren.splice(sourceSlot.index, 1);
+            if (root._isGroupType(sourceSlot.parentNode.type)) {
+                if (sourceSlot.parentNode.currentIndex >= sourceSlot.parentChildren.length)
+                    sourceSlot.parentNode.currentIndex = Math.max(0, sourceSlot.parentChildren.length - 1);
+            } else if (sourceSlot.parentChildren.length === 1) {
+                root._collapseInto(sourceSlot.parentNode, sourceSlot.parentChildren[0].node);
+            } else if (sourceSlot.parentChildren.length > 1) {
+                root._renormalizeSizes(sourceSlot.parentNode);
+            }
+        }
+
+        root.tree = null;
+        root.tree = newTree;
+    }
+
+    function insertTabAtIndex(paneData, targetAreaId, targetIndex) {
+        if (!root.tree || !paneData)
+            return;
+        var newTree = root._cloneNode(root.tree);
+        var targetArea = root._findArea(newTree, targetAreaId);
+        if (!targetArea)
+            return;
+
+        var pane = {
+            type: paneData.type || "pane",
+            id: root._genId(),
+            title: paneData.title,
+            component: paneData.component,
+            viewType: paneData.viewType,
+            item: paneData.item,
+            props: paneData.props
+        };
+
+        if (root._isGroupType(targetArea.type)) {
+            if (pane.type === "toolbar" && targetArea.type === "tabs")
+                return;
+            if (targetIndex < 0)
+                targetIndex = 0;
+            if (targetIndex > targetArea.children.length)
+                targetIndex = targetArea.children.length;
+            targetArea.children.splice(targetIndex, 0, root._tabsChild(pane));
+            targetArea.currentIndex = targetIndex;
+        } else {
+            var foundPane = root._find(newTree, targetAreaId, null, -1);
+            if (!foundPane)
+                return;
+            if (pane.type === "toolbar" || foundPane.node.type === "toolbar")
+                return;
+            var firstChild = root._tabsChild(foundPane.node);
+            var secondChild = root._tabsChild(pane);
+            var childrenArr = (targetIndex <= 0) ? [secondChild, firstChild] : [firstChild, secondChild];
+            var newGroup = {
+                type: "tabs",
+                id: root._genId(),
+                currentIndex: (targetIndex <= 0) ? 0 : 1,
+                children: childrenArr
+            };
+            if (foundPane.parentChildren === null) {
+                newTree = newGroup;
+            } else {
+                foundPane.parentChildren[foundPane.index] = {
+                    size: foundPane.parentChildren[foundPane.index].size,
+                    node: newGroup
+                };
+            }
+        }
+
+        root.tree = null;
+        root.tree = newTree;
+    }
+
+    // Inserts a new pane or toolbar of viewType into a split node (splitId)
+    // right at the boundary index (between children[boundaryIndex] and children[boundaryIndex + 1]).
+    function insertPaneAtSplitBoundary(splitId, boundaryIndex, viewType, title) {
+        if (!root.tree)
+            return;
+        var component = root.componentRegistry[viewType];
+        if (!component)
+            return;
+
+        var newTree = root._cloneNode(root.tree);
+        var found = root._find(newTree, splitId, null, -1);
+        if (!found || found.node.type !== "split")
+            return;
+
+        var splitNode = found.node;
+        var isToolbar = (viewType === "statusbar" || viewType === "commandbar");
+        var newPane = {
+            type: isToolbar ? "toolbar" : "pane",
+            id: root._genId(),
+            title: title || "新規ペイン",
+            component: component,
+            viewType: viewType,
+            item: null,
+            props: null
+        };
+        if (isToolbar) {
+            newPane.fixedSize = 0;
+        }
+
+        var insertIdx = boundaryIndex + 1;
+        if (insertIdx < 0)
+            insertIdx = 0;
+        if (insertIdx > splitNode.children.length)
+            insertIdx = splitNode.children.length;
+
+        var numChildren = splitNode.children.length + 1;
+        var newShare = 1.0 / numChildren;
+
+        splitNode.children.splice(insertIdx, 0, {
+            size: newShare,
+            node: newPane
+        });
+        root._renormalizeSizes(splitNode);
+
+        root.tree = null;
+        root.tree = newTree;
     }
 
     // Moves paneId (currently in area sourceAreaId) to sit relative to

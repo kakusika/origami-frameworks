@@ -219,4 +219,88 @@ Item {
             }
         ]
     }
+
+    // Drop target for inserting/reordering tabs into this header strip
+    DropArea {
+        id: headerDropArea
+        anchors.fill: parent
+        keys: ["pane-tab"]
+        z: 50
+
+        property int targetIndex: -1
+        property real lineX: -1
+
+        function updateIndex(drag) {
+            if (!root.node || !root.node.children)
+                return;
+            var dragSource = drag.source;
+            if (!dragSource)
+                return;
+
+            var localPos = headerDropArea.mapFromItem(root, drag.x, drag.y);
+            var bestIdx = 0;
+            var bestX = 0;
+            var tabCount = tabRepeater.count;
+
+            if (tabCount === 0) {
+                bestIdx = 0;
+                bestX = StyleKit.Units.smallSpacing;
+            } else {
+                var found = false;
+                for (var i = 0; i < tabCount; i++) {
+                    var tabItem = tabRepeater.itemAt(i);
+                    if (!tabItem)
+                        continue;
+                    var tabPos = tabItem.mapToItem(headerDropArea, 0, 0);
+                    var midX = tabPos.x + tabItem.width / 2;
+                    if (localPos.x < midX) {
+                        bestIdx = i;
+                        bestX = tabPos.x;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found && tabCount > 0) {
+                    var lastItem = tabRepeater.itemAt(tabCount - 1);
+                    if (lastItem) {
+                        var lastPos = lastItem.mapToItem(headerDropArea, 0, 0);
+                        bestIdx = tabCount;
+                        bestX = lastPos.x + lastItem.width;
+                    }
+                }
+            }
+
+            headerDropArea.targetIndex = bestIdx;
+            headerDropArea.lineX = bestX;
+
+            dragSource.hoverController = root.controller;
+            dragSource.hoverLeafId = root.leafId;
+            dragSource.hoverZone = "header";
+            dragSource.hoverTargetIndex = bestIdx;
+        }
+
+        onPositionChanged: drag => {
+            drag.accept();
+            headerDropArea.updateIndex(drag);
+        }
+        onEntered: drag => {
+            drag.accept();
+            headerDropArea.updateIndex(drag);
+        }
+        onExited: {
+            headerDropArea.targetIndex = -1;
+            headerDropArea.lineX = -1;
+        }
+
+        // Green insertion indicator line
+        Rectangle {
+            visible: headerDropArea.containsDrag && headerDropArea.lineX >= 0
+            x: headerDropArea.lineX - 1.5
+            y: 2
+            width: 3
+            height: parent.height - 4
+            color: StyleKit.Theme.paletteFor(StyleKit.Theme.header).positiveTextColor
+            z: 100
+        }
+    }
 }

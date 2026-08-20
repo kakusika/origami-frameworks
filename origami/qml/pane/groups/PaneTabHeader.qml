@@ -227,37 +227,32 @@ Rectangle {
         }
         onReleased: {
             if (dragArea._dragging) {
-                // Drag.drop()には頼らない(PaneDropOverlay.qml参照: MouseAreaの
-                // onReleased時点では既にdrag.activeがfalseへ遷移済みで、
-                // Drag.drop()を呼んでもdropped()が発火しないことがある)。
-                // 代わりに、ホバー中にPaneDropOverlayが書き込んでおいた
-                // hoverController/hoverLeafId/hoverZoneを直接使って確定する。
-                // ドロップ先が自分自身と同じcontrollerならrequestDrop()、
-                // 別のPaneView(サイドバー⇔メインエリアなど別controller)への
-                // 移動ならextractTab()で取り出してinsertTab()で挿入する。
                 var targetController = dragProxy.hoverController;
                 var targetLeafId = dragProxy.hoverLeafId;
                 var zone = dragProxy.hoverZone || "center";
+                var targetIndex = dragProxy.hoverTargetIndex;
                 if (targetController && targetLeafId >= 0) {
                     if (targetController === root.controller) {
-                        targetController.requestDrop(root.leafId, root.tabId, targetLeafId, zone);
+                        if (targetIndex !== undefined && targetIndex >= 0) {
+                            targetController.requestDropAtIndex(root.leafId, root.tabId, targetLeafId, targetIndex);
+                        } else {
+                            targetController.requestDrop(root.leafId, root.tabId, targetLeafId, zone);
+                        }
                     } else {
                         var tabData = root.controller.extractTab(root.leafId, root.tabId);
-                        if (tabData)
-                            targetController.insertTab(tabData, targetLeafId, zone);
+                        if (tabData) {
+                            if (targetIndex !== undefined && targetIndex >= 0) {
+                                targetController.insertTabAtIndex(tabData, targetLeafId, targetIndex);
+                            } else {
+                                targetController.insertTab(tabData, targetLeafId, zone);
+                            }
+                        }
                     }
                 }
                 dragProxy.hoverController = null;
                 dragProxy.hoverLeafId = -1;
                 dragProxy.hoverZone = "";
-                // Drag.activeをfalseにする(onClickedでの_dragging=false)前に、
-                // dragProxyをドロップ領域の外へ実際に動かしておく。自ペインへ
-                // ドロップした場合のように一度もexited()が発火しないまま
-                // ドラッグを終えると、Qt内部のドラッググラバーがそのDropArea
-                // へ「入ったまま」の状態を引きずり、次に同じleaf上で(別の
-                // タブであっても)ドラッグしてもentered()が二度と発火しなく
-                // なる。位置を実際に動かして正規のexited()を発火させることで
-                // グラバー側の状態をきちんと後始末する。
+                dragProxy.hoverTargetIndex = -1;
                 dragProxy.x = -100000;
                 dragProxy.y = -100000;
                 root.controller.endDrag(dragProxy);
@@ -269,35 +264,16 @@ Rectangle {
             dragArea._dragging = false;
         }
         onCanceled: {
-            // サイドバー(OverlayDrawer、interactiveResizeEnabled)の端に
-            // ドラッグ中のポインタが差しかかると、リサイズ判定のために
-            // マウスの掴みがこちらから奪われることがある。その場合Qtは
-            // released/clickedではなくcanceledを送ってくる。ここで
-            // _draggingをリセットしないと、Drag.active(→dragProxyの
-            // Drag.active)がtrueのまま固まり、ホバー中だったPaneDropOverlay
-            // のハイライトが消えなくなる(以後のペイン移動も巻き添えで
-            // 効かなくなる)。
             dragProxy.hoverController = null;
             dragProxy.hoverLeafId = -1;
             dragProxy.hoverZone = "";
-            // onReleased同様、Drag.activeを落とす前にdropArea外へ追い出して
-            // 正規のexited()を発火させておく(理由は上のonReleased参照)。
-            // そのため_draggingのリセットはこの後で行う。
+            dragProxy.hoverTargetIndex = -1;
             dragProxy.x = -100000;
             dragProxy.y = -100000;
             dragArea._dragging = false;
             root.controller.endDrag(dragProxy);
         }
 
-        // ドラッグ/ドロップの当たり判定に使う実体。DropArea側の判定は
-        // このアイテム自身の矩形(位置+サイズ)とDropAreaの矩形の重なりで
-        // 行われるため、タブと同じ大きさのまま(width/height: root.width/
-        // root.height)にしていると、画面の端付近へドロップしようとした
-        // 瞬間に矩形の一部がウィンドウ外へはみ出し、"entered"は来るのに
-        // "dropped"が発火しない(はみ出た瞬間に"exited"扱いされる)不具合が
-        // 起きる。そのため当たり判定はカーソル位置そのものを表す1x1の点に
-        // 縮小し、見た目の大きさは中の子Rectangle(親の矩形の外にもそのまま
-        // 描画される)だけで表現する。
         Item {
             id: dragProxy
             parent: root.controller ? root.controller.dragLayer : root
@@ -309,11 +285,10 @@ Rectangle {
             readonly property int tabId: root.tabId
             readonly property int leafId: root.leafId
 
-            // 現在ホバー中のドロップ先(PaneDropOverlay.qmlが書き込む)。
-            // Drag.drop()に頼らずonReleasedで直接読むために使う。
             property var hoverController: null
             property int hoverLeafId: -1
             property string hoverZone: ""
+            property int hoverTargetIndex: -1
 
             // dragTypeを明示的にInternalにする: 既定のAutomaticのままだと、
             // Wayland環境でQtが実OS(コンポジタ)側のドラッグ&ドロップとして

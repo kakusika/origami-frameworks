@@ -120,51 +120,24 @@ QQC2.ToolButton {
         }
     }
 
-    // Guards against a race ViewTypePickerPopup.qml's detachedWindow: true
-    // introduces (see widgets/Popup.qml's own class comment for what that
-    // property is): clicking this same button again while the popup is
-    // open is meant to close it, but the popup -- a real top-level window
-    // while detached -- closes itself first, on losing window activation
-    // to whichever window this very click just brought forward, before
-    // this button's own onClicked below even runs. Left alone, root.open
-    // already reads false by the time onClicked fires, so the plain
-    // toggle would instead *reopen* it -- from the user's perspective,
-    // clicking the trigger a second time visibly does nothing (closes,
-    // then instantly reopens, confirmed live). This is the one button
-    // among DropdownButton.qml/HamburgerButton.qml/HeaderMenuButton.qml/
-    // this file that still needs this guard -- the other three build on
-    // ThemedMenu.qml, which defaults detachedWindow to false (confined to
-    // the app window, no such race) and no call site opts it in.
-    //
-    // Set unconditionally on every close below. Cleared on a *positive*
-    // hoveredChanged -- the cursor genuinely, freshly entering this
-    // button -- so a stale flag from an unrelated close (Escape, clicking
-    // elsewhere, picking an item) can't wrongly swallow some later click,
-    // since reaching this button for that later click always requires a
-    // fresh hover-enter first. Guarded on `!root.pressed` too: confirmed
-    // live (via temporary console.log instrumentation) that re-clicking
-    // this exact button without ever moving the cursor away also fires a
-    // hoveredChanged(true) *during* that second press -- not a fresh
-    // approach at all, just Qt's own hover state settling as a side
-    // effect of the press itself -- which without this guard clears the
-    // very flag meant to survive that exact click, immediately undoing
-    // it. AbstractButton.pressed alone (checked at the popup's onClosed
-    // instead) doesn't work here either -- also confirmed live -- because
-    // the window-activation change that closes the popup wins before
-    // AbstractButton flips `pressed` true in the first place.
-    property bool _suppressReopen: false
-
-    onHoveredChanged: {
-        if (root.hovered && !root.pressed)
-            root._suppressReopen = false;
-    }
-
+    // Only ever opens from here -- never closes itself via a toggle. A
+    // second click on this same button while the popup is open never
+    // reaches this handler at all (ViewTypePickerPopup.qml's own
+    // modal: true overlay catches that press first, as a press outside
+    // its own content, and closes the popup there); the *third* click
+    // then genuinely starts fresh, with nothing left open, and reopens it
+    // normally. Same "trigger only opens, the popup's own closePolicy
+    // handles closing" shape as every other plain-Popup trigger in this
+    // codebase (ToggleGroup.qml's detailsButton, CollapsibleTextField.qml's
+    // collapsed-state TapHandler) -- see ViewTypePickerPopup.qml's own
+    // closePolicy comment for why this one specifically needs
+    // CloseOnPressOutside rather than those others' ...OutsideParent.
+    // `requestClose()` stays a real, separately-callable function --
+    // PaneHeader.qml's _menuCoordinator calls it directly to close this
+    // popup when a sibling menu opens.
     onClicked: {
-        if (root._suppressReopen) {
-            root._suppressReopen = false;
-            return;
-        }
-        root.open ? root.requestClose() : root.requestOpen();
+        if (!root.open)
+            root.requestOpen();
     }
 
     Origami.ViewTypePickerPopup {
@@ -174,9 +147,6 @@ QQC2.ToolButton {
         selectedViewType: root.selectedViewType
         onViewTypeSelected: (viewType, title) => root.viewTypeSelected(viewType, title)
         onOpened: root.opened()
-        onClosed: {
-            root.closed();
-            root._suppressReopen = true;
-        }
+        onClosed: root.closed()
     }
 }

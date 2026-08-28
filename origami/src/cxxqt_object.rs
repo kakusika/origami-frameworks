@@ -1,12 +1,12 @@
-use std::path::Path;
+use std::path::PathBuf;
 use std::pin::Pin;
 
 use crate::pane_tree::PaneTree;
 use cxx_qt::CxxQtType;
-use cxx_qt_lib::QString;
+use cxx_qt_lib::{QString, QStringList, QUrl};
 
-fn vault_root() -> &'static Path {
-    Path::new(origami_config::workspace::DEFAULT_VAULT_ROOT)
+fn vault_root() -> PathBuf {
+    origami_config::vault::active_vault_root()
 }
 
 #[cxx_qt::bridge]
@@ -18,6 +18,16 @@ mod ffi {
     unsafe extern "C++" {
         include!("cxx-qt-lib/qstring.h");
         type QString = cxx_qt_lib::QString;
+    }
+
+    unsafe extern "C++" {
+        include!("cxx-qt-lib/qstringlist.h");
+        type QStringList = cxx_qt_lib::QStringList;
+    }
+
+    unsafe extern "C++" {
+        include!("cxx-qt-lib/qurl.h");
+        type QUrl = cxx_qt_lib::QUrl;
     }
 
     unsafe extern "RustQt" {
@@ -133,6 +143,34 @@ mod ffi {
         #[qinvokable]
         fn pane_opacity(self: Pin<&mut BackgroundState>) -> f64;
     }
+
+    unsafe extern "RustQt" {
+        // Vault switching applies on next app restart (see AppControl's own
+        // restart_app in cettila's settings crate) rather than live -- so
+        // this is plain qinvokables, no qproperty/NOTIFY: the vault-picker
+        // UI calls set_active_vault() then triggers a restart itself: no
+        // in-process consumer ever needs to observe a live change here.
+        #[qobject]
+        #[qml_element]
+        type VaultManager = super::VaultManagerRust;
+
+        #[qinvokable]
+        fn active_vault_path(self: Pin<&mut VaultManager>) -> QString;
+
+        #[qinvokable]
+        fn recent_vaults(self: Pin<&mut VaultManager>) -> QStringList;
+
+        #[qinvokable]
+        // Takes a QUrl (FilePickerDialog's directory-mode result, or a
+        // caller-built "file://" + plain-path string for a recent-vaults
+        // row -- QML coerces a plain string to QUrl at the call site),
+        // converted to a local path via QUrl::toLocalFile() the same way
+        // BackgroundSettings::setImagePath does (cettila's settings crate).
+        fn set_active_vault(self: Pin<&mut VaultManager>, path: &QUrl);
+
+        #[qinvokable]
+        fn remove_recent_vault(self: Pin<&mut VaultManager>, path: &QString);
+    }
 }
 
 #[derive(Default)]
@@ -140,7 +178,7 @@ pub struct WorkspaceStoreRust;
 
 impl ffi::WorkspaceStore {
     fn load_json(self: Pin<&mut Self>) -> QString {
-        match origami_config::workspace::load_workspace_json(vault_root()) {
+        match origami_config::workspace::load_workspace_json(&vault_root()) {
             Some(json) => QString::from(json.as_str()),
             None => QString::from(""),
         }
@@ -148,7 +186,7 @@ impl ffi::WorkspaceStore {
 
     fn save_json(self: Pin<&mut Self>, json: &QString) {
         if let Err(err) =
-            origami_config::workspace::save_workspace_json(vault_root(), &json.to_string())
+            origami_config::workspace::save_workspace_json(&vault_root(), &json.to_string())
         {
             eprintln!("origami: failed to save workspace: {err}");
         }
@@ -179,7 +217,7 @@ impl ffi::WorkspaceManager {
     }
 
     fn load_workspace(mut self: Pin<&mut Self>) {
-        if let Some(json_str) = origami_config::workspace::load_workspace_json(vault_root()) {
+        if let Some(json_str) = origami_config::workspace::load_workspace_json(&vault_root()) {
             if let Ok(tree) = PaneTree::from_json(&json_str) {
                 let qjson = QString::from(json_str.as_str());
                 self.as_mut().rust_mut().tree = tree;
@@ -192,7 +230,7 @@ impl ffi::WorkspaceManager {
         let json_str = self.rust().tree_json.to_string();
         if !json_str.is_empty() {
             if let Err(err) =
-                origami_config::workspace::save_workspace_json(vault_root(), &json_str)
+                origami_config::workspace::save_workspace_json(&vault_root(), &json_str)
             {
                 eprintln!("origami: failed to save workspace tree: {err}");
             }
@@ -339,11 +377,11 @@ pub struct LayoutLockSettingsRust;
 
 impl ffi::LayoutLockSettings {
     fn layout_locked(self: Pin<&mut Self>) -> bool {
-        origami_config::settings::load_layout_locked(vault_root())
+        origami_config::settings::load_layout_locked(&vault_root())
     }
 
     fn set_layout_locked(self: Pin<&mut Self>, locked: bool) {
-        if let Err(err) = origami_config::settings::save_layout_locked(vault_root(), locked) {
+        if let Err(err) = origami_config::settings::save_layout_locked(&vault_root(), locked) {
             eprintln!("origami: failed to save layout lock setting: {err}");
         }
     }
@@ -354,11 +392,11 @@ pub struct ResizeLockSettingsRust;
 
 impl ffi::ResizeLockSettings {
     fn resize_locked(self: Pin<&mut Self>) -> bool {
-        origami_config::settings::load_resize_locked(vault_root())
+        origami_config::settings::load_resize_locked(&vault_root())
     }
 
     fn set_resize_locked(self: Pin<&mut Self>, locked: bool) {
-        if let Err(err) = origami_config::settings::save_resize_locked(vault_root(), locked) {
+        if let Err(err) = origami_config::settings::save_resize_locked(&vault_root(), locked) {
             eprintln!("origami: failed to save resize lock setting: {err}");
         }
     }
@@ -369,13 +407,46 @@ pub struct BackgroundStateRust;
 
 impl ffi::BackgroundState {
     fn image_path(self: Pin<&mut Self>) -> QString {
-        match origami_config::settings::load_background_image_path(vault_root()) {
+        match origami_config::settings::load_background_image_path(&vault_root()) {
             Some(path) => QString::from(path.as_str()),
             None => QString::from(""),
         }
     }
 
     fn pane_opacity(self: Pin<&mut Self>) -> f64 {
-        origami_config::settings::load_background_pane_opacity(vault_root())
+        origami_config::settings::load_background_pane_opacity(&vault_root())
+    }
+}
+
+#[derive(Default)]
+pub struct VaultManagerRust;
+
+impl ffi::VaultManager {
+    fn active_vault_path(self: Pin<&mut Self>) -> QString {
+        QString::from(origami_config::vault::active_vault_root().to_string_lossy().as_ref())
+    }
+
+    fn recent_vaults(self: Pin<&mut Self>) -> QStringList {
+        origami_config::vault::recent_vaults()
+            .into_iter()
+            .map(|path| QString::from(path.to_string_lossy().as_ref()))
+            .collect()
+    }
+
+    fn set_active_vault(self: Pin<&mut Self>, path: &QUrl) {
+        let local_path = path.to_local_file_or_default().to_string();
+        if let Err(err) =
+            origami_config::vault::set_active_vault(std::path::Path::new(&local_path))
+        {
+            eprintln!("origami: failed to set active vault: {err}");
+        }
+    }
+
+    fn remove_recent_vault(self: Pin<&mut Self>, path: &QString) {
+        if let Err(err) =
+            origami_config::vault::remove_recent_vault(std::path::Path::new(&path.to_string()))
+        {
+            eprintln!("origami: failed to remove recent vault: {err}");
+        }
     }
 }

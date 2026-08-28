@@ -120,6 +120,92 @@ Origami.MultiRowBar {
         root.controller.detachPane(areaId, paneId);
     }
 
+    // Loaded lazily via Qt.createComponent (a qrc-absolute path, not a
+    // declarative `Origami.FloatingWindow {}`) specifically to avoid a
+    // static type-resolution cycle: FloatingWindow.qml itself embeds a
+    // real Origami.PaneHeader as its own second header row (see that
+    // file's class comment), so a compile-time `Component { Origami.
+    // FloatingWindow {} }` here would create PaneHeader -> FloatingWindow
+    // -> PaneHeader in the QML type graph -- caught at app startup as
+    // "qt.qml.typeresolution.cycle" / "Type Origami.FloatingWindow
+    // unavailable", not a runtime bug. Qt.createComponent() resolves the
+    // target by URL at runtime instead of at type-compile time, which
+    // sidesteps that graph entirely -- same fix ViewRegistry.qml's own
+    // webViewComponent uses for an analogous reason (see its own
+    // comment). The path is qrc-absolute (not workspace-relative) because
+    // this file's own qrc location varies by which prefix registered it;
+    // an absolute qrc path is the one thing guaranteed stable regardless.
+    // Cached in _floatingWindowComponent below rather than re-created on
+    // every call -- a qrc-embedded file's load outcome never changes
+    // between calls, so there's nothing to gain by re-resolving it.
+    property Component _floatingWindowComponent: null
+
+    function _floatingWindowComponentInstance() {
+        if (!root._floatingWindowComponent) {
+            root._floatingWindowComponent = Qt.createComponent("qrc:/qt/qml/la/cettila/Origami/qml/floating/FloatingWindow.qml");
+            if (root._floatingWindowComponent.status !== Component.Ready)
+                console.warn("PaneHeader: FloatingWindow.qml failed to load:", root._floatingWindowComponent.errorString());
+        }
+        return root._floatingWindowComponent;
+    }
+
+    // Centers a freshly created FloatingWindow over the shared host --
+    // same default position main.qml's own openSettings() call site uses.
+    // `properties` is mutated (title/hostedItem-or-windowComponent are
+    // already set by the caller) rather than merged into a copy -- both
+    // call sites below discard their own object right after this call.
+    function _openFloatingWindow(properties) {
+        var component = root._floatingWindowComponentInstance();
+        if (!component || component.status !== Component.Ready)
+            return null;
+        var host = Origami.FloatingWindowRegistry.host;
+        var w = StyleKit.Units.gridUnit * 30;
+        var h = StyleKit.Units.gridUnit * 20;
+        properties.width = w;
+        properties.height = h;
+        properties.x = host ? Math.max(0, (host.width - w) / 2) : 0;
+        properties.y = host ? Math.max(0, (host.height - h) / 2) : 0;
+        return Origami.FloatingWindowRegistry.open(component, properties);
+    }
+
+    // "フローティングウィンドウで開く": same shape as _openActiveInNewWindow()
+    // above, just targeting FloatingWindow (in-app, dockable back into the
+    // pane tree via its own grip -- see FloatingWindow.qml) instead of
+    // PaneWindow (a real OS-level window).
+    function _openActiveInFloatingWindow() {
+        if (!root._activeTab || !root.controller)
+            return;
+        var component = root.controller.componentRegistry ? root.controller.componentRegistry[root._activeTab.viewType] : null;
+        if (!component)
+            return;
+        root._openFloatingWindow({
+            title: root._activeTab.title,
+            windowComponent: component,
+            windowViewType: root._activeTab.viewType
+        });
+    }
+
+    // "フローティングウィンドウに移動": same shape as _moveActiveToNewWindow()
+    // above -- the active pane's own already-live Item, moved into a new
+    // FloatingWindow via its `hostedItem` property (see that file's own
+    // comment for why this mirrors PaneWindow.qml's `hostedItem`), before
+    // detachPane() runs, for the same ordering reason as above.
+    function _moveActiveToFloatingWindow() {
+        if (!root._activeTab || !root.controller || !root._activeItem || !root.node)
+            return;
+        var item = root._activeItem;
+        var title = root._activeTab.title;
+        var viewType = root._activeTab.viewType;
+        var areaId = root.node.id;
+        var paneId = root._activeTab.id;
+        root._openFloatingWindow({
+            hostedItem: item,
+            title: title,
+            windowViewType: viewType
+        });
+        root.controller.detachPane(areaId, paneId);
+    }
+
     readonly property var _builtinMenus: [
         {
             text: "表示",
@@ -134,6 +220,18 @@ Origami.MultiRowBar {
                     text: "別ウィンドウに移動",
                     onTriggered: function () {
                         root._moveActiveToNewWindow();
+                    }
+                },
+                {
+                    text: "フローティングウィンドウで開く",
+                    onTriggered: function () {
+                        root._openActiveInFloatingWindow();
+                    }
+                },
+                {
+                    text: "フローティングウィンドウに移動",
+                    onTriggered: function () {
+                        root._moveActiveToFloatingWindow();
                     }
                 }
             ]

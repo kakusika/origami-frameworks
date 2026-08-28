@@ -233,7 +233,7 @@ Rectangle {
                 var targetIndex = dragProxy.hoverTargetIndex;
                 if (targetController && targetLeafId >= 0) {
                     if (targetController === root.controller) {
-                        if (targetIndex !== undefined && targetIndex >= 0) {
+                        if (zone === "header" && targetIndex !== undefined && targetIndex >= 0) {
                             targetController.requestDropAtIndex(root.leafId, root.tabId, targetLeafId, targetIndex);
                         } else {
                             targetController.requestDrop(root.leafId, root.tabId, targetLeafId, zone);
@@ -241,7 +241,7 @@ Rectangle {
                     } else {
                         var tabData = root.controller.extractTab(root.leafId, root.tabId);
                         if (tabData) {
-                            if (targetIndex !== undefined && targetIndex >= 0) {
+                            if (zone === "header" && targetIndex !== undefined && targetIndex >= 0) {
                                 targetController.insertTabAtIndex(tabData, targetLeafId, targetIndex);
                             } else {
                                 targetController.insertTab(tabData, targetLeafId, zone);

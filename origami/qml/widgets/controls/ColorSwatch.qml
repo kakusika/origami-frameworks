@@ -25,7 +25,7 @@ Item {
         radius: StyleKit.Units.cornerRadius
         color: hoverHandler.hovered ? root.colors.hoverColor : "transparent"
         border.width: StyleKit.Units.borderWidth
-        border.color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.25)
+        border.color: StyleKit.Theme.opaqueBlend(root.colors.textColor, root.colors.backgroundColor, 0.25)
 
         HoverHandler {
             id: hoverHandler
@@ -48,7 +48,7 @@ Item {
                 radius: StyleKit.Units.cornerRadius / 2
                 color: root.selectedColor
                 border.width: 1
-                border.color: Qt.rgba(0, 0, 0, 0.3)
+                border.color: StyleKit.Theme.solidOutlineColor(root.selectedColor)
             }
 
             Origami.Label {

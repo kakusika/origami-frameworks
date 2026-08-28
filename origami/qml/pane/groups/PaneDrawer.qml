@@ -454,6 +454,9 @@ Item {
         onExited: {
             railDropV.targetIndex = -1;
             railDropV.lineY = -1;
+            if (railDropV.dragSource) {
+                railDropV.dragSource.hoverTargetIndex = -1;
+            }
         }
 
         Rectangle {
@@ -601,6 +604,9 @@ Item {
         onExited: {
             railDropH.targetIndex = -1;
             railDropH.lineX = -1;
+            if (railDropH.dragSource) {
+                railDropH.dragSource.hoverTargetIndex = -1;
+            }
         }
 
         Rectangle {
@@ -624,7 +630,31 @@ Item {
     // double it up.
     Item {
         id: bodyArea
-        visible: root.expanded
+
+        // Fades in/out on expand/collapse, faster than overlayPopup's own
+        // enter/exit Transition further down since this fade runs
+        // alongside the rail-adjacent PaneSplit geometry animation (see
+        // PaneSplit.qml's own per-cell Behaviors) rather than standing
+        // alone, so it needs to keep pace with that resize instead of
+        // lagging behind it. Stays visible (and its Repeater's model
+        // below stays populated) for the duration of the fade-out --
+        // root.expanded flipping straight to false would otherwise tear
+        // down every child PaneNode before the animation had a chance to
+        // play, leaving an empty box to fade rather than the actual
+        // content (same reasoning as overlayPopup's own onClosed comment
+        // below).
+        readonly property bool _visuallyExpanded: root.expanded || bodyArea.opacity > 0
+        visible: bodyArea._visuallyExpanded
+        opacity: root.expanded ? 1.0 : 0.0
+        clip: true
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: StyleKit.Units.veryShortDuration
+                easing.type: Easing.OutQuad
+            }
+        }
+
         anchors.left: root.horizontal ? parent.left : railVertical.right
         anchors.top: root.horizontal ? railHorizontal.bottom : parent.top
         anchors.right: parent.right
@@ -650,7 +680,7 @@ Item {
         // visibility toggle, the same pattern PaneLeaf.qml itself uses
         // for an actual "tabs" node's alternate children.
         Repeater {
-            model: root.expanded && root.node ? root.node.children : []
+            model: bodyArea._visuallyExpanded && root.node ? root.node.children : []
 
             delegate: Origami.PaneNode {
                 id: cell

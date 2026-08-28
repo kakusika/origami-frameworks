@@ -80,6 +80,32 @@ Item {
         root.fixedSizes = next;
     }
 
+    // True only for the instant a fixedSizePx change (a drawer/toolbar
+    // collapsing or expanding) is actually being applied -- see
+    // _setFixedAnimated below, the only caller. The per-cell geometry
+    // Behaviors further down gate on this instead of just "not
+    // dragging": every other source of an x/y/width/height write on
+    // those cells -- a window resize, a tree rebuild, the initial
+    // Component.onCompleted below -- should snap immediately, not
+    // animate, since none of those are the user watching a drawer open/
+    // close; only this one specific trigger should animate.
+    property bool _animateGeometry: false
+
+    // Wraps _setFixed() with a one-shot pulse of _animateGeometry so the
+    // resulting effectiveSizes/x/y/width/height change (on this cell and
+    // every sibling it displaces) animates, then clears the flag again
+    // via Qt.callLater once this same JS turn's synchronous property
+    // writes/binding re-evaluations have all landed -- any *later*
+    // write (a window resize the next event loop tick, say) is then
+    // back to snapping instantly, same as before this cell's own change.
+    function _setFixedAnimated(index, px) {
+        root._animateGeometry = true;
+        root._setFixed(index, px);
+        Qt.callLater(function () {
+            root._animateGeometry = false;
+        });
+    }
+
     function _refreshSizes() {
         root.sizes = root.node ? root.node.children.map(function (c) {
             return c.size;
@@ -166,11 +192,40 @@ Item {
             width: root.horizontal ? root._size(index) : root.width
             height: root.horizontal ? root.height : root._size(index)
 
+            Behavior on x {
+                enabled: root._animateGeometry
+                NumberAnimation {
+                    duration: StyleKit.Units.veryShortDuration
+                    easing.type: Easing.OutQuad
+                }
+            }
+            Behavior on y {
+                enabled: root._animateGeometry
+                NumberAnimation {
+                    duration: StyleKit.Units.veryShortDuration
+                    easing.type: Easing.OutQuad
+                }
+            }
+            Behavior on width {
+                enabled: root._animateGeometry
+                NumberAnimation {
+                    duration: StyleKit.Units.veryShortDuration
+                    easing.type: Easing.OutQuad
+                }
+            }
+            Behavior on height {
+                enabled: root._animateGeometry
+                NumberAnimation {
+                    duration: StyleKit.Units.veryShortDuration
+                    easing.type: Easing.OutQuad
+                }
+            }
+
             node: cell.modelData.node
             controller: root.controller
             splitOrientation: root.node ? root.node.orientation : ""
 
-            onFixedSizePxChanged: root._setFixed(cell.index, cell.fixedSizePx)
+            onFixedSizePxChanged: root._setFixedAnimated(cell.index, cell.fixedSizePx)
             Component.onCompleted: root._setFixed(cell.index, cell.fixedSizePx)
         }
     }

@@ -101,18 +101,29 @@ Item {
                 var targetController = dragProxy.hoverController;
                 var targetLeafId = dragProxy.hoverLeafId;
                 var zone = dragProxy.hoverZone || "center";
+                var targetIndex = dragProxy.hoverTargetIndex;
                 if (targetController && targetLeafId >= 0) {
                     if (targetController === root.controller) {
-                        targetController.requestDrop(root.leafId, root.tabId, targetLeafId, zone);
+                        if (zone === "header" && targetIndex !== undefined && targetIndex >= 0) {
+                            targetController.requestDropAtIndex(root.leafId, root.tabId, targetLeafId, targetIndex);
+                        } else {
+                            targetController.requestDrop(root.leafId, root.tabId, targetLeafId, zone);
+                        }
                     } else {
                         var tabData = root.controller.extractTab(root.leafId, root.tabId);
-                        if (tabData)
-                            targetController.insertTab(tabData, targetLeafId, zone);
+                        if (tabData) {
+                            if (zone === "header" && targetIndex !== undefined && targetIndex >= 0) {
+                                targetController.insertTabAtIndex(tabData, targetLeafId, targetIndex);
+                            } else {
+                                targetController.insertTab(tabData, targetLeafId, zone);
+                            }
+                        }
                     }
                 }
                 dragProxy.hoverController = null;
                 dragProxy.hoverLeafId = -1;
                 dragProxy.hoverZone = "";
+                dragProxy.hoverTargetIndex = -1;
                 dragProxy.x = -100000;
                 dragProxy.y = -100000;
                 root.controller.endDrag(dragProxy);
@@ -127,6 +138,7 @@ Item {
             dragProxy.hoverController = null;
             dragProxy.hoverLeafId = -1;
             dragProxy.hoverZone = "";
+            dragProxy.hoverTargetIndex = -1;
             dragProxy.x = -100000;
             dragProxy.y = -100000;
             dragArea._dragging = false;
@@ -147,6 +159,7 @@ Item {
             property var hoverController: null
             property int hoverLeafId: -1
             property string hoverZone: ""
+            property int hoverTargetIndex: -1
 
             Drag.dragType: Drag.Internal
             Drag.active: dragArea._dragging

@@ -1,15 +1,14 @@
 import QtQuick
-import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import la.cettila.Origami 1.0 as Origami
 import StyleKit 1.0 as StyleKit
 
 // A generic confirmation / message dialog popup.
 // Provides standard title, message, confirm/cancel buttons, and destructive action styling.
-QQC2.Popup {
+Origami.ModalDialog {
     id: root
 
-    property string title: "Confirm Action"
+    title: "Confirm Action"
     property string message: "Are you sure you want to proceed?"
     property string confirmText: "OK"
     property string cancelText: "Cancel"
@@ -21,54 +20,41 @@ QQC2.Popup {
     signal confirmed
     signal cancelled
 
-    ColumnLayout {
-        spacing: StyleKit.Units.largeSpacing
-        implicitWidth: StyleKit.Units.gridUnit * 16
+    Origami.Label {
+        text: root.message
+        type: "secondary"
+        wrapMode: Text.WordWrap
+        Layout.fillWidth: true
+    }
 
-        Origami.Label {
-            font.bold: true
-            font.pointSize: StyleKit.Units.gridUnit * 0.75
-            text: root.title
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-        }
+    Origami.Separator {
+        Layout.fillWidth: true
+    }
 
-        Origami.Label {
-            text: root.message
-            type: "secondary"
-            wrapMode: Text.WordWrap
-            Layout.fillWidth: true
-        }
+    RowLayout {
+        Layout.alignment: Qt.AlignRight
+        spacing: StyleKit.Units.smallSpacing
 
-        Origami.Separator {
-            Layout.fillWidth: true
-        }
-
-        RowLayout {
-            Layout.alignment: Qt.AlignRight
-            spacing: StyleKit.Units.smallSpacing
-
-            Origami.ActionButton {
-                visible: root.showCancel
-                text: root.cancelText
-                onClicked: {
-                    root.cancelled();
-                    root.close();
-                }
+        Origami.ActionButton {
+            visible: root.showCancel
+            text: root.cancelText
+            onClicked: {
+                root.cancelled();
+                root.close();
             }
+        }
 
-            Origami.ActionButton {
-                text: root.confirmText
-                highlighted: true
-                // Render negative/danger highlight if destructive
-                background: Rectangle {
-                    radius: StyleKit.Units.cornerRadius
-                    color: root.isDestructive ? root.colors.negativeTextColor : root.colors.highlightColor
-                }
-                onClicked: {
-                    root.confirmed();
-                    root.close();
-                }
+        Origami.ActionButton {
+            text: root.confirmText
+            highlighted: true
+            // Render negative/danger highlight if destructive
+            background: Rectangle {
+                radius: StyleKit.Units.cornerRadius
+                color: root.isDestructive ? root.colors.negativeTextColor : root.colors.highlightColor
+            }
+            onClicked: {
+                root.confirmed();
+                root.close();
             }
         }
     }

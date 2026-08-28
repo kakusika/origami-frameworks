@@ -61,7 +61,7 @@ Item {
         anchors.left: root.dockedRight ? undefined : parent.left
         onClicked: root.expanded = true
 
-        iconName: root.dockedRight ? "arrow-left" : "arrow-right"
+        iconName: root.dockedRight ? "chevron-left" : "chevron-right"
 
         background: Rectangle {
             color: root.handleColor
@@ -88,7 +88,7 @@ Item {
             anchors.left: root.dockedRight ? undefined : parent.left
             onClicked: root.expanded = false
 
-            iconName: root.dockedRight ? "arrow-right" : "arrow-left"
+            iconName: root.dockedRight ? "chevron-right" : "chevron-left"
         }
 
         ColumnLayout {

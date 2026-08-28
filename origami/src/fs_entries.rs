@@ -6,9 +6,18 @@
 
 use std::path::Path;
 
-/// Defaults to the dev vault (sandbox/). There is no config system yet, so this
-/// is hardcoded the same way QmlView's `source` default points into sandbox/.
-pub const DEFAULT_ROOT: &str = "/home/tefla/projects/develop/cettila-projects/cettila/sandbox";
+/// The active vault's root, same resolver every vault-scoped config/settings
+/// call uses (see `origami_config::vault::active_vault_root`) -- Explorer's
+/// own "no config system yet" hardcoded default was retired once vault
+/// switching landed; this just re-reads whichever vault is currently active.
+/// Returns an owned `String` (not `PathBuf`) since every call site here
+/// consumes it as a plain path string (`list_dir`/`can_go_up_from`/etc. all
+/// take `&str`), matching the original `&'static str` constant's shape.
+pub fn default_root() -> String {
+    origami_config::vault::active_vault_root()
+        .to_string_lossy()
+        .into_owned()
+}
 
 pub struct DirEntryInfo {
     pub name: String,

@@ -27,7 +27,26 @@ QQC2.Popup {
     // own content also reaches whatever view sits behind it, which can
     // steal focus and close this popup before onTriggered/onClicked ever
     // fires.
-    closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutsideParent
+    //
+    // CloseOnPressOutside (not ...OutsideParent): with modal: true, a
+    // press anywhere outside this popup's own content -- including back on
+    // root's own trigger button, which sits *outside* this popup's bounds
+    // despite being its `parent` -- gets caught by the modal overlay
+    // first, before it can ever reach the trigger's own onClicked. Using
+    // ...OutsideParent (as most of this codebase's other plain-Popup
+    // triggers do) exempts that button specifically from counting as
+    // "outside", which sounds right for avoiding an open/close fight, but
+    // in practice just means a press there does nothing at all instead --
+    // neither closing (exempted) nor reaching the button underneath
+    // (still swallowed by the modal overlay either way) -- which is
+    // exactly the "click the trigger again, popup doesn't close" bug this
+    // once relied on ViewTypePickerButton.qml's own now-removed
+    // _suppressReopen guard to work around. Plain CloseOnPressOutside
+    // instead lets that same press close the popup itself (it's
+    // unambiguously outside this popup's own content), matching how
+    // ViewTypePickerButton.qml's trigger now only ever opens (see its own
+    // comment) and leaves closing entirely to this policy.
+    closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutside
     modal: true
     dim: false
 

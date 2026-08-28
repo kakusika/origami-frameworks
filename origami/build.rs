@@ -10,6 +10,7 @@ fn main() {
                 QmlFile::from("qml/pane/core/PaneContext.qml").singleton(true),
                 QmlFile::from("qml/pane/core/PaneBackdrop.qml").singleton(true),
                 QmlFile::from("qml/pane/window/PaneWindowRegistry.qml").singleton(true),
+                QmlFile::from("qml/floating/FloatingWindowRegistry.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ErrorBus.qml").singleton(true),
                 QmlFile::from("qml/widgets/impl/ToastBus.qml").singleton(true),
             ])
@@ -26,6 +27,10 @@ fn main() {
                 "qml/pane/header/PaneGrip.qml",
                 //[ Pane - window ]
                 "qml/pane/window/PaneWindow.qml",
+                //[ Floating ]
+                "qml/floating/FloatingWindowHost.qml",
+                "qml/floating/FloatingWindow.qml",
+                "qml/floating/FloatingWindowHeader.qml",
                 //[ Pane - manager ]
                 "qml/pane/manager/PaneManager.qml",
                 "qml/pane/manager/PaneManagerRow.qml",
@@ -64,6 +69,7 @@ fn main() {
                 "qml/widgets/popups/ColorPickerPopup.qml",
                 "qml/widgets/popups/ConfirmDialog.qml",
                 "qml/widgets/popups/IoErrorBanner.qml",
+                "qml/widgets/popups/ModalDialog.qml",
                 "qml/widgets/popups/ToastNotification.qml",
                 //[ Views ]
                 "qml/views/Breadcrumb.qml",
@@ -79,6 +85,7 @@ fn main() {
                 "qml/regions/header/HeaderMenuCoordinator.qml",
                 "qml/regions/header/HeaderMenuGroup.qml",
                 "qml/regions/panel/CollapsiblePanel.qml",
+                "qml/regions/panel/BottomPanel.qml",
                 "qml/regions/sidebar/SideTitleBar.qml",
                 "qml/regions/statusbar/StatusBar.qml",
             ]),

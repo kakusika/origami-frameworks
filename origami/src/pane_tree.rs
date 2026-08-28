@@ -277,6 +277,118 @@ impl PaneTree {
         None
     }
 
+    /// Split the root node with a new pane, placing the new pane at the root
+    /// boundary specified by `orientation` and `first` (true = first/left/top, false = last/right/bottom).
+    pub fn split_root(
+        &mut self,
+        orientation: &str,
+        first: bool,
+        new_view_type: &str,
+        new_title: &str,
+    ) -> Option<i32> {
+        let new_id = self.gen_id();
+        let new_pane = PaneNode::Pane {
+            id: new_id,
+            title: new_title.to_string(),
+            view_type: new_view_type.to_string(),
+            props: json!({}),
+        };
+
+        if let Some(root_node) = self.root.take() {
+            if let PaneNode::Split {
+                id,
+                orientation: root_orientation,
+                mut children,
+            } = root_node
+            {
+                if root_orientation == orientation {
+                    let insert_idx = if first { 0 } else { children.len() };
+                    let new_share = 1.0 / (children.len() as f64 + 1.0);
+                    children.insert(
+                        insert_idx,
+                        SplitChild {
+                            size: new_share,
+                            node: new_pane,
+                        },
+                    );
+                    renormalize_sizes(&mut children);
+                    self.root = Some(PaneNode::Split {
+                        id,
+                        orientation: root_orientation,
+                        children,
+                    });
+                    return Some(new_id);
+                } else {
+                    let old_split = PaneNode::Split {
+                        id,
+                        orientation: root_orientation,
+                        children,
+                    };
+                    let children = if first {
+                        vec![
+                            SplitChild {
+                                size: 0.5,
+                                node: new_pane,
+                            },
+                            SplitChild {
+                                size: 0.5,
+                                node: old_split,
+                            },
+                        ]
+                    } else {
+                        vec![
+                            SplitChild {
+                                size: 0.5,
+                                node: old_split,
+                            },
+                            SplitChild {
+                                size: 0.5,
+                                node: new_pane,
+                            },
+                        ]
+                    };
+                    self.root = Some(PaneNode::Split {
+                        id: None,
+                        orientation: orientation.to_string(),
+                        children,
+                    });
+                    return Some(new_id);
+                }
+            } else {
+                let children = if first {
+                    vec![
+                        SplitChild {
+                            size: 0.5,
+                            node: new_pane,
+                        },
+                        SplitChild {
+                            size: 0.5,
+                            node: root_node,
+                        },
+                    ]
+                } else {
+                    vec![
+                        SplitChild {
+                            size: 0.5,
+                            node: root_node,
+                        },
+                        SplitChild {
+                            size: 0.5,
+                            node: new_pane,
+                        },
+                    ]
+                };
+                self.root = Some(PaneNode::Split {
+                    id: None,
+                    orientation: orientation.to_string(),
+                    children,
+                });
+                return Some(new_id);
+            }
+        }
+        None
+    }
+
     /// Move a tab from `from_group_id` at `from_index` to `to_group_id` at `to_index`.
     pub fn move_tab(
         &mut self,
@@ -1011,5 +1123,34 @@ mod tests {
         }
 
         assert!(!tree.remove_standalone(999));
+    }
+
+    #[test]
+    fn test_split_root() {
+        let mut tree = PaneTree::new(Some(PaneNode::Pane {
+            id: 1,
+            title: "Board".to_string(),
+            view_type: "board".to_string(),
+            props: json!({}),
+        }));
+
+        let new_id = tree
+            .split_root("horizontal", true, "calendar", "Calendar")
+            .unwrap();
+        assert_eq!(new_id, 2);
+
+        if let Some(PaneNode::Split {
+            orientation,
+            children,
+            ..
+        }) = &tree.root
+        {
+            assert_eq!(orientation, "horizontal");
+            assert_eq!(children.len(), 2);
+            assert_eq!(children[0].node.id(), Some(2));
+            assert_eq!(children[1].node.id(), Some(1));
+        } else {
+            panic!("Expected Split root");
+        }
     }
 }

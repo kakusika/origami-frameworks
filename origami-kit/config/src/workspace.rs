@@ -14,9 +14,12 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Hardcoded dev-vault root, same as
-/// `cettila-view-explorer::fs_entries::DEFAULT_ROOT` -- there's no
-/// vault-picker yet, so both point at the same `sandbox/` directory.
+/// Hardcoded dev-vault root -- the zero-config fallback `vault::
+/// active_vault_root()` (see `crate::vault`) resolves to before the user has
+/// ever picked a vault via the vault-picker (`Origami.VaultManager`/
+/// `VaultPickerDialog.qml`). `fs_entries::default_root()` (`origami` crate)
+/// resolves through that same function, so it always matches whichever
+/// vault is actually active rather than this constant directly.
 pub const DEFAULT_VAULT_ROOT: &str =
     "/home/tefla/projects/develop/cettila-projects/cettila/sandbox";
 

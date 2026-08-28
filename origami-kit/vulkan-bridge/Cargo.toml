@@ -1,0 +1,13 @@
+[package]
+name = "origami-vulkan-bridge"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+
+[dependencies]
+anyhow = { workspace = true }
+ash = "0.38"
+naga = { version = "29.0", features = ["wgsl-in", "spv-out"] }
+wgpu = "29.0.4"
+wgpu-hal = "29.0.4"
+wgpu-types = "29.0.4"

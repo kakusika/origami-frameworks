@@ -290,6 +290,9 @@ Item {
         onExited: {
             headerDropArea.targetIndex = -1;
             headerDropArea.lineX = -1;
+            if (headerDropArea.dragSource) {
+                headerDropArea.dragSource.hoverTargetIndex = -1;
+            }
         }
 
         // Green insertion indicator line

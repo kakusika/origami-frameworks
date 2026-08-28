@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 
-members = ["origami", "origami-kit/config", "origami-gallery"]
+members = ["origami", "origami-kit/config", "origami-kit/vulkan-bridge", "origami-gallery"]
 
 default-members = ["origami"]
 
@@ -12,6 +12,7 @@ edition = "2024"
 [workspace.dependencies]
 origami = { path = "origami" }
 origami-config = { path = "origami-kit/config" }
+origami-vulkan-bridge = { path = "origami-kit/vulkan-bridge" }
 ayame = { git = "https://github.com/kakusika/ayame" }
 
 #[ Crates.io ]

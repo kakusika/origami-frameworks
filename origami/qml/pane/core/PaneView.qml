@@ -834,6 +834,9 @@ Item {
             item: paneData.item,
             props: paneData.props
         };
+        // See insertTab()'s identical seeding above for why this is needed.
+        if (pane.item)
+            root._itemCache[pane.id] = pane.item;
 
         if (root._isGroupType(targetArea.type)) {
             if (pane.type === "toolbar" && targetArea.type === "tabs")
@@ -943,8 +946,17 @@ Item {
             if (zone === "center")
                 return;
             var selfArea = root._findArea(root.tree, sourceAreaId);
-            if (selfArea && (selfArea.type === "pane" || selfArea.type === "toolbar" || selfArea.type === "drawer" || selfArea.type === "tabs"))
+            if (!selfArea)
                 return;
+            if (zone.indexOf("root-") === 0) {
+                if (root.tree && (root.tree.type === "pane" || root.tree.type === "toolbar"))
+                    return;
+            } else {
+                if (selfArea.type === "pane" || selfArea.type === "toolbar")
+                    return;
+                if (root._isGroupType(selfArea.type) && (!selfArea.children || selfArea.children.length <= 1))
+                    return;
+            }
         }
 
         var newTree = root._cloneNode(root.tree);
@@ -970,7 +982,71 @@ Item {
         if (!pane)
             return;
 
-        if (zone === "center") {
+        if (zone.indexOf("root-") === 0) {
+            var rootOrientation = (zone === "root-left" || zone === "root-right" || zone === "root-drawer-left" || zone === "root-drawer-right") ? "horizontal" : "vertical";
+            var rootNewFirst = (zone === "root-left" || zone === "root-top" || zone === "root-drawer-left" || zone === "root-drawer-top");
+            var isRootDrawerZone = (zone.indexOf("root-drawer-") === 0);
+
+            if (isRootDrawerZone) {
+                var drawerNode = {
+                    type: "drawer",
+                    id: root._genId(),
+                    expanded: true,
+                    orientation: rootOrientation,
+                    currentIndex: rootNewFirst ? 0 : 1,
+                    children: rootNewFirst ? [root._tabsChild(pane),
+                        {
+                            node: newTree
+                        }
+                    ] : [
+                        {
+                            node: newTree
+                        },
+                        root._tabsChild(pane)]
+                };
+                newTree = drawerNode;
+            } else {
+                var newPaneNode = root._paneNode(pane);
+                if (newTree && newTree.type === "split" && newTree.orientation === rootOrientation) {
+                    var insertIdx = rootNewFirst ? 0 : newTree.children.length;
+                    var newShare = 1.0 / (newTree.children.length + 1);
+                    newTree.children.splice(insertIdx, 0, {
+                        size: newShare,
+                        node: newPaneNode
+                    });
+                    root._renormalizeSizes(newTree);
+                    if (sourceSlot && sourceSlot.parentChildren === newTree.children && sourceSlot.index >= insertIdx) {
+                        sourceSlot.index += 1;
+                    }
+                } else {
+                    var children = rootNewFirst ? [
+                        {
+                            size: 0.5,
+                            node: newPaneNode
+                        },
+                        {
+                            size: 0.5,
+                            node: newTree
+                        }
+                    ] : [
+                        {
+                            size: 0.5,
+                            node: newTree
+                        },
+                        {
+                            size: 0.5,
+                            node: newPaneNode
+                        }
+                    ];
+                    newTree = {
+                        type: "split",
+                        id: root._genId(),
+                        orientation: rootOrientation,
+                        children: children
+                    };
+                }
+            }
+        } else if (zone === "center") {
             var targetArea = root._findArea(newTree, targetAreaId);
             if (!targetArea)
                 return;
@@ -1186,8 +1262,77 @@ Item {
             item: paneData.item,
             props: paneData.props
         };
+        // Pre-seed the cache under the fresh id: materialize() only ever
+        // populates it as a side effect of *creating* an item via
+        // pane.component, so without this an already-live item carried
+        // over from another controller's extractTab() would be silently
+        // discarded (and leaked) the first time materialize() runs for
+        // this pane, recreated instead from pane.component.
+        if (pane.item)
+            root._itemCache[pane.id] = pane.item;
 
-        if (zone === "center") {
+        if (zone.indexOf("root-") === 0) {
+            var rootOrientation = (zone === "root-left" || zone === "root-right" || zone === "root-drawer-left" || zone === "root-drawer-right") ? "horizontal" : "vertical";
+            var rootNewFirst = (zone === "root-left" || zone === "root-top" || zone === "root-drawer-left" || zone === "root-drawer-top");
+            var isRootDrawerZone = (zone.indexOf("root-drawer-") === 0);
+
+            if (isRootDrawerZone) {
+                var drawerNode = {
+                    type: "drawer",
+                    id: root._genId(),
+                    expanded: true,
+                    orientation: rootOrientation,
+                    currentIndex: rootNewFirst ? 0 : 1,
+                    children: rootNewFirst ? [root._tabsChild(pane),
+                        {
+                            node: newTree
+                        }
+                    ] : [
+                        {
+                            node: newTree
+                        },
+                        root._tabsChild(pane)]
+                };
+                newTree = drawerNode;
+            } else {
+                var newPaneNode = root._paneNode(pane);
+                if (newTree && newTree.type === "split" && newTree.orientation === rootOrientation) {
+                    var insertIdx = rootNewFirst ? 0 : newTree.children.length;
+                    var newShare = 1.0 / (newTree.children.length + 1);
+                    newTree.children.splice(insertIdx, 0, {
+                        size: newShare,
+                        node: newPaneNode
+                    });
+                    root._renormalizeSizes(newTree);
+                } else {
+                    var children = rootNewFirst ? [
+                        {
+                            size: 0.5,
+                            node: newPaneNode
+                        },
+                        {
+                            size: 0.5,
+                            node: newTree
+                        }
+                    ] : [
+                        {
+                            size: 0.5,
+                            node: newTree
+                        },
+                        {
+                            size: 0.5,
+                            node: newPaneNode
+                        }
+                    ];
+                    newTree = {
+                        type: "split",
+                        id: root._genId(),
+                        orientation: rootOrientation,
+                        children: children
+                    };
+                }
+            }
+        } else if (zone === "center") {
             var targetArea = root._findArea(newTree, targetAreaId);
             if (!targetArea)
                 return;

@@ -9,6 +9,7 @@ let
     mkdir -p $out
     for f in \
       ${qt6.qtbase}/lib/* \
+      ${qt6.qtdeclarative}/lib/* \
       ${qt6.qtmultimedia}/lib/*
     do
       ln -sfn "$f" "$out/$(basename "$f")"

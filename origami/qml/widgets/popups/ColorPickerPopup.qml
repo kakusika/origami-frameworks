@@ -63,7 +63,7 @@ QQC2.Popup {
             radius: StyleKit.Units.cornerRadius
             color: popup.selectedColor
             border.width: StyleKit.Units.borderWidth
-            border.color: Qt.rgba(0, 0, 0, 0.2)
+            border.color: StyleKit.Theme.solidOutlineColor(popup.selectedColor)
         }
 
         // Preset palette swatches
@@ -82,7 +82,7 @@ QQC2.Popup {
                     radius: StyleKit.Units.cornerRadius / 2
                     color: modelData
                     border.width: popup.selectedColor.toString() === modelData ? 2 : 1
-                    border.color: popup.selectedColor.toString() === modelData ? popup.colors.highlightColor : Qt.rgba(0, 0, 0, 0.2)
+                    border.color: popup.selectedColor.toString() === modelData ? popup.colors.highlightColor : StyleKit.Theme.solidOutlineColor(Qt.color(modelData))
 
                     TapHandler {
                         onTapped: {

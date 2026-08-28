@@ -95,7 +95,7 @@ Item {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: 1
-                        color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.2)
+                        color: StyleKit.Theme.opaqueBlend(root.colors.textColor, root.colors.backgroundColor, 0.2)
                     }
                 }
 
@@ -127,7 +127,7 @@ Item {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: 1
-                    color: Qt.rgba(root.colors.textColor.r, root.colors.textColor.g, root.colors.textColor.b, 0.2)
+                    color: StyleKit.Theme.opaqueBlend(root.colors.textColor, root.colors.backgroundColor, 0.2)
                 }
             }
 

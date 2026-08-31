@@ -1,0 +1,133 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon } from "@ayame/icons.slint";
+
+// Collapsible icon + text field (e.g. a search box or address entry) --
+// ported from origami/qml/views/CollapsibleTextField.qml. Collapses to
+// an icon-only square once its allocated width drops at or below
+// `comfortable-width`; the collapsed square still opens a small popup
+// text field on click, same fallback the QML original used.
+export component CollapsibleTextField inherits Rectangle {
+    in property <image> icon;
+    in property <string> placeholder-text: "";
+    in-out property <string> text: "";
+    callback accepted();
+    callback edited(string);
+
+    property <length> square-size: 32px;
+    property <length> comfortable-width: 96px;
+    property <bool> collapsed: root.width <= root.comfortable-width;
+
+    height: root.square-size;
+    background: (root.collapsed && collapsed-touch.has-hover) ? Tokens.hover : Tokens.background;
+    border-width: Tokens.border-width;
+    border-color: (!root.collapsed && input.has-focus) ? Tokens.accent : Tokens.border;
+    border-radius: Tokens.corner-radius;
+
+    animate border-color { duration: 100ms; }
+    animate background { duration: 100ms; }
+
+    HorizontalLayout {
+        visible: !root.collapsed;
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+
+        if root.icon.width > 0: Icon {
+            source: root.icon;
+            color: input.has-focus ? Tokens.accent : Tokens.text-secondary;
+            width: 16px;
+            height: 16px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+
+            if root.text == "" && root.placeholder-text != "": Text {
+                text: root.placeholder-text;
+                color: Tokens.text-disabled;
+                font-size: Tokens.font-size-normal;
+                vertical-alignment: center;
+                width: parent.width;
+            }
+
+            input := TextInput {
+                width: parent.width;
+                height: parent.height;
+                text: root.text;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-normal;
+                vertical-alignment: center;
+                edited => {
+                    root.text = self.text;
+                    root.edited(self.text);
+                }
+                accepted => { root.accepted(); }
+            }
+        }
+    }
+
+    Icon {
+        visible: root.collapsed;
+        source: root.icon;
+        color: collapsed-touch.has-hover ? Tokens.accent : Tokens.text-primary;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: 16px;
+        height: 16px;
+    }
+
+    collapsed-touch := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        enabled: root.collapsed;
+        mouse-cursor: pointer;
+        clicked => { collapsed-popup.show(); }
+    }
+
+    collapsed-popup := PopupWindow {
+        x: 0px;
+        y: root.square-size + Tokens.spacing-small;
+        width: 220px;
+        height: 36px;
+        close-policy: PopupClosePolicy.close-on-click-outside;
+
+        Rectangle {
+            background: Tokens.surface-raised;
+            border-width: Tokens.border-width;
+            border-color: popup-input.has-focus ? Tokens.accent : Tokens.border;
+            border-radius: Tokens.corner-radius;
+
+            Rectangle {
+                x: Tokens.spacing-medium;
+                width: parent.width - Tokens.spacing-medium * 2;
+                height: parent.height;
+
+                if root.text == "" && root.placeholder-text != "": Text {
+                    text: root.placeholder-text;
+                    color: Tokens.text-disabled;
+                    font-size: Tokens.font-size-normal;
+                    vertical-alignment: center;
+                    width: parent.width;
+                }
+
+                popup-input := TextInput {
+                    width: parent.width;
+                    height: parent.height;
+                    text: root.text;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-normal;
+                    vertical-alignment: center;
+                    edited => {
+                        root.text = self.text;
+                        root.edited(self.text);
+                    }
+                    accepted => {
+                        root.accepted();
+                        collapsed-popup.close();
+                    }
+                }
+            }
+        }
+    }
+}

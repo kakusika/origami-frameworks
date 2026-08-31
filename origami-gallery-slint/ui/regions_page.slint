@@ -1,0 +1,200 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton } from "@ayame/components.slint";
+import { HeaderMenuBar, HeaderMenuItem } from "@origami/header_menu_bar.slint";
+import { ToolBar, ToolBarSeparator } from "@origami/tool_bar.slint";
+import { StatusBar } from "@origami/status_bar.slint";
+import { FloatingWindow } from "@origami/floating_window.slint";
+import { ActionButton, IconButton } from "@origami/action_button.slint";
+import { ThemedMenu } from "@origami/themed_menu.slint";
+
+// Live showcase of Origami Regions & Shell architecture (HeaderMenuBar, ToolBar, StatusBar, FloatingWindow).
+export component RegionsPage inherits Rectangle {
+    property <string> status: "Ready";
+    property <string> status-type: "normal";
+
+    property <[HeaderMenuItem]> menu-items: [
+        { id: "file", label: "File", enabled: true },
+        { id: "edit", label: "Edit", enabled: true },
+        { id: "view", label: "View", enabled: true },
+        { id: "window", label: "Window", enabled: true },
+        { id: "help", label: "Help", enabled: true },
+    ];
+
+    VerticalLayout {
+        // 1. Header Menu Bar
+        menu-bar := HeaderMenuBar {
+            items: root.menu-items;
+            menu-clicked(idx, id, mx, my) => {
+                root.status = "HeaderMenu: opened " + id;
+                file-menu.show();
+            }
+        }
+
+        file-menu := ThemedMenu {
+            x: 10px;
+            y: 30px;
+            items: [
+                { kind: "item", label: "New Project", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                { kind: "item", label: "Open File...", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                { kind: "separator", label: "", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                { kind: "item", label: "Save All", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                { kind: "item", label: "Quit", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+            ];
+            triggered(i) => { root.status = "FileMenu triggered item " + i; }
+        }
+
+        // 2. ToolBar
+        ToolBar {
+            ActionButton {
+                text: "New Window";
+                primary: true;
+                clicked => {
+                    fw1.is-open = true;
+                    fw1.window-x = 50px;
+                    fw1.window-y = 40px;
+                    root.status = "FloatingWindow: opened Inspector";
+                }
+            }
+
+            ToolBarSeparator { }
+
+            ActionButton {
+                text: "Normal Status";
+                clicked => {
+                    root.status = "System Ready";
+                    root.status-type = "normal";
+                }
+            }
+
+            ActionButton {
+                text: "Busy Status";
+                clicked => {
+                    root.status = "Syncing with cloud...";
+                    root.status-type = "busy";
+                }
+            }
+
+            ActionButton {
+                text: "Error Status";
+                destructive: true;
+                clicked => {
+                    root.status = "Connection timeout!";
+                    root.status-type = "error";
+                }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            Text {
+                text: "Interactive Desktop Shell Canvas";
+                color: Tokens.text-disabled;
+                font-size: Tokens.font-size-small;
+                vertical-alignment: center;
+            }
+        }
+
+        // 3. Desktop Work Area (Houses FloatingWindows)
+        desktop := Rectangle {
+            vertical-stretch: 1;
+            background: Tokens.background;
+            clip: true;
+
+            // Background Grid Pattern Hint
+            Text {
+                text: "Drag the title bar of the floating window to move, or drag the bottom-right corner to resize.";
+                color: Tokens.text-disabled;
+                font-size: Tokens.font-size-normal;
+                x: 20px;
+                y: 20px;
+            }
+
+            // Floating Window 1 (Inspector)
+            fw1 := FloatingWindow {
+                title: "Property Inspector";
+                host-width: desktop.width;
+                host-height: desktop.height;
+                window-x: 60px;
+                window-y: 60px;
+                window-width: 340px;
+                window-height: 260px;
+                is-open: true;
+                closed => { root.status = "FloatingWindow: closed"; }
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text {
+                        text: "Floating Window Inspector";
+                        font-weight: 700;
+                        color: Tokens.text-primary;
+                    }
+                    Text {
+                        text: "This virtual window floats above the workspace. It supports live dragging, smooth resizing, maximize toggle, and minimization.";
+                        color: Tokens.text-secondary;
+                        font-size: Tokens.font-size-small;
+                        wrap: word-wrap;
+                    }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-small;
+                        AppButton {
+                            text: "Action 1";
+                            clicked => { root.status = "Inspector: Action 1 executed"; }
+                        }
+                        AppButton {
+                            text: "Action 2";
+                            primary: true;
+                            clicked => { root.status = "Inspector: Action 2 executed"; }
+                        }
+                    }
+                }
+            }
+
+            // Floating Window 2 (Log Console)
+            fw2 := FloatingWindow {
+                title: "Live Event Console";
+                host-width: desktop.width;
+                host-height: desktop.height;
+                window-x: 440px;
+                window-y: 100px;
+                window-width: 320px;
+                window-height: 200px;
+                is-open: true;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-small;
+
+                    Text {
+                        text: "Console Stream";
+                        font-weight: 700;
+                        color: Tokens.text-primary;
+                    }
+                    Rectangle {
+                        background: Tokens.background;
+                        border-radius: Tokens.corner-radius;
+                        vertical-stretch: 1;
+
+                        Text {
+                            text: "> " + root.status;
+                            color: #10b981;
+                            font-size: Tokens.font-size-small;
+                            font-family: "monospace";
+                            x: Tokens.spacing-small;
+                            y: Tokens.spacing-small;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Status Bar
+        StatusBar {
+            status-text: root.status;
+            status-type: root.status-type;
+            center-text: "Origami Shell Engine v0.2";
+            right-info-text: "UTF-8  |  Vulkan 60 FPS";
+        }
+    }
+}

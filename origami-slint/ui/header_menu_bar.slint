@@ -1,0 +1,54 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+export struct HeaderMenuItem {
+    id: string,
+    label: string,
+    enabled: bool,
+}
+
+// Slint port of origami/qml/regions/header/HeaderMenuGroup.qml.
+// Top-level desktop application menu bar (File, Edit, View, Window, Help, etc.).
+export component HeaderMenuBar inherits Rectangle {
+    in property <[HeaderMenuItem]> items: [];
+    in-out property <int> active-index: -1;
+    callback menu-clicked(int, string, length, length);
+
+    height: 30px;
+    background: Tokens.surface;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-small;
+        padding-right: Tokens.spacing-small;
+        spacing: 2px;
+        alignment: start;
+
+        for item[i] in root.items: item-rect := Rectangle {
+            height: parent.height - 4px;
+            width: item-label.preferred-width + Tokens.spacing-medium * 2;
+            border-radius: Tokens.corner-radius;
+            background: root.active-index == i ? Tokens.selected-surface : (item-touch.has-hover ? Tokens.hover : transparent);
+
+            animate background { duration: 80ms; }
+
+            item-label := Text {
+                text: item.label;
+                color: !item.enabled ? Tokens.text-disabled : (root.active-index == i ? Tokens.accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary));
+                font-size: Tokens.font-size-normal;
+                font-weight: 500;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            item-touch := TouchArea {
+                enabled: item.enabled;
+                mouse-cursor: item.enabled ? pointer : default;
+                clicked => {
+                    root.active-index = i;
+                    root.menu-clicked(i, item.id, item-rect.x, item-rect.y + item-rect.height);
+                }
+            }
+        }
+    }
+}

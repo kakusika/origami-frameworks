@@ -1,0 +1,244 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton, ColorSwatchRow, OptionSlider } from "@ayame/components.slint";
+
+// Full color picker popup: preset swatch palette, HSV sliders, hex field,
+// and a live preview -- ported from origami/qml/widgets/popups/
+// ColorPickerPopup.qml. Reuses `ayame-slint`'s existing `ColorSwatchRow`
+// (preset palette) and `OptionSlider` (H/S/V sliders) rather than
+// reinventing either.
+//
+// HSV state is tracked as its own `h`/`s`/`v` properties (mirroring the
+// QML original's own `_hue`/`_saturation`/`_value`) rather than derived
+// continuously from `selected-color` -- RGB<->HSV isn't a lossless round
+// trip at the boundaries (e.g. black has no defined hue), so continuous
+// derivation would fight a user actively dragging the hue slider through
+// a zero-saturation color. Only resynced on an *external* change to
+// `selected-color` (`changed selected-color`), same trigger points the
+// QML original's own `onSelectedColorChanged`/`Component.onCompleted`
+// used.
+//
+// All HSV<->RGB math is composed from small `pure function`s rather than
+// using local variables inside one big function body -- Slint functions
+// don't support local variable declarations, only a single `return`
+// expression (composed function calls are the way to factor out a
+// repeated subexpression instead).
+//
+// Dropped the QML original's own live hex-field round trip (typing a hex
+// string directly parses it back into `selected-color`) -- Slint's
+// expression language has no string-to-color parsing at all, only
+// compile-time hex/named-color literals. `hex-text`/`hex-edited` instead
+// hands the raw typed string to a consumer's Rust to parse and push back
+// via `selected-color`'s own setter -- same "Rust owns parsing/mutation"
+// split this whole workspace's Slint side already uses everywhere else.
+// A consumer should only refresh `hex-text` in response to a *non*-hex-
+// field change (a slider drag, a swatch pick) to avoid fighting the
+// user's own in-progress typing.
+export component ColorPickerPopup inherits PopupWindow {
+    in-out property <color> selected-color: #3b82f6;
+    in property <string> hex-text: "#3b82f6";
+    callback color-accepted(color);
+    callback hex-edited(string);
+
+    property <float> h: 0.6;
+    property <float> s: 0.8;
+    property <float> v: 0.9;
+
+    property <[color]> preset-colors: [#ef4444, #f97316, #f59e0b, #10b981, #06b6d4, #3b82f6, #6366f1, #8b5cf6, #ec4899, #f43f5e, #1e293b, #475569, #94a3b8, #e2e8f0, #ffffff];
+
+    pure function rgb-max(r: float, g: float, b: float) -> float { return max(r, max(g, b)); }
+    pure function rgb-min(r: float, g: float, b: float) -> float { return min(r, min(g, b)); }
+    pure function rgb-delta(r: float, g: float, b: float) -> float { return rgb-max(r, g, b) - rgb-min(r, g, b); }
+
+    pure function hsv-v(r: float, g: float, b: float) -> float {
+        return rgb-max(r, g, b);
+    }
+    pure function hsv-s(r: float, g: float, b: float) -> float {
+        return rgb-max(r, g, b) <= 0 ? 0 : rgb-delta(r, g, b) / rgb-max(r, g, b);
+    }
+    pure function hsv-h(r: float, g: float, b: float) -> float {
+        return rgb-delta(r, g, b) <= 0.0001 ? 0 :
+            rgb-max(r, g, b) == r ? mod((g - b) / rgb-delta(r, g, b) + 6.0, 6.0) / 6.0 :
+            rgb-max(r, g, b) == g ? ((b - r) / rgb-delta(r, g, b) + 2.0) / 6.0 :
+            ((r - g) / rgb-delta(r, g, b) + 4.0) / 6.0;
+    }
+
+    pure function hsv-chroma(s: float, v: float) -> float { return v * s; }
+    pure function hsv-hprime(h: float) -> float { return mod(h * 6.0, 6.0); }
+    pure function hsv-x(h: float, s: float, v: float) -> float {
+        return hsv-chroma(s, v) * (1.0 - abs(mod(hsv-hprime(h), 2.0) - 1.0));
+    }
+    pure function hsv-m(s: float, v: float) -> float { return v - hsv-chroma(s, v); }
+
+    pure function hsv-r-raw(h: float, s: float, v: float) -> float {
+        return hsv-hprime(h) < 1.0 ? hsv-chroma(s, v) :
+            hsv-hprime(h) < 2.0 ? hsv-x(h, s, v) :
+            hsv-hprime(h) < 4.0 ? 0.0 :
+            hsv-hprime(h) < 5.0 ? hsv-x(h, s, v) : hsv-chroma(s, v);
+    }
+    pure function hsv-g-raw(h: float, s: float, v: float) -> float {
+        return hsv-hprime(h) < 1.0 ? hsv-x(h, s, v) :
+            hsv-hprime(h) < 3.0 ? hsv-chroma(s, v) :
+            hsv-hprime(h) < 4.0 ? hsv-x(h, s, v) : 0.0;
+    }
+    pure function hsv-b-raw(h: float, s: float, v: float) -> float {
+        return hsv-hprime(h) < 2.0 ? 0.0 :
+            hsv-hprime(h) < 3.0 ? hsv-x(h, s, v) :
+            hsv-hprime(h) < 5.0 ? hsv-chroma(s, v) : hsv-x(h, s, v);
+    }
+
+    pure function hsv-to-color(h: float, s: float, v: float) -> color {
+        return rgb(
+            round((hsv-r-raw(h, s, v) + hsv-m(s, v)) * 255),
+            round((hsv-g-raw(h, s, v) + hsv-m(s, v)) * 255),
+            round((hsv-b-raw(h, s, v) + hsv-m(s, v)) * 255),
+        );
+    }
+
+    // Guards against a real feedback loop caught while diagnosing
+    // choppy slider-drag interaction in `origami-gallery-slint`: an
+    // H/S/V slider write sets `h`/`s`/`v` *then* derives `selected-
+    // color` from them -- without this guard, that assignment alone
+    // re-triggers this very `changed` handler, which re-derives
+    // `h`/`s`/`v` right back from the just-written RGB color. RGB is
+    // only 8-bit per channel, so that round trip doesn't reproduce the
+    // original float `h`/`s`/`v` exactly -- the slider's own displayed
+    // position then visibly corrects itself by the rounding error on
+    // every single drag tick, which is the actual jank, not a Slint or
+    // rendering-backend limitation (a smooth `cettila-slint` running in
+    // the same environment ruled that out first).
+    property <bool> syncing-from-hsv: false;
+
+    changed selected-color => {
+        if (!root.syncing-from-hsv) {
+            root.h = hsv-h(root.selected-color.red / 255.0, root.selected-color.green / 255.0, root.selected-color.blue / 255.0);
+            root.s = hsv-s(root.selected-color.red / 255.0, root.selected-color.green / 255.0, root.selected-color.blue / 255.0);
+            root.v = hsv-v(root.selected-color.red / 255.0, root.selected-color.green / 255.0, root.selected-color.blue / 255.0);
+        }
+    }
+
+    Rectangle {
+        width: 220px;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+        border-radius: Tokens.corner-radius;
+
+        VerticalLayout {
+            padding: Tokens.spacing-medium;
+            spacing: Tokens.spacing-small;
+
+            Text {
+                text: "Color Picker";
+                font-weight: 700;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-normal;
+            }
+
+            Rectangle {
+                height: 32px;
+                border-radius: Tokens.corner-radius;
+                background: root.selected-color;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+            }
+
+            ColorSwatchRow {
+                swatches: root.preset-colors;
+                selected-index: -1;
+                picked(i) => { root.selected-color = root.preset-colors[i]; }
+            }
+
+            Rectangle { height: 1px; background: Tokens.divider; }
+
+            OptionSlider {
+                label: "H";
+                minimum: 0;
+                maximum: 1;
+                value: root.h;
+                value-changed(nv) => {
+                    root.h = nv;
+                    root.syncing-from-hsv = true;
+                    root.selected-color = root.hsv-to-color(root.h, root.s, root.v);
+                    root.syncing-from-hsv = false;
+                }
+            }
+            OptionSlider {
+                label: "S";
+                minimum: 0;
+                maximum: 1;
+                value: root.s;
+                value-changed(nv) => {
+                    root.s = nv;
+                    root.syncing-from-hsv = true;
+                    root.selected-color = root.hsv-to-color(root.h, root.s, root.v);
+                    root.syncing-from-hsv = false;
+                }
+            }
+            OptionSlider {
+                label: "V";
+                minimum: 0;
+                maximum: 1;
+                value: root.v;
+                value-changed(nv) => {
+                    root.v = nv;
+                    root.syncing-from-hsv = true;
+                    root.selected-color = root.hsv-to-color(root.h, root.s, root.v);
+                    root.syncing-from-hsv = false;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: Tokens.spacing-medium;
+                alignment: center;
+
+                Text {
+                    text: "Hex";
+                    color: Tokens.text-secondary;
+                    font-size: Tokens.font-size-small;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    height: 28px;
+                    background: Tokens.background;
+                    border-width: Tokens.border-width;
+                    border-color: hex-input.has-focus ? Tokens.accent : Tokens.border;
+                    border-radius: Tokens.corner-radius;
+
+                    animate border-color { duration: 100ms; }
+
+                    hex-input := TextInput {
+                        x: Tokens.spacing-small;
+                        width: parent.width - Tokens.spacing-small * 2;
+                        height: parent.height;
+                        text: root.hex-text;
+                        color: Tokens.text-primary;
+                        font-size: Tokens.font-size-small;
+                        vertical-alignment: center;
+                        edited => { root.hex-edited(self.text); }
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                alignment: end;
+                spacing: Tokens.spacing-small;
+
+                AppButton {
+                    text: "Cancel";
+                    clicked => { root.close(); }
+                }
+                AppButton {
+                    text: "OK";
+                    primary: true;
+                    clicked => {
+                        root.color-accepted(root.selected-color);
+                        root.close();
+                    }
+                }
+            }
+        }
+    }
+}

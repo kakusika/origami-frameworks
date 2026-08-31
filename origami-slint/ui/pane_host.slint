@@ -1,0 +1,547 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Renders a flat list of pre-computed rectangles (see `origami_slint::
+// layout`) as a single `for` loop -- no recursive component nesting. This
+// component owns pane *chrome* only (divider/group-frame/header/tab-
+// label/tab-add/drawer-rail cells, plus drag-ghost/drop-zone visual
+// feedback): a consumer renders its own app-specific content for
+// `kind == "content"` cells separately, using the same shared `cells`
+// list, layered under/around this component -- Slint has no mechanism
+// for a shared library component to dispatch to app-specific content
+// components by name, so content rendering can't live here too. See
+// `PaneCell.view-type`'s own doc comment.
+//
+// Interactivity (tab select/close/add, drawer toggle, divider drag-resize,
+// tab drag-and-drop) is handled here with plain `TouchArea`s rather than
+// Slint's experimental `DragArea`/`DropArea` (whose payload model --
+// `data-transfer` values built through a `global` callback pair -- is
+// aimed at cross-window/OS drag-out, not simple in-app list reordering).
+// Instead, drag position is tracked in Slint-local properties for
+// snappy visual feedback, and the actual tree mutation + hit-testing
+// against the last-computed rect list happens in Rust once the pointer is
+// released (`tab-drag-ended`) -- consistent with `origami-slint`'s design
+// of Rust owning all pane-tree state.
+//
+// A consumer app embeds this filling whatever region it allocates to the
+// pane-docking area (typically `width: 100%; height: 100%;` of its own
+// window, until a future app-shell-chrome consumer needs to share that
+// space with a menu bar/sidebar) and forwards every property/callback
+// below to/from its own root component under the same name, the same
+// `<=>` aliasing / callback-forwarding-block idiom used for any other
+// composed child component (see a consuming app's own `ui/app.slint` for
+// the concrete wiring).
+
+export struct PaneCell {
+    x: length,
+    y: length,
+    width: length,
+    height: length,
+    z: int,
+    kind: string,       // "content" | "tab-label" | "tab-add" | "drawer-rail" | "divider" | "group-frame" | "header"
+    id: int,
+    child-id: int,
+    index: int,
+    extra: float,
+    // Consumer-defined content-type tag ("board" | "calendar" | ... in
+    // `cettila-slint`), meaningless to `PaneHost` itself -- only read
+    // here to skip `content` cells (a consumer's own separate loop
+    // renders those); the actual set of valid values is entirely up to
+    // whatever app supplies `cells`.
+    view-type: string,
+    title: string,
+    active: bool,
+}
+
+export component PaneHost inherits Rectangle {
+    in property <[PaneCell]> cells: [];
+
+    // origami's `PaneView.maximizedLeafId` -- -1 means nothing is
+    // maximized. When set, the Rust-side layout pass renders ONLY that
+    // leaf's own subtree at full viewport size (the tree itself is
+    // untouched), so every other cell simply stops appearing in `cells`
+    // -- no Slint-side hiding logic needed here beyond the header
+    // button itself showing "restore" instead of "maximize" for that
+    // one leaf.
+    in property <int> maximized-leaf-id: -1;
+    // Shared (not per-pane) background compositing (origami:
+    // PaneBackdrop.qml + main.qml's window-filling Image + PaneLeaf.qml's
+    // own background rect going translucent). `background-image-path`
+    // being "" means no background is configured at all, so chrome cells
+    // stay fully opaque; a consumer's own window-filling `Image` (the
+    // actual decoded pixel data) is drawn separately, underneath this
+    // component, since `PaneHost` only needs to know whether one is
+    // configured, not render it itself.
+    in property <string> background-image-path: "";
+    in property <float> background-pane-opacity: 1.0;
+
+    callback relayout(length, length);
+    callback select-tab(int, int);
+    callback close-tab(int, int);
+    callback toggle-drawer(int);
+    callback convert-group(int);
+    callback toggle-maximize(int);
+    // (id, child-id) straight from the Header cell -- a consumer's Rust
+    // side decides whether that means "remove this standalone pane/
+    // group" (child-id < 0, a bare pane) or "close this one tab"
+    // (child-id = the owning group id).
+    callback close-leaf(int, int);
+    // Same (id, child-id) shape as close-leaf -- "detach this pane/tab to
+    // its own OS window" (origami: PaneWindow.qml).
+    callback detach-leaf(int, int);
+
+    // Collapsed-drawer floating overlay (origami: PaneDrawer.qml's
+    // `overlayPopup`) -- clicking a *collapsed* rail peeks at that
+    // drawer's active child in a popup beside/below the rail, instead of
+    // committing to the inline layout `toggle-drawer` uses (that's only
+    // reachable by clicking an *expanded* rail, to collapse it back).
+    // `PaneHost` doesn't know what a drawer's active child actually is
+    // (that's tree state living in a consumer's Rust), or own a popup
+    // instance itself (its content is app-specific, and a popup opened
+    // from a *different* component than the one showing it isn't
+    // something Slint supports directly) -- it only fires
+    // `drawer-overlay-opened(id)` (synchronously, so a consumer's Rust
+    // handler has already populated whatever content state it needs by
+    // the time a consumer's forwarding block reacts to this and shows
+    // its own popup) and `drawer-overlay-close-requested()` (re-clicking
+    // the same already-open rail; a click *outside* the popup is instead
+    // handled entirely by the popup's own `close-on-click-outside`
+    // policy, unrelated to this component), plus exposes where a
+    // consumer should position that popup. Whether a peek is currently
+    // open, and which drawer it belongs to, stays private state here --
+    // a consumer never needs to read either (both are already implied
+    // by whichever explicit signal it last received).
+    property <bool> drawer-overlay-visible: false;
+    property <int> drawer-overlay-drawer-id: -1;
+    out property <length> drawer-overlay-x: 0px;
+    out property <length> drawer-overlay-y: 0px;
+    callback drawer-overlay-opened(int);
+    callback drawer-overlay-close-requested();
+
+    callback resize-divider-start(int, int);
+    callback resize-divider(int, int, float, float);
+    callback resize-divider-end();
+    callback tab-drag-ended(int, int, length, length);
+    callback drag-hover(length, length);
+    callback set-active-leaf(int);
+
+    // Fired instead of owning a picker popup directly (that popup's
+    // content -- the actual list of pickable view types -- is entirely
+    // app-specific, `PaneHost` has no opinion on it): `mode` is
+    // "add-tab" (from the tab-add "+" button, `target` = the group id
+    // to append to) or "change-type" (from a header's type-switcher,
+    // `target` = the pane id to retype in place); `x`/`y` is where a
+    // consumer should anchor its own popup.
+    callback request-picker(string, int, length, length);
+
+    changed width => { root.relayout(root.width, root.height); }
+    changed height => { root.relayout(root.width, root.height); }
+
+    property <bool> dragging: false;
+    property <string> drag-label: "";
+    property <length> drag-x: 0px;
+    property <length> drag-y: 0px;
+    property <int> drag-armed-group: -1;
+    property <int> drag-armed-child: -1;
+
+    // Live edge-zone drop-target highlight, recomputed on every drag move
+    // by a consumer's Rust (`origami_slint::drop::find_target_leaf`/
+    // `compute_zone`/`highlight_rect`, driven off this component's own
+    // `drag-hover` callback) -- "" means no valid target under the
+    // cursor right now (nothing rendered).
+    in property <string> drop-zone: "";
+    in property <length> drop-hl-x: 0px;
+    in property <length> drop-hl-y: 0px;
+    in property <length> drop-hl-w: 0px;
+    in property <length> drop-hl-h: 0px;
+
+    // Absolute cursor position (`cell.x/y + self.mouse-x/y`) at the moment
+    // a divider drag started -- captured once on press and never touched
+    // again for the rest of that gesture. Every `moved` tick reports the
+    // *total* delta since this fixed point (not a per-tick incremental
+    // delta), matching a consumer's own `resize_pair`-style from-a-
+    // frozen-baseline design: recomputing fresh from a fixed reference
+    // each tick has no memory of transient min/max clamps or gaps while
+    // the cursor was outside the window, unlike an incremental model
+    // where each tick's delta builds on whatever the previous tick left
+    // behind (and, if read after `resize-divider`'s own synchronous
+    // relayout has already moved `cell.x`/`cell.y` out from under it,
+    // can mix pre- and post-move coordinates into a phantom position --
+    // both real bugs hit during this feature's own original development).
+    property <length> divider-press-x: 0px;
+    property <length> divider-press-y: 0px;
+
+    for cell in root.cells: Rectangle {
+        x: cell.x;
+        y: cell.y;
+        width: cell.width;
+        height: cell.height;
+
+        if cell.kind == "divider": TouchArea {
+            // Widen the hit target beyond the 1px visual line, same idea
+            // as PaneSplit.qml's grabMargin. `z` forces this above a
+            // neighboring bare pane's `header-click` TouchArea (that one
+            // has no margin inset -- unlike a Tabs/Drawer group's own
+            // framed header -- so it reaches all the way to the leaf's
+            // outer edge, exactly where this widened strip also sits) --
+            // without it, the header (earlier in `root.cells`, but this
+            // widened strip overlapping into the *next* cell's already-
+            // rendered header made grabbing the divider unreliable).
+            z: 500;
+            x: cell.width < cell.height ? -3px : 0px;
+            y: cell.width < cell.height ? 0px : -3px;
+            width: cell.width < cell.height ? cell.width + 6px : cell.width;
+            height: cell.width < cell.height ? cell.height : cell.height + 6px;
+            mouse-cursor: cell.width < cell.height ? MouseCursor.col-resize : MouseCursor.row-resize;
+
+            pointer-event(event) => {
+                if (event.kind == PointerEventKind.down) {
+                    root.divider-press-x = cell.x + self.mouse-x;
+                    root.divider-press-y = cell.y + self.mouse-y;
+                    root.resize-divider-start(cell.id, cell.index);
+                }
+                if (event.kind == PointerEventKind.move && self.pressed) {
+                    if (cell.width < cell.height) {
+                        root.resize-divider(cell.id, cell.index, cell.extra, (cell.x + self.mouse-x - root.divider-press-x) / 1px);
+                    } else {
+                        root.resize-divider(cell.id, cell.index, cell.extra, (cell.y + self.mouse-y - root.divider-press-y) / 1px);
+                    }
+                }
+                if (event.kind == PointerEventKind.up) {
+                    root.resize-divider-end();
+                }
+            }
+
+            Rectangle { background: Tokens.divider; }
+        }
+
+        if cell.kind == "group-frame": Rectangle {
+            // Group frame is a perimeter border surrounding tabs/drawers;
+            // its background must be transparent so content cells underneath
+            // (file-grid, custom views) remain visible.
+            background: transparent;
+            border-width: Tokens.border-width;
+            border-radius: Tokens.corner-radius;
+            border-color: Tokens.border;
+        }
+
+        // PaneHeader.qml's chrome row -- see `origami_slint::layout`'s
+        // `CellKind::Header` doc comment for the id/child-id convention:
+        // cell.id is the draggable pane (active tab's pane, or the pane
+        // itself if bare), cell.child-id is its owning group, or -1 if
+        // it's a bare pane. The grip is the only drag affordance a bare
+        // pane has (tab-label cells above already cover dragging a
+        // specific tab).
+        if cell.kind == "header": Rectangle {
+            // See the "group-frame" cell above for why this goes
+            // translucent together with it, not on its own.
+            background: root.background-image-path != "" ? Tokens.surface.with-alpha(root.background-pane-opacity) : Tokens.surface;
+
+            header-click := TouchArea {
+                width: parent.width;
+                height: parent.height;
+                clicked => { root.set-active-leaf(cell.child-id >= 0 ? cell.child-id : cell.id); }
+            }
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-small;
+                padding-right: Tokens.spacing-small;
+                spacing: Tokens.spacing-small;
+
+                grip := TouchArea {
+                    width: 20px;
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.down) {
+                            root.drag-armed-group = cell.child-id;
+                            root.drag-armed-child = cell.id;
+                            root.set-active-leaf(cell.child-id >= 0 ? cell.child-id : cell.id);
+                        }
+                        if (event.kind == PointerEventKind.move && self.pressed) {
+                            root.dragging = true;
+                            root.drag-label = cell.title;
+                            root.drag-x = cell.x + self.mouse-x;
+                            root.drag-y = cell.y + self.mouse-y;
+                            root.drag-hover(root.drag-x, root.drag-y);
+                        }
+                        if (event.kind == PointerEventKind.up && root.dragging) {
+                            root.dragging = false;
+                            root.tab-drag-ended(root.drag-armed-group, root.drag-armed-child, root.drag-x, root.drag-y);
+                        }
+                    }
+
+                    Icon {
+                        source: Icons.grip-vertical;
+                        color: Tokens.text-secondary;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                type-switch := TouchArea {
+                    width: 14px;
+                    clicked => {
+                        root.request-picker("change-type", cell.id, cell.x, cell.y + cell.height);
+                    }
+
+                    Icon {
+                        source: Icons.chevron-down;
+                        color: type-switch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                        width: 12px;
+                        height: 12px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                Text {
+                    text: cell.title;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-small;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+
+                // Visible maximize/restore button (origami: PaneMaximizeBar)
+                // -- a plain, always-there icon, not a hidden gesture.
+                maximize-touch := TouchArea {
+                    width: 16px;
+                    clicked => {
+                        root.toggle-maximize(cell.child-id >= 0 ? cell.child-id : cell.id);
+                    }
+
+                    Icon {
+                        source: root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id) ? Icons.minimize : Icons.maximize;
+                        color: maximize-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                // Visible close button -- the only close affordance a
+                // *bare* pane has (no tab-label "x" to use, unlike a
+                // Tabs/Drawer group's own children); for a group header
+                // it closes the active tab, same as that tab's own "x".
+                close-leaf-touch := TouchArea {
+                    width: 16px;
+                    clicked => {
+                        root.close-leaf(cell.id, cell.child-id);
+                    }
+
+                    Icon {
+                        source: Icons.x;
+                        color: close-leaf-touch.has-hover ? Tokens.destructive : Tokens.text-secondary;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                // Visible "detach to a new window" button (origami:
+                // PaneHeader's own menu -> "move to another window").
+                // Only the move variant is implemented (removes this
+                // pane from the tree, opens it in its own OS window) --
+                // the duplicate-without-removing "open in new window"
+                // variant is deferred.
+                detach-touch := TouchArea {
+                    width: 16px;
+                    clicked => {
+                        root.detach-leaf(cell.id, cell.child-id);
+                    }
+
+                    Icon {
+                        source: Icons.external-link;
+                        color: detach-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+
+            if cell.active: Rectangle {
+                y: parent.height - 2px;
+                width: parent.width;
+                height: 2px;
+                background: Tokens.accent;
+            }
+        }
+
+        if cell.kind == "tab-label": Rectangle {
+            background: cell.active ? Tokens.hover : Tokens.surface;
+
+            label-touch := TouchArea {
+                pointer-event(event) => {
+                    if (event.kind == PointerEventKind.down) {
+                        root.drag-armed-group = cell.id;
+                        root.drag-armed-child = cell.child-id;
+                    }
+                    if (event.kind == PointerEventKind.move && self.pressed) {
+                        root.dragging = true;
+                        root.drag-label = cell.title;
+                        root.drag-x = cell.x + self.mouse-x;
+                        root.drag-y = cell.y + self.mouse-y;
+                        root.drag-hover(root.drag-x, root.drag-y);
+                    }
+                    if (event.kind == PointerEventKind.up) {
+                        if (root.dragging) {
+                            root.dragging = false;
+                            root.tab-drag-ended(root.drag-armed-group, root.drag-armed-child, root.drag-x, root.drag-y);
+                        } else {
+                            root.select-tab(cell.id, cell.index);
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: cell.title;
+                color: white;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            Rectangle {
+                x: parent.width - self.width - 4px;
+                y: (parent.height - self.height) / 2;
+                width: 14px;
+                height: 14px;
+                background: close-touch.has-hover ? Tokens.destructive : transparent;
+                border-radius: 3px;
+                Icon {
+                    source: Icons.x;
+                    color: white;
+                    width: 10px;
+                    height: 10px;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+                close-touch := TouchArea {
+                    clicked => { root.close-tab(cell.id, cell.child-id); }
+                }
+            }
+        }
+
+        // Split into two stacked touch areas rather than a single "+"
+        // button with a right-click-only convert-to-drawer gesture --
+        // origami's own group hamburger menu has this as "convert to
+        // drawer", but surfaced here as a plain visible button instead
+        // of a hidden gesture.
+        if cell.kind == "tab-add": Rectangle {
+            background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
+            VerticalLayout {
+                add-touch := TouchArea {
+                    vertical-stretch: 1;
+                    clicked => {
+                        root.request-picker("add-tab", cell.id, cell.x, cell.y + cell.height);
+                    }
+                    Icon { source: Icons.plus; color: Tokens.text-primary; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; }
+                }
+                convert-drawer-touch := TouchArea {
+                    height: 10px;
+                    clicked => { root.convert-group(cell.id); }
+                    Icon {
+                        source: Icons.switch-horizontal;
+                        color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                        width: 8px;
+                        height: 8px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+        }
+
+        // The rail doubles as the whole Drawer's own grip -- origami's
+        // PaneGrip on a drawer rail drags the entire drawer node, not a
+        // child within it (that's what a Tabs/Drawer group's PaneHeader
+        // grip already does, for its *active child*). Click-vs-drag is
+        // resolved the same way the header/tab-label TouchAreas already
+        // do: only treat it as a click (toggle expand/collapse) if no
+        // drag was ever armed.
+        if cell.kind == "drawer-rail": Rectangle {
+            background: rail-touch.has-hover ? Tokens.surface-raised : Tokens.background;
+            Text {
+                text: cell.title;
+                color: Tokens.text-secondary;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                wrap: word-wrap;
+            }
+            rail-touch := TouchArea {
+                mouse-cursor: MouseCursor.move;
+                pointer-event(event) => {
+                    if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                        root.drag-armed-group = -1;
+                        root.drag-armed-child = cell.id;
+                    }
+                    if (event.kind == PointerEventKind.move && self.pressed) {
+                        root.dragging = true;
+                        root.drag-label = cell.title;
+                        root.drag-x = cell.x + self.mouse-x;
+                        root.drag-y = cell.y + self.mouse-y;
+                        root.drag-hover(root.drag-x, root.drag-y);
+                    }
+                    if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left) {
+                        if (root.dragging) {
+                            root.dragging = false;
+                            root.tab-drag-ended(root.drag-armed-group, root.drag-armed-child, root.drag-x, root.drag-y);
+                        } else if (cell.active) {
+                            // Already expanded (inline) -- collapse it.
+                            root.toggle-drawer(cell.id);
+                        } else if (root.drawer-overlay-visible && root.drawer-overlay-drawer-id == cell.id) {
+                            // Same collapsed rail clicked again -- close the peek popup.
+                            root.drawer-overlay-visible = false;
+                            root.drawer-overlay-close-requested();
+                        } else {
+                            root.drawer-overlay-drawer-id = cell.id;
+                            root.drawer-overlay-x = cell.width < cell.height ? cell.x + cell.width : cell.x;
+                            root.drawer-overlay-y = cell.width < cell.height ? cell.y : cell.y + cell.height;
+                            root.drawer-overlay-opened(cell.id);
+                            root.drawer-overlay-visible = true;
+                        }
+                    }
+                }
+            }
+
+            // Visible corner button to convert this Drawer back to a
+            // Tabs group -- origami's own rail hamburger menu has this as
+            // "convert to tabs"; stacked on top of rail-touch (declared
+            // after it) so this small corner intercepts clicks before the
+            // larger drag/toggle area beneath it does.
+            convert-tabs-touch := TouchArea {
+                x: parent.width - self.width;
+                y: 0;
+                width: 12px;
+                height: 12px;
+                clicked => { root.convert-group(cell.id); }
+                Icon {
+                    source: Icons.switch-horizontal;
+                    color: convert-tabs-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    width: 8px;
+                    height: 8px;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+            }
+        }
+    }
+
+    if root.dragging && root.drop-zone != "": Rectangle {
+        x: root.drop-hl-x;
+        y: root.drop-hl-y;
+        width: root.drop-hl-w;
+        height: root.drop-hl-h;
+        z: 998;
+        background: root.drop-zone == "center" ? Tokens.selected-surface : Tokens.accent;
+        opacity: root.drop-zone == "center" ? 0.55 : 0.9;
+    }
+
+    if root.dragging: Rectangle {
+        x: root.drag-x - 20px;
+        y: root.drag-y - 10px;
+        width: 120px;
+        height: 24px;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: white;
+        Text { text: root.drag-label; color: white; horizontal-alignment: center; vertical-alignment: center; }
+    }
+}

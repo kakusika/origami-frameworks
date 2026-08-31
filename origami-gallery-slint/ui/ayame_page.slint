@@ -1,0 +1,505 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { SectionLabel, AppButton, ToggleSwitch, DropdownButton, ColorSwatchRow, OptionSlider, CollapsibleSection, SidebarCategoryList, CheckBox, RadioButton, AppTextField, AppTextArea, ProgressBar, Badge, Divider, Card, ButtonGroup, ButtonGroupItem, ToolTip, TabBar, TabItem } from "@ayame/components.slint";
+import { Icons } from "@ayame/icons.slint";
+
+// Live showcase of every `ayame-slint` `components.slint` export.
+export component AyamePage inherits Rectangle {
+    property <string> status: "Interact with a widget below to see its callback fire here.";
+
+    property <float> slider-value: 0.4;
+    property <[color]> swatches: [#ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6];
+    property <int> swatch-selected: 3;
+    property <bool> demo-checkbox: true;
+    property <int> demo-radio: 0;
+    property <string> demo-input: "Ayame Slint UI";
+    property <float> demo-progress: 0.68;
+    property <int> demo-button-group: 0;
+    property <int> demo-tab: 0;
+    property <int> demo-sidebar-idx: 0;
+
+    // Plain geometric positioning rather than an outer `VerticalLayout`
+    // -- see `origami_page.slint`'s identical structure for why (a real
+    // width-binding cycle Slint's own compiler flagged during this
+    // file's verification pass).
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height - 34px;
+        viewport-height: content.preferred-height + 24px;
+
+        content := VerticalLayout {
+            width: parent.width;
+            padding: Tokens.spacing-large;
+            spacing: Tokens.spacing-large;
+
+            // Page Header Card
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-small;
+
+                    Text {
+                        text: "ayame-slint";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large + 2px;
+                        color: Tokens.text-primary;
+                    }
+                    Text {
+                        text: "Ayame's design-system tokens + basic components, the Slint counterpart to its QML StyleKit.";
+                        color: Tokens.text-secondary;
+                        font-size: Tokens.font-size-normal;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+
+            // -- SectionLabel Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "SectionLabel"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        SectionLabel { text: "Primary section label"; }
+                        SectionLabel { text: "Secondary section label"; secondary: true; }
+                    }
+                }
+            }
+
+            // -- AppButton Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "AppButton"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        AppButton { text: "Default"; clicked => { root.status = "AppButton: Default clicked"; } }
+                        AppButton { text: "Primary"; primary: true; clicked => { root.status = "AppButton: Primary clicked"; } }
+                        AppButton { text: "Destructive"; destructive: true; clicked => { root.status = "AppButton: Destructive clicked"; } }
+                        AppButton { text: "Disabled"; enabled: false; }
+                    }
+                }
+            }
+
+            // -- ToggleSwitch Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ToggleSwitch"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    ToggleSwitch {
+                        text: "Enable animations";
+                        toggled(v) => { root.status = "ToggleSwitch: toggled(" + (v ? "true" : "false") + ")"; }
+                    }
+                }
+            }
+
+            // -- DropdownButton Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "DropdownButton"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    DropdownButton {
+                        text: "Choose a theme";
+                        options: ["Light", "Dark", "System"];
+                        selected(i) => { root.status = "DropdownButton: selected(" + i + ")"; }
+                    }
+                }
+            }
+
+            // -- ColorSwatchRow Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ColorSwatchRow"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    ColorSwatchRow {
+                        swatches: root.swatches;
+                        selected-index: root.swatch-selected;
+                        picked(i) => {
+                            root.swatch-selected = i;
+                            root.status = "ColorSwatchRow: picked(" + i + ")";
+                        }
+                    }
+                }
+            }
+
+            // -- OptionSlider Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "OptionSlider"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    OptionSlider {
+                        label: "Opacity";
+                        minimum: 0;
+                        maximum: 1;
+                        value: root.slider-value;
+                        value-changed(v) => {
+                            root.slider-value = v;
+                            root.status = "OptionSlider: value-changed(" + Math.round(v * 100) / 100 + ")";
+                        }
+                    }
+                }
+            }
+
+            // -- CollapsibleSection Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "CollapsibleSection"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    CollapsibleSection {
+                        title: "Advanced settings";
+                        show-toggle: true;
+                        toggle-checked: true;
+                        width: 100%;
+                        toggle-requested(checked) => { root.status = "CollapsibleSection: toggle-requested(" + (checked ? "true" : "false") + ")"; }
+
+                        Text { text: "Body content shown while expanded."; color: Tokens.text-secondary; }
+                    }
+                }
+            }
+
+            // -- TabBar & SidebarCategoryList Card (Sliding Pill) --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-large;
+
+                    Text { text: "TabBar & SidebarCategoryList (Continuous Sliding Pill)"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text { text: "Pill Style TabBar"; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        TabBar {
+                            tabs: [
+                                { id: "overview", title: "Overview", icon: Icons.maximize, has-icon: false, badge: "" },
+                                { id: "metrics", title: "Metrics", icon: Icons.maximize, has-icon: false, badge: "LIVE" },
+                                { id: "logs", title: "Logs", icon: Icons.maximize, has-icon: false, badge: "9+" },
+                                { id: "settings", title: "Settings", icon: Icons.maximize, has-icon: false, badge: "" },
+                            ];
+                            current-index <=> root.demo-tab;
+                            pill-style: true;
+                            tab-selected(idx, id) => {
+                                root.status = "TabBar: selected " + id + " (index " + idx + ")";
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text { text: "Underline Style TabBar"; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        TabBar {
+                            tabs: [
+                                { id: "t1", title: "Editor", icon: Icons.maximize, has-icon: false, badge: "" },
+                                { id: "t2", title: "Canvas", icon: Icons.maximize, has-icon: false, badge: "" },
+                                { id: "t3", title: "Terminal", icon: Icons.maximize, has-icon: false, badge: "" },
+                            ];
+                            current-index <=> root.demo-tab;
+                            pill-style: false;
+                            tab-selected(idx, id) => {
+                                root.status = "Underline TabBar: selected " + id + " (index " + idx + ")";
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text { text: "Vertical Sidebar Category List"; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        SidebarCategoryList {
+                            height: 140px;
+                            categories: ["General", "Appearance", "Shortcuts", "Advanced"];
+                            current-index <=> root.demo-sidebar-idx;
+                        }
+                    }
+                }
+            }
+            // -- CheckBox & RadioButton Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "CheckBox & RadioButton"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-large;
+                        CheckBox {
+                            text: "Enable notifications";
+                            checked: root.demo-checkbox;
+                            toggled(c) => {
+                                root.demo-checkbox = c;
+                                root.status = "CheckBox: toggled(" + (c ? "true" : "false") + ")";
+                            }
+                        }
+                        CheckBox {
+                            text: "Disabled state";
+                            checked: true;
+                            enabled: false;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-large;
+                        RadioButton {
+                            text: "Option A";
+                            checked: root.demo-radio == 0;
+                            clicked => {
+                                root.demo-radio = 0;
+                                root.status = "RadioButton: selected Option A";
+                            }
+                        }
+                        RadioButton {
+                            text: "Option B";
+                            checked: root.demo-radio == 1;
+                            clicked => {
+                                root.demo-radio = 1;
+                                root.status = "RadioButton: selected Option B";
+                            }
+                        }
+                        RadioButton {
+                            text: "Option C (Disabled)";
+                            checked: false;
+                            enabled: false;
+                        }
+                    }
+                }
+            }
+
+            // -- AppTextField & AppTextArea Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "AppTextField & AppTextArea"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        AppTextField {
+                            horizontal-stretch: 1;
+                            placeholder-text: "Type search term...";
+                            text <=> root.demo-input;
+                            edited(s) => { root.status = "AppTextField: edited '" + s + "'"; }
+                        }
+                        AppTextField {
+                            horizontal-stretch: 1;
+                            placeholder-text: "Password input";
+                            input-type: InputType.password;
+                        }
+                    }
+
+                    AppTextArea {
+                        placeholder-text: "Multi-line text editor...";
+                        edited(s) => { root.status = "AppTextArea: length = " + s; }
+                    }
+                }
+            }
+
+            // -- ProgressBar, Badge, Divider Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ProgressBar, Badge & Divider"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        alignment: center;
+                        Badge { text: "Active"; variant: "accent"; }
+                        Badge { text: "Success"; variant: "success"; }
+                        Badge { text: "Error"; variant: "destructive"; }
+                        Badge { text: "Draft"; variant: "neutral"; }
+                    }
+
+                    Divider { }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text {
+                            text: "Download progress (" + Math.round(root.demo-progress * 100) + "%)";
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
+                        ProgressBar {
+                            progress: root.demo-progress;
+                        }
+                    }
+                }
+            }
+
+            // -- ButtonGroup & ToolTip Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ButtonGroup & ToolTip"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-large;
+                        alignment: center;
+
+                        ButtonGroup {
+                            items: [
+                                { id: "left", text: "Left", icon: Icons.switch-horizontal, has-icon: false },
+                                { id: "center", text: "Center", icon: Icons.switch-horizontal, has-icon: false },
+                                { id: "right", text: "Right", icon: Icons.switch-horizontal, has-icon: false },
+                            ];
+                            selected-index: root.demo-button-group;
+                            selected(idx, id) => {
+                                root.demo-button-group = idx;
+                                root.status = "ButtonGroup: selected " + id + " (index " + idx + ")";
+                            }
+                        }
+
+                        tooltip-target := Rectangle {
+                            height: 30px;
+                            width: 140px;
+                            border-radius: Tokens.corner-radius;
+                            background: tt-touch.has-hover ? Tokens.hover : Tokens.surface-raised;
+                            border-width: Tokens.border-width;
+                            border-color: Tokens.border;
+
+                            Text {
+                                text: "Hover for tooltip";
+                                color: Tokens.text-primary;
+                                font-size: Tokens.font-size-small;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tt-touch := TouchArea {
+                                mouse-cursor: pointer;
+                            }
+
+                            ToolTip {
+                                x: (parent.width - self.width) / 2;
+                                y: -self.height - 4px;
+                                text: "Helpful hint tooltip!";
+                                showing: tt-touch.has-hover;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Status bar at bottom
+    Rectangle {
+        y: parent.height - 34px;
+        width: parent.width;
+        height: 34px;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+
+        HorizontalLayout {
+            padding-left: Tokens.spacing-large;
+            padding-right: Tokens.spacing-large;
+            spacing: Tokens.spacing-medium;
+            alignment: center;
+
+            Rectangle {
+                width: 8px;
+                height: 8px;
+                border-radius: 4px;
+                background: Tokens.accent;
+            }
+
+            Text {
+                text: root.status;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+    }
+}

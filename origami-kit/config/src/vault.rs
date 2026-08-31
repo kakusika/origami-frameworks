@@ -1,8 +1,8 @@
 //! Load/save which vault is currently active, plus a most-recently-used list
-//! of vaults, under the OS-level per-user config directory
-//! (`$XDG_CONFIG_HOME/cettila`, i.e. `~/.config/cettila` on Linux, via the
-//! `directories` crate -- same `("dev", "cettila", "cettila")`
-//! qualifier/organization/application triple `cache.rs` already uses).
+//! of vaults, under the OS-level per-user config directory (`$XDG_CONFIG_HOME/
+//! <organization>`, e.g. `~/.config/cettila` on Linux by default, via the
+//! `directories` crate and `crate::identity`'s qualifier/organization/
+//! application triple -- see that module's own doc comment).
 //!
 //! This can't live inside `<vault>/.cettila/...` like `settings.rs`/
 //! `workspace.rs` do: you'd need to already know which vault is active
@@ -32,7 +32,8 @@ const MAX_RECENT_VAULTS: usize = 10;
 /// Where `VaultConfig` is persisted, or `None` if the platform's config
 /// directory couldn't be resolved (e.g. no home directory).
 pub fn vault_config_path() -> Option<PathBuf> {
-    let dirs = ProjectDirs::from("dev", "cettila", "cettila")?;
+    let id = crate::identity::app_identity();
+    let dirs = ProjectDirs::from(&id.qualifier, &id.organization, &id.application)?;
     Some(dirs.config_dir().join("vault.toml"))
 }
 

@@ -160,6 +160,39 @@ pub fn rename_entry(path: &str, new_name: &str) -> Result<String, String> {
     Ok(destination.to_string_lossy().into_owned())
 }
 
+/// Moves a single entry to the OS trash/recycle bin (via the `trash`
+/// crate) rather than permanently deleting it -- recoverable by the user
+/// afterward the same way deleting via a real file manager already is.
+/// Single-path, not a batch, same "acts on exactly one path the user is
+/// actively waiting on, report failure back rather than skip it" reasoning
+/// as `rename_entry` above (unlike `move_entries_to`/`copy_entries_to`/
+/// `link_entries_to`, which are genuinely best-effort batch drag-and-drop
+/// operations).
+pub fn move_to_trash(path: &str) -> Result<(), String> {
+    trash::delete(path).map_err(|err| format!("ゴミ箱に移動できませんでした: {err}"))
+}
+
+/// Batch form of `move_to_trash` above, for a multi-selection context-menu
+/// action -- unlike `move_entries_to`/`copy_entries_to`/`link_entries_to`
+/// (silent best-effort, built for drag-and-drop), this is a direct,
+/// user-initiated batch delete, so it reports back every failure instead
+/// of silently skipping it. Returns an empty string if every path
+/// succeeded, otherwise a newline-joined `"<name>: <error>"` line per
+/// failure (successes are not rolled back).
+pub fn move_to_trash_many(paths: &[String]) -> String {
+    let mut errors = Vec::new();
+    for path in paths {
+        if let Err(err) = move_to_trash(path) {
+            let name = Path::new(path)
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_else(|| path.clone());
+            errors.push(format!("{name}: {err}"));
+        }
+    }
+    errors.join("\n")
+}
+
 /// Moves every entry in `paths` into `target_dir` via a plain rename,
 /// returning how many actually moved. Used by cettila-view-explorer's
 /// drag-and-drop (both internal drag-move and, incidentally, any drop

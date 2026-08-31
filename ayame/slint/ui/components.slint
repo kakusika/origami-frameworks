@@ -1,0 +1,902 @@
+import { Tokens } from "tokens.slint";
+import { Icon } from "icons.slint";
+
+// Text with a "primary"/"secondary" role, matching Origami.Label's
+// type: "secondary" convention from the QML settings screen.
+export component SectionLabel inherits Text {
+    in property <bool> secondary: false;
+    color: root.secondary ? Tokens.text-secondary : Tokens.text-primary;
+    font-size: root.secondary ? Tokens.font-size-small : Tokens.font-size-normal;
+    wrap: word-wrap;
+}
+
+export component AppButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> destructive: false;
+    in property <bool> primary: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: 30px;
+    width: max(64px, label.preferred-width + Tokens.spacing-large * 1.5);
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border : root.destructive ? (area.has-hover ? Tokens.destructive.darker(0.2) : Tokens.destructive) : root.primary ? (area.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) : area.has-hover ? Tokens.accent : Tokens.border;
+    background: !root.enabled ? Tokens.surface : root.destructive ? (area.pressed ? Tokens.destructive.darker(0.3) : area.has-hover ? Tokens.destructive.darker(0.1) : Tokens.destructive) : root.primary ? (area.pressed ? Tokens.accent.darker(0.2) : area.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : area.pressed ? Tokens.pressed : area.has-hover ? Tokens.hover : Tokens.surface;
+    opacity: root.enabled ? 1.0 : 0.45;
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    label := Text {
+        text: root.text;
+        color: (root.primary || root.destructive) ? white : Tokens.text-primary;
+        font-size: Tokens.font-size-normal;
+        font-weight: (root.primary || root.destructive) ? 600 : 400;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    area := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}
+
+export component ToggleSwitch inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked: false;
+    callback toggled(bool);
+
+    height: max(22px, layout.preferred-height);
+    width: layout.preferred-width;
+
+    layout := HorizontalLayout {
+        spacing: Tokens.spacing-medium;
+        alignment: start;
+
+        if root.text != "": Text {
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+        }
+
+        track := Rectangle {
+            width: 38px;
+            height: 22px;
+            border-radius: self.height / 2;
+            background: root.checked ? (switch-touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : (switch-touch.has-hover ? Tokens.hover : Tokens.surface-raised);
+            border-width: Tokens.border-width;
+            border-color: root.checked ? Tokens.accent : (switch-touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+
+            animate background { duration: Tokens.anim-short * 1ms; }
+            animate border-color { duration: Tokens.anim-short * 1ms; }
+
+            knob := Rectangle {
+                width: switch-touch.pressed ? 20px : 16px;
+                height: 16px;
+                y: (parent.height - self.height) / 2;
+                x: root.checked ? parent.width - self.width - 3px : 3px;
+                border-radius: self.height / 2;
+                background: white;
+                animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+                animate width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+            }
+        }
+    }
+
+    switch-touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}
+
+export component DropdownButton inherits Rectangle {
+    in property <string> text;
+    in property <[string]> options: [];
+    callback selected(int);
+
+    height: 30px;
+    width: 200px;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: area.has-hover ? Tokens.accent : Tokens.border;
+    background: area.pressed ? Tokens.pressed : area.has-hover ? Tokens.hover : Tokens.surface;
+
+    animate background { duration: 100ms; }
+    animate border-color { duration: 100ms; }
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        Text {
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+        Icon {
+            source: @image-url("icons/chevron-down.svg");
+            color: Tokens.text-secondary;
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { popup.show(); }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: root.height + 4px;
+        width: root.width;
+
+        Rectangle {
+            background: Tokens.surface-raised;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border;
+            border-radius: Tokens.corner-radius;
+
+            VerticalLayout {
+                padding: Tokens.spacing-small;
+                spacing: 2px;
+
+                for opt[i] in root.options: Rectangle {
+                    height: 28px;
+                    background: itemArea.has-hover ? Tokens.hover : transparent;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Text {
+                        text: opt;
+                        color: Tokens.text-primary;
+                        font-size: Tokens.font-size-normal;
+                        vertical-alignment: center;
+                        x: Tokens.spacing-medium;
+                    }
+
+                    itemArea := TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => { root.selected(i); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// A row of clickable color swatches (theme accent-color picker) -- plain
+// `TouchArea`-on-`Rectangle` idiom, same as every other control in this
+// file. Index-based selection (`picked(int)`), not a `color`-typed
+// callback, so the Rust side doesn't need a Slint-color-to-hex round trip:
+// it already knows which `Rgba` each index corresponds to (the same list
+// it built `swatches` from).
+export component ColorSwatchRow inherits Rectangle {
+    in property <[color]> swatches: [];
+    in property <int> selected-index: -1;
+    callback picked(int);
+
+    height: 26px;
+
+    HorizontalLayout {
+        spacing: Tokens.spacing-small + 2px;
+
+        for c[i] in root.swatches: Rectangle {
+            width: 26px;
+            height: 26px;
+            border-radius: self.height / 2;
+            background: c;
+            border-width: i == root.selected-index ? 2.5px : (swatch-touch.has-hover ? 2px : Tokens.border-width);
+            border-color: i == root.selected-index ? white : (swatch-touch.has-hover ? white.with-alpha(0.8) : Tokens.border);
+
+            animate border-width { duration: 100ms; }
+            animate border-color { duration: 100ms; }
+
+            swatch-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.picked(i); }
+            }
+        }
+    }
+}
+
+export component OptionSlider inherits Rectangle {
+    in property <string> label;
+    in property <float> minimum: 0;
+    in property <float> maximum: 1;
+    in-out property <float> value: 0;
+    callback value-changed(float);
+
+    height: (root.label == "" ? 0px : 18px) + 24px;
+
+    VerticalLayout {
+        spacing: Tokens.spacing-small;
+
+        if root.label != "": HorizontalLayout {
+            Text {
+                text: root.label;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                font-weight: 600;
+                horizontal-stretch: 1;
+            }
+            Text {
+                text: Math.round(root.value * 100) / 100;
+                color: Tokens.text-secondary;
+                font-size: Tokens.font-size-small;
+            }
+        }
+
+        track := Rectangle {
+            height: 24px;
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 6px;
+                width: parent.width;
+                border-radius: 3px;
+                background: Tokens.surface-raised;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+            }
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 6px;
+                width: parent.width * (root.maximum > root.minimum ? (root.value - root.minimum) / (root.maximum - root.minimum) : 0);
+                border-radius: 3px;
+                background: Tokens.accent;
+            }
+            handle := Rectangle {
+                width: slider-touch.pressed ? 22px : (slider-touch.has-hover ? 18px : 16px);
+                height: slider-touch.pressed ? 22px : (slider-touch.has-hover ? 18px : 16px);
+                border-radius: self.height / 2;
+                background: slider-touch.pressed ? Tokens.accent.brighter(0.2) : white;
+                border-width: slider-touch.pressed ? 3px : (slider-touch.has-hover ? 2px : 1px);
+                border-color: slider-touch.pressed ? Tokens.accent : Tokens.border;
+                y: (parent.height - self.height) / 2;
+                x: (parent.width - self.width) * (root.maximum > root.minimum ? (root.value - root.minimum) / (root.maximum - root.minimum) : 0);
+                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate background { duration: Tokens.anim-very-short * 1ms; }
+                animate border-color { duration: Tokens.anim-very-short * 1ms; }
+            }
+            slider-touch := TouchArea {
+                mouse-cursor: pointer;
+                moved => {
+                    if (self.pressed) {
+                        root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
+                        root.value-changed(root.value);
+                    }
+                }
+                clicked => {
+                    root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
+                    root.value-changed(root.value);
+                }
+            }
+        }
+    }
+}
+
+// Mirrors Origami.CollapsibleSection: a header (title + optional
+// header-right ToggleSwitch) that expands/collapses a body of arbitrary
+// children with smooth accordion physics.
+export component CollapsibleSection inherits Rectangle {
+    in property <string> title;
+    in property <bool> show-toggle: false;
+    in-out property <bool> toggle-checked: false;
+    callback toggle-requested(bool);
+    in-out property <bool> expanded: true;
+
+    background: Tokens.surface;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    height: header.height + (root.expanded ? body.preferred-height + Tokens.spacing-medium : 0px);
+    clip: true;
+
+    animate height { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+
+    VerticalLayout {
+        header := Rectangle {
+            height: 36px;
+            background: header-touch.has-hover ? Tokens.hover.with-alpha(0.5) : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-medium;
+                padding-right: Tokens.spacing-medium;
+                spacing: Tokens.spacing-medium;
+
+                header-click-area := HorizontalLayout {
+                    spacing: Tokens.spacing-small;
+                    horizontal-stretch: 1;
+
+                    Icon {
+                        source: root.expanded ? @image-url("icons/chevron-down.svg") : @image-url("icons/chevron-right.svg");
+                        color: Tokens.text-primary;
+                        width: 14px;
+                        height: 14px;
+                        vertical-alignment: center;
+                    }
+
+                    Text {
+                        text: root.title;
+                        color: Tokens.text-primary;
+                        font-size: Tokens.font-size-normal;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+                }
+
+                if root.show-toggle: ToggleSwitch {
+                    checked: root.toggle-checked;
+                    toggled(checked) => { root.toggle-requested(checked); }
+                }
+            }
+
+            header-touch := TouchArea {
+                width: parent.width - (root.show-toggle ? 60px : 0px);
+                mouse-cursor: pointer;
+                clicked => { root.expanded = !root.expanded; }
+            }
+        }
+
+        body := VerticalLayout {
+            visible: root.expanded;
+            padding-left: Tokens.spacing-medium;
+            padding-right: Tokens.spacing-medium;
+            padding-bottom: Tokens.spacing-medium;
+            spacing: Tokens.spacing-small;
+            @children
+        }
+    }
+}
+
+export component SidebarCategoryList inherits Rectangle {
+    in property <[string]> categories: [];
+    in-out property <int> current-index: 0;
+
+    width: 160px;
+    background: Tokens.surface;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    border-radius: Tokens.corner-radius;
+
+    // Single continuous sliding indicator
+    if root.current-index >= 0 && root.current-index < root.categories.length: pill := Rectangle {
+        x: Tokens.spacing-small;
+        y: Tokens.spacing-small + root.current-index * (32px + 2px);
+        width: parent.width - Tokens.spacing-small * 2;
+        height: 32px;
+        border-radius: Tokens.corner-radius;
+        background: Tokens.accent;
+        animate y { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+    }
+
+    VerticalLayout {
+        padding: Tokens.spacing-small;
+        spacing: 2px;
+
+        for cat[i] in root.categories: Rectangle {
+            height: 32px;
+            background: (i != root.current-index && itemArea.has-hover) ? Tokens.hover : transparent;
+            border-radius: Tokens.corner-radius;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            Text {
+                text: cat;
+                color: i == root.current-index ? white : (itemArea.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                font-size: Tokens.font-size-normal;
+                font-weight: i == root.current-index ? 600 : 400;
+                vertical-alignment: center;
+                x: Tokens.spacing-medium;
+                animate color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            itemArea := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.current-index = i; }
+            }
+        }
+
+        Rectangle { }
+    }
+}
+
+export component CheckBox inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback toggled(bool);
+
+    height: max(22px, layout.preferred-height);
+    width: layout.preferred-width;
+    opacity: root.enabled ? 1.0 : 0.45;
+
+    layout := HorizontalLayout {
+        spacing: Tokens.spacing-medium;
+        alignment: start;
+
+        box := Rectangle {
+            width: 18px;
+            height: 18px;
+            y: (parent.height - self.height) / 2;
+            border-radius: Tokens.corner-radius;
+            border-width: Tokens.border-width;
+            border-color: root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border);
+            background: root.checked ? (touch.pressed ? Tokens.accent.darker(0.2) : touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : (touch.has-hover ? Tokens.hover : Tokens.surface-raised);
+
+            animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+            animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+            if root.checked: Icon {
+                source: @image-url("icons/check.svg");
+                color: white;
+                width: touch.pressed ? 10px : 13px;
+                height: touch.pressed ? 10px : 13px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+            }
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}
+
+export component RadioButton inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: max(22px, layout.preferred-height);
+    width: layout.preferred-width;
+    opacity: root.enabled ? 1.0 : 0.45;
+
+    layout := HorizontalLayout {
+        spacing: Tokens.spacing-medium;
+        alignment: start;
+
+        circle := Rectangle {
+            width: 18px;
+            height: 18px;
+            y: (parent.height - self.height) / 2;
+            border-radius: self.height / 2;
+            border-width: Tokens.border-width;
+            border-color: root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border);
+            background: touch.has-hover ? Tokens.hover : Tokens.surface-raised;
+
+            animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+            if root.checked: Rectangle {
+                width: touch.pressed ? 6px : 8px;
+                height: touch.pressed ? 6px : 8px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                border-radius: self.height / 2;
+                background: Tokens.accent;
+                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+            }
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+export component AppTextField inherits Rectangle {
+    in-out property <string> text <=> input.text;
+    in property <string> placeholder-text;
+    in property <bool> enabled: true;
+    in property <bool> read-only: false;
+    in property <InputType> input-type: InputType.text;
+    out property <bool> has-focus: input.has-focus;
+    callback accepted();
+    callback edited(string);
+
+    height: 32px;
+    border-radius: Tokens.corner-radius;
+    border-width: input.has-focus ? 1.5px : Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+    background: !root.enabled ? Tokens.surface.darker(0.1) : Tokens.surface;
+    opacity: root.enabled ? 1.0 : 0.5;
+
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate background { duration: Tokens.anim-very-short * 1ms; }
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+
+        input := TextInput {
+            enabled: root.enabled;
+            read-only: root.read-only;
+            input-type: root.input-type;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            accepted => { root.accepted(); }
+            edited => { root.edited(self.text); }
+        }
+    }
+
+    if root.text == "" && root.placeholder-text != "" && !input.has-focus: Text {
+        x: Tokens.spacing-medium;
+        text: root.placeholder-text;
+        color: Tokens.text-disabled;
+        font-size: Tokens.font-size-normal;
+        vertical-alignment: center;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.text;
+        clicked => { input.focus(); }
+    }
+}
+
+export component AppTextArea inherits Rectangle {
+    in-out property <string> text <=> input.text;
+    in property <string> placeholder-text;
+    in property <bool> enabled: true;
+    in property <bool> read-only: false;
+    in property <TextWrap> wrap: word-wrap;
+    out property <bool> has-focus: input.has-focus;
+    callback edited(string);
+
+    min-height: 72px;
+    border-radius: Tokens.corner-radius;
+    border-width: input.has-focus ? 1.5px : Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+    background: !root.enabled ? Tokens.surface.darker(0.1) : Tokens.surface;
+    opacity: root.enabled ? 1.0 : 0.5;
+
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate background { duration: Tokens.anim-very-short * 1ms; }
+
+    HorizontalLayout {
+        padding: Tokens.spacing-medium;
+
+        input := TextInput {
+            enabled: root.enabled;
+            read-only: root.read-only;
+            wrap: root.wrap;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            single-line: false;
+            edited => { root.edited(self.text); }
+        }
+    }
+
+    if root.text == "" && root.placeholder-text != "" && !input.has-focus: Text {
+        x: Tokens.spacing-medium;
+        y: Tokens.spacing-medium;
+        text: root.placeholder-text;
+        color: Tokens.text-disabled;
+        font-size: Tokens.font-size-normal;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.text;
+        clicked => { input.focus(); }
+    }
+}
+
+export component ProgressBar inherits Rectangle {
+    in property <float> progress: 0.0;
+    in property <bool> indeterminate: false;
+
+    height: 6px;
+    border-radius: self.height / 2;
+    background: Tokens.surface-raised;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    clip: true;
+
+    fill := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: parent.width * max(0.0, min(1.0, root.progress));
+        height: parent.height;
+        border-radius: parent.height / 2;
+        background: Tokens.accent;
+        animate width { duration: Tokens.anim-short * 1ms; easing: ease-out; }
+    }
+}
+
+export component Badge inherits Rectangle {
+    in property <string> text;
+    in property <string> variant: "accent";
+
+    height: 20px;
+    width: label.preferred-width + Tokens.spacing-medium * 1.5;
+    border-radius: self.height / 2;
+    background: root.variant == "destructive" ? Tokens.destructive.with-alpha(0.2) :
+                root.variant == "neutral" ? Tokens.surface-raised :
+                root.variant == "success" ? #10b981.with-alpha(0.2) :
+                Tokens.accent.with-alpha(0.2);
+    border-width: 1px;
+    border-color: root.variant == "destructive" ? Tokens.destructive.with-alpha(0.5) :
+                  root.variant == "neutral" ? Tokens.border :
+                  root.variant == "success" ? #10b981.with-alpha(0.5) :
+                  Tokens.accent.with-alpha(0.5);
+
+    label := Text {
+        text: root.text;
+        font-size: Tokens.font-size-small;
+        font-weight: 600;
+        color: root.variant == "destructive" ? Tokens.destructive :
+               root.variant == "neutral" ? Tokens.text-secondary :
+               root.variant == "success" ? #10b981 :
+               Tokens.accent;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+export component Divider inherits Rectangle {
+    in property <bool> vertical: false;
+
+    horizontal-stretch: root.vertical ? 0 : 1;
+    vertical-stretch: root.vertical ? 1 : 0;
+    min-height: 1px;
+    max-height: root.vertical ? 100000px : 1px;
+    min-width: 1px;
+    max-width: root.vertical ? 1px : 100000px;
+    background: Tokens.divider;
+}
+
+export component Card inherits Rectangle {
+    in property <bool> raised: false;
+
+    background: root.raised ? Tokens.surface-raised : Tokens.surface;
+    border-radius: Tokens.corner-radius + 2px;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+
+    VerticalLayout {
+        padding: Tokens.spacing-large;
+        spacing: Tokens.spacing-medium;
+        @children
+    }
+}
+
+export struct TabItem {
+    id: string,
+    title: string,
+    icon: image,
+    has-icon: bool,
+    badge: string,
+}
+
+export component TabBar inherits Rectangle {
+    in property <[TabItem]> tabs: [];
+    in-out property <int> current-index: 0;
+    in property <bool> pill-style: true;
+    callback tab-selected(int, string);
+
+    height: 36px;
+    background: root.pill-style ? Tokens.surface-raised : transparent;
+    border-radius: root.pill-style ? Tokens.corner-radius + 2px : 0px;
+    border-width: root.pill-style ? Tokens.border-width : 0px;
+    border-color: Tokens.border;
+
+    property <length> item-width: root.tabs.length > 0 ? (self.width - (root.pill-style ? 6px : 0px)) / root.tabs.length : 0px;
+
+    // Single continuous sliding indicator
+    if root.current-index >= 0 && root.current-index < root.tabs.length: indicator := Rectangle {
+        x: (root.pill-style ? 3px : 0px) + root.current-index * root.item-width;
+        y: root.pill-style ? 3px : parent.height - 2px;
+        width: root.item-width;
+        height: root.pill-style ? parent.height - 6px : 2px;
+        border-radius: root.pill-style ? Tokens.corner-radius : 1px;
+        background: Tokens.accent;
+
+        animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate width { duration: Tokens.anim-very-short * 1ms; }
+    }
+
+    HorizontalLayout {
+        padding: root.pill-style ? 3px : 0px;
+        spacing: 0px;
+
+        for tab[i] in root.tabs: Rectangle {
+            width: root.item-width;
+            height: parent.height;
+            border-radius: Tokens.corner-radius;
+            background: (i != root.current-index && tab-touch.has-hover) ? Tokens.hover : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            HorizontalLayout {
+                alignment: center;
+                spacing: Tokens.spacing-small;
+
+                if tab.has-icon: Icon {
+                    source: tab.icon;
+                    color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : Tokens.text-secondary;
+                    width: 16px;
+                    height: 16px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: tab.title;
+                    color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : (tab-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    font-size: Tokens.font-size-normal;
+                    font-weight: i == root.current-index ? 600 : 400;
+                    vertical-alignment: center;
+                    animate color { duration: Tokens.anim-very-short * 1ms; }
+                }
+
+                if tab.badge != "": Rectangle {
+                    background: i == root.current-index ? (root.pill-style ? white.with-alpha(0.25) : Tokens.accent) : Tokens.surface-raised;
+                    border-radius: 6px;
+                    height: 16px;
+                    width: max(16px, badge-text.preferred-width + 6px);
+
+                    badge-text := Text {
+                        text: tab.badge;
+                        color: i == root.current-index ? white : Tokens.text-secondary;
+                        font-size: 10px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            tab-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.current-index = i;
+                    root.tab-selected(i, tab.id);
+                }
+            }
+        }
+    }
+}
+
+export struct ButtonGroupItem {
+    id: string,
+    text: string,
+    icon: image,
+    has-icon: bool,
+}
+
+export component ButtonGroup inherits Rectangle {
+    in property <[ButtonGroupItem]> items: [];
+    in-out property <int> selected-index: 0;
+    in property <bool> enabled: true;
+    callback selected(int, string);
+
+    height: 32px;
+    property <length> btn-width: 80px;
+    width: root.items.length * root.btn-width + 6px;
+    background: Tokens.surface-raised;
+    border-radius: Tokens.corner-radius + 1px;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    opacity: root.enabled ? 1.0 : 0.5;
+
+    // Single continuous sliding indicator
+    if root.selected-index >= 0 && root.selected-index < root.items.length: pill := Rectangle {
+        x: 3px + root.selected-index * root.btn-width;
+        y: 3px;
+        width: root.btn-width;
+        height: parent.height - 6px;
+        border-radius: Tokens.corner-radius;
+        background: Tokens.accent;
+
+        animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate width { duration: Tokens.anim-very-short * 1ms; }
+    }
+
+    HorizontalLayout {
+        padding: 3px;
+        spacing: 0px;
+
+        for item[i] in root.items: Rectangle {
+            width: root.btn-width;
+            height: parent.height;
+            border-radius: Tokens.corner-radius;
+            background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            item-content := HorizontalLayout {
+                spacing: Tokens.spacing-small;
+                alignment: center;
+
+                if item.has-icon: Icon {
+                    source: item.icon;
+                    color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    width: 14px;
+                    height: 14px;
+                    vertical-alignment: center;
+                }
+
+                if item.text != "": Text {
+                    text: item.text;
+                    color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    font-size: Tokens.font-size-normal;
+                    font-weight: i == root.selected-index ? 600 : 400;
+                    vertical-alignment: center;
+                    animate color { duration: Tokens.anim-very-short * 1ms; }
+                }
+            }
+
+            item-touch := TouchArea {
+                enabled: root.enabled;
+                mouse-cursor: root.enabled ? pointer : default;
+                clicked => {
+                    root.selected-index = i;
+                    root.selected(i, item.id);
+                }
+            }
+        }
+    }
+}
+
+export component ToolTip inherits Rectangle {
+    in property <string> text;
+    in property <bool> showing: false;
+
+    visible: root.showing && root.text != "";
+    background: Tokens.surface-raised;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    height: label.preferred-height + Tokens.spacing-small * 2;
+    width: label.preferred-width + Tokens.spacing-medium * 2;
+    opacity: root.showing ? 1.0 : 0.0;
+    animate opacity { duration: 120ms; }
+
+    label := Text {
+        text: root.text;
+        color: Tokens.text-primary;
+        font-size: Tokens.font-size-small;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

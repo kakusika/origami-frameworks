@@ -5,7 +5,6 @@
   stdenv,
   mkShell,
   qt6,
-  ayame,
   ...
 }:
 let
@@ -19,11 +18,7 @@ let
   ];
 in
 mkShell rec {
-  #[ https://github.com/NixOS/nixpkgs/blob/master/pkgs/kde/plasma/breeze/default.nix ]
   buildInputs = with pkgs; [
-    ayame
-    kdePackages.kirigami-gallery
-
     #[ Develop ]
     ##[ Rust ]
     rustToolchain
@@ -33,6 +28,7 @@ mkShell rec {
     ##[ CMake ]
     cmake
     ninja
+    stdenv.cc.cc.lib
 
     #[ Runtime ]
     ##[ Qt ]
@@ -43,29 +39,57 @@ mkShell rec {
     kdePackages.qqc2-breeze-style
     kdePackages.kirigami
     kdePackages.kguiaddons
+    kdePackages.kirigami-gallery
+    ##[ Wayland ]
+    fontconfig
+    freetype
+    openssl
+    glib
+    vulkan-loader
+    vulkan-validation-layers
+    vulkan-tools
+    vulkan-headers
+    wayland
+    libxkbcommon
+    libinput
+    ##[ Misc ]
+    pipewire
+    pkg-config
     ##[ Graphics ]
     libGL
     mesa
   ];
 
-  PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
-  LD_LIBRARY_PATH = lib.makeLibraryPath [
-    qt6.qtbase
-    qt6.qtdeclarative
-    qt6.qtwayland
-    qt6.qtwebengine
-    qt6.qtmultimedia
-
+  PKG_CONFIG_PATH = lib.makeSearchPathOutput "dev" "lib/pkgconfig" [
+    pkgs.openssl
+    pkgs.fontconfig
+    pkgs.freetype
     pkgs.wayland
     pkgs.libxkbcommon
-    pkgs.pipewire
-    pkgs.mesa
-    pkgs.libGL
-
-    pkgs.stdenv.cc.cc.lib
   ];
+  LD_LIBRARY_PATH =
+    lib.makeLibraryPath [
+      qt6.qtbase
+      qt6.qtdeclarative
+      qt6.qtwayland
+      qt6.qtwebengine
+      qt6.qtmultimedia
+
+      pkgs.wayland
+      pkgs.libxkbcommon
+      pkgs.pipewire
+      pkgs.fontconfig
+      pkgs.freetype
+      pkgs.mesa
+      pkgs.libGL
+      pkgs.vulkan-loader
+
+      pkgs.stdenv.cc.cc.lib
+    ]
+    + ":/run/opengl-driver/lib";
 
   RUSTFLAGS = "-C link-arg=-fuse-ld=lld";
+  VK_LAYER_PATH = "${pkgs.vulkan-validation-layers}/share/vulkan/explicit_layer.d";
   #[ Qt ]
   ENV_QT_INCLUDE_PATH = "${qt6.qtdeclarative}/include";
   QT_QPA_PLATFORM_PLUGIN_PATH = "${qt6.qtbase}/${qt6.qtbase.qtPluginPrefix}/platforms";
@@ -81,8 +105,6 @@ mkShell rec {
     pkgs.kdePackages.qqc2-breeze-style
     pkgs.kdePackages.kirigami.unwrapped
     pkgs.kdePackages.kguiaddons
-
-    ayame
   ];
   QML2_IMPORT_PATH = QML_IMPORT_PATH;
 

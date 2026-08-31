@@ -1,10 +1,11 @@
-//! Load/save small app-wide UI preferences under a vault's `.cettila/`
-//! directory. Currently just the chosen QQC2 style name (see the settings
-//! screen's "外観" category). Kept separate from `workspace.rs` since it
-//! has nothing to do with the pane layout, but follows the same shape:
-//! one opaque TOML file, vault-root relative. Transient "last used
-//! directory" state lives in `cache.rs` instead, not here -- see that
-//! module for the reasoning.
+//! Load/save small app-wide UI preferences under a vault's own namespace
+//! subfolder (see `crate::identity`; `.cettila` for cettila itself).
+//! Currently just the chosen QQC2 style name (see the settings screen's
+//! "外観" category). Kept separate from `workspace.rs` since it has
+//! nothing to do with the pane layout, but follows the same shape: one
+//! opaque TOML file, vault-root relative. Transient "last used directory"
+//! state lives in `cache.rs` instead, not here -- see that module for the
+//! reasoning.
 
 use std::fs;
 use std::io;
@@ -13,7 +14,9 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 pub fn settings_path(vault_root: &Path) -> PathBuf {
-    vault_root.join(".cettila").join("settings.toml")
+    vault_root
+        .join(&crate::identity::app_identity().vault_namespace)
+        .join("settings.toml")
 }
 
 /// Where the precomputed background-effect result (see
@@ -23,7 +26,7 @@ pub fn settings_path(vault_root: &Path) -> PathBuf {
 /// so there's no need for content-addressed caching.
 pub fn background_cache_path(vault_root: &Path) -> PathBuf {
     vault_root
-        .join(".cettila")
+        .join(&crate::identity::app_identity().vault_namespace)
         .join("cache")
         .join("background.png")
 }

@@ -1,0 +1,201 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Blender-UIList-style container: a list area + a side action column
+// (+/-/up/down) -- ported from origami/qml/views/EditableListView.qml.
+//
+// The QML original exposes `property alias delegate` so a caller can
+// swap in an arbitrary row component at runtime -- Slint's `for` loop
+// body is fixed at `.slint`-compile time, not swappable from Rust or a
+// parent component, so a genuinely generic delegate isn't portable.
+// Scoped down to label-only rows (`EditableListEntry` is just a
+// `label: string`) instead, matching the same "closed set, not truly
+// generic" simplification `ContentView`'s view-type dispatch and
+// `picker.slint`'s `PickerRow` already use.
+//
+// `ayame-slint`'s icon set has no dedicated up/down-arrow icons -- the
+// up button reuses `Icons.chevron-down` rotated 180 degrees (a
+// chevron-down flipped vertically reads as a chevron-up) rather than
+// adding new icon assets for this one widget.
+export struct EditableListEntry {
+    label: string,
+}
+
+export component EditableListView inherits Rectangle {
+    in property <[EditableListEntry]> items: [];
+    in-out property <int> current-index: -1;
+    callback add-requested();
+    callback remove-requested(int);
+    callback move-up-requested(int);
+    callback move-down-requested(int);
+
+    width: 260px;
+    height: 200px;
+
+    HorizontalLayout {
+        spacing: Tokens.spacing-small;
+
+        list-area := Rectangle {
+            horizontal-stretch: 1;
+            background: Tokens.background;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border;
+            border-radius: Tokens.corner-radius;
+            clip: true;
+
+            Flickable {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: parent.height;
+                viewport-height: max(parent.height, list-layout.preferred-height);
+
+                list-layout := VerticalLayout {
+                    padding: Tokens.spacing-small;
+                    spacing: Tokens.spacing-small / 2;
+
+                    for entry[i] in root.items: Rectangle {
+                        height: 28px;
+                        background: i == root.current-index ? Tokens.selected-surface : (row-touch.has-hover ? Tokens.hover : transparent);
+                        border-radius: Tokens.corner-radius;
+
+                        animate background { duration: 80ms; }
+
+                        Text {
+                            text: entry.label;
+                            color: i == root.current-index ? white : Tokens.text-primary;
+                            font-size: Tokens.font-size-normal;
+                            font-weight: i == root.current-index ? 600 : 400;
+                            vertical-alignment: center;
+                            x: Tokens.spacing-medium;
+                        }
+
+                        row-touch := TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => { root.current-index = i; }
+                        }
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: start;
+            spacing: Tokens.spacing-small / 2;
+
+            add-touch := TouchArea {
+                width: 28px;
+                height: 28px;
+                mouse-cursor: pointer;
+                clicked => { root.add-requested(); }
+
+                Rectangle {
+                    width: parent.width;
+                    height: parent.height;
+                    background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Icon {
+                        source: Icons.plus;
+                        color: Tokens.text-primary;
+                        width: 14px;
+                        height: 14px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+
+            remove-touch := TouchArea {
+                width: 28px;
+                height: 28px;
+                enabled: root.current-index >= 0;
+                mouse-cursor: self.enabled ? pointer : default;
+                clicked => { root.remove-requested(root.current-index); }
+
+                Rectangle {
+                    width: parent.width;
+                    height: parent.height;
+                    background: !remove-touch.enabled ? Tokens.surface.with-alpha(0.5) : remove-touch.has-hover ? Tokens.destructive.with-alpha(0.2) : Tokens.surface;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Icon {
+                        source: Icons.x;
+                        color: remove-touch.enabled ? (remove-touch.has-hover ? Tokens.destructive : Tokens.text-primary) : Tokens.text-disabled;
+                        width: 14px;
+                        height: 14px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+
+            Rectangle { height: 1px; background: Tokens.divider; }
+
+            up-touch := TouchArea {
+                width: 28px;
+                height: 28px;
+                enabled: root.current-index > 0;
+                mouse-cursor: self.enabled ? pointer : default;
+                clicked => { root.move-up-requested(root.current-index); }
+
+                Rectangle {
+                    width: parent.width;
+                    height: parent.height;
+                    background: !up-touch.enabled ? Tokens.surface.with-alpha(0.5) : up-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Icon {
+                        source: Icons.chevron-down;
+                        transform-rotation: 180deg;
+                        color: up-touch.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                        width: 14px;
+                        height: 14px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+
+            down-touch := TouchArea {
+                width: 28px;
+                height: 28px;
+                enabled: root.current-index >= 0 && root.current-index < root.items.length - 1;
+                mouse-cursor: self.enabled ? pointer : default;
+                clicked => { root.move-down-requested(root.current-index); }
+
+                Rectangle {
+                    width: parent.width;
+                    height: parent.height;
+                    background: !down-touch.enabled ? Tokens.surface.with-alpha(0.5) : down-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Icon {
+                        source: Icons.chevron-down;
+                        color: down-touch.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                        width: 14px;
+                        height: 14px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,93 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// A dismissible strip for a failed save/load's error text -- ported from
+// origami/qml/widgets/popups/IoErrorBanner.qml. Positioning (an anchored
+// overlay strip pinned to an edge vs. an in-flow layout child) is a
+// consumer's own decision, same as the QML original -- this component
+// only renders the strip itself, sized to its own message text.
+//
+// No `ErrorBus`-style status-bar-forwarding side effect (that was
+// app-shell-level plumbing in the QML original, not this component's
+// concern) -- a consumer's Rust can react to `message` changing on its
+// own if it wants that surfaced elsewhere too.
+export component IoErrorBanner inherits Rectangle {
+    in property <string> message: "";
+    callback dismissed();
+
+    visible: root.message != "";
+    height: root.message == "" ? 0px : max(36px, layout.preferred-height + Tokens.spacing-medium * 2);
+    background: Tokens.destructive.with-alpha(0.15);
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: Tokens.destructive.with-alpha(0.4);
+    clip: true;
+
+    // Left accent indicator line
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 4px;
+        height: parent.height;
+        background: Tokens.destructive;
+    }
+
+    layout := HorizontalLayout {
+        padding-left: Tokens.spacing-large;
+        padding-right: Tokens.spacing-medium;
+        padding-top: Tokens.spacing-small;
+        padding-bottom: Tokens.spacing-small;
+        spacing: Tokens.spacing-medium;
+        alignment: center;
+
+        // Error icon badge
+        Rectangle {
+            width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: Tokens.destructive;
+            y: (parent.height - self.height) / 2;
+
+            Text {
+                text: "!";
+                color: white;
+                font-size: 11px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        label := Text {
+            text: root.message;
+            color: Tokens.destructive.brighter(0.3);
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            wrap: word-wrap;
+        }
+
+        close-touch := TouchArea {
+            width: 24px;
+            height: 24px;
+            mouse-cursor: pointer;
+            clicked => { root.dismissed(); }
+
+            Rectangle {
+                width: parent.width;
+                height: parent.height;
+                background: close-touch.has-hover ? Tokens.destructive.with-alpha(0.25) : transparent;
+                border-radius: Tokens.corner-radius;
+
+                animate background { duration: 100ms; }
+
+                Text {
+                    text: "✕";
+                    color: close-touch.has-hover ? white : Tokens.destructive;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Slint port of origami/qml/regions/bar/Bar.qml.
+// Toolbar container for hosting action buttons, view switchers, search fields, and separators.
+export component ToolBarSeparator inherits Rectangle {
+    width: Tokens.border-width;
+    height: 18px;
+    background: Tokens.border;
+}
+
+export component ToolBar inherits Rectangle {
+    height: 40px;
+    background: Tokens.surface;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+        alignment: center;
+
+        @children
+    }
+}

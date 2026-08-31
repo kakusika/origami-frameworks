@@ -1,0 +1,195 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Theme-styled context menu -- ported from origami/qml/widgets/menus/
+// ThemedMenu.qml + ThemedSubMenu.qml (merged into this one component,
+// see below).
+//
+// QML's `ThemedSubMenu` recurses into itself for arbitrary-depth
+// submenu nesting, via a same-type `Loader { source: "ThemedSubMenu.qml"
+// }` trick specifically to dodge QML's "recursive type instantiation"
+// compile error. Slint has no equivalent escape hatch -- no recursive
+// or self-referencing components at all (the same fundamental gap
+// `origami_slint::layout`'s own header comment already documents for
+// the pane tree itself). This is a **bounded 2-level menu** instead:
+// top-level entries (`item` / `separator` / `submenu`), where a
+// `submenu` entry carries a flat `[SubmenuEntry]` that cannot itself
+// nest further. Any origami QML menu needing 3+ levels of nesting has
+// no Slint equivalent here.
+//
+// `has-icon` on both structs is a separate explicit flag rather than
+// inferring "no icon" from some sentinel `image` value (Slint's
+// `image` type has no reliable emptiness check usable here) -- same
+// idiom `catalogs.slint`'s `FileGridCell.has-thumbnail` already uses
+// for exactly this problem.
+export struct SubmenuEntry {
+    label: string,
+    icon: image,
+    has-icon: bool,
+    enabled: bool,
+    selected: bool,
+}
+
+export struct MenuItemEntry {
+    kind: string, // "item" | "separator" | "submenu"
+    label: string,
+    icon: image,
+    has-icon: bool,
+    enabled: bool,
+    selected: bool,
+    submenu: [SubmenuEntry],
+}
+
+export component ThemedMenu inherits PopupWindow {
+    in property <[MenuItemEntry]> items: [];
+    // Fired with the top-level item's own index for a `kind == "item"`
+    // row.
+    callback triggered(int);
+    // Fired with (top-level submenu index, sub-item index) for a row
+    // inside that submenu's own flat list.
+    callback submenu-triggered(int, int);
+
+    close-policy: PopupClosePolicy.close-on-click-outside;
+
+    Rectangle {
+        width: layout.preferred-width + Tokens.spacing-small * 2;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+        border-radius: Tokens.corner-radius;
+
+        layout := VerticalLayout {
+            padding: Tokens.spacing-small;
+
+            for row[i] in root.items: Rectangle {
+                height: row.kind == "separator" ? 9px : 26px;
+
+                if row.kind == "separator": Rectangle {
+                    y: (parent.height - self.height) / 2;
+                    width: parent.width;
+                    height: 1px;
+                    background: Tokens.divider;
+                }
+
+                // `row-touch`/`submenu-popup` below are declared
+                // unconditionally (not gated behind `if row.kind ==
+                // "submenu"`) even though `submenu-popup` only ever
+                // shows for a submenu row -- Slint's `if` creates its
+                // own id scope, so a conditionally-declared
+                // `submenu-popup` isn't reachable from `row-touch`'s own
+                // `clicked` handler (or vice versa for a shared
+                // `has-hover` background binding) unless both live
+                // inside the exact same `if` block. `row.submenu` is
+                // just an empty list for a non-submenu row, so the
+                // unused, never-shown `submenu-popup` per such row costs
+                // nothing but a little overhead.
+                if row.kind != "separator": Rectangle {
+                    height: 28px;
+                    background: (row-touch.has-hover || row.selected) ? Tokens.hover : transparent;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    HorizontalLayout {
+                        padding-left: Tokens.spacing-medium;
+                        padding-right: Tokens.spacing-medium;
+                        spacing: Tokens.spacing-small;
+
+                        if row.has-icon: Icon {
+                            source: row.icon;
+                            color: row.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                            width: 14px;
+                            height: 14px;
+                        }
+
+                        Text {
+                            text: row.label;
+                            color: !row.enabled ? Tokens.text-disabled : row.selected ? Tokens.accent : Tokens.text-primary;
+                            font-size: Tokens.font-size-normal;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+
+                        if row.kind == "submenu": Icon {
+                            source: Icons.chevron-right;
+                            color: Tokens.text-secondary;
+                            width: 12px;
+                            height: 12px;
+                        }
+                    }
+
+                    row-touch := TouchArea {
+                        enabled: row.enabled;
+                        mouse-cursor: row.enabled ? pointer : default;
+                        clicked => {
+                            if (row.kind == "submenu") {
+                                submenu-popup.show();
+                            } else {
+                                root.triggered(i);
+                                root.close();
+                            }
+                        }
+                    }
+
+                    submenu-popup := PopupWindow {
+                        x: parent.width + 4px;
+                        y: 0px;
+                        width: sub-layout.preferred-width + Tokens.spacing-small * 2;
+                        close-policy: PopupClosePolicy.close-on-click-outside;
+
+                        Rectangle {
+                            background: Tokens.surface-raised;
+                            border-width: Tokens.border-width;
+                            border-color: Tokens.border;
+                            border-radius: Tokens.corner-radius;
+
+                            sub-layout := VerticalLayout {
+                                padding: Tokens.spacing-small;
+                                spacing: 2px;
+
+                                for sub[j] in row.submenu: Rectangle {
+                                    height: 28px;
+                                    background: (sub-touch.has-hover || sub.selected) ? Tokens.hover : transparent;
+                                    border-radius: Tokens.corner-radius;
+
+                                    animate background { duration: 80ms; }
+
+                                    HorizontalLayout {
+                                        padding-left: Tokens.spacing-medium;
+                                        padding-right: Tokens.spacing-medium;
+                                        spacing: Tokens.spacing-small;
+
+                                        if sub.has-icon: Icon {
+                                            source: sub.icon;
+                                            color: sub.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                                            width: 14px;
+                                            height: 14px;
+                                        }
+
+                                        Text {
+                                            text: sub.label;
+                                            color: !sub.enabled ? Tokens.text-disabled : sub.selected ? Tokens.accent : Tokens.text-primary;
+                                            font-size: Tokens.font-size-normal;
+                                            vertical-alignment: center;
+                                            horizontal-stretch: 1;
+                                        }
+                                    }
+
+                                    sub-touch := TouchArea {
+                                        enabled: sub.enabled;
+                                        mouse-cursor: sub.enabled ? pointer : default;
+                                        clicked => {
+                                            root.submenu-triggered(i, j);
+                                            submenu-popup.close();
+                                            root.close();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

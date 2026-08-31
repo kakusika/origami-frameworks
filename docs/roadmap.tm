@@ -1,6 +1,3 @@
-- FileTileのコンテンツを自動計算にする
-- ToggleButtonをroundbuttonへ。ToggleButtonにwithdetailみたいなの追加？
-
-#[ Gallery ]
-
-- Submenuを追加
+- [x] FileTileのコンテンツを自動計算にする
+- [x] ToggleButton / RoundButton / DetailToggleButton を追加
+- [x] Submenuを追加 (ThemedMenu & Gallery)

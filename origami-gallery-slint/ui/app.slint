@@ -1,0 +1,218 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton } from "@ayame/components.slint";
+import { OrigamiPage } from "origami_page.slint";
+import { RegionsPage } from "regions_page.slint";
+import { PanePage } from "pane_page.slint";
+import { AyamePage } from "ayame_page.slint";
+import { PaneCell } from "@origami/pane_host.slint";
+
+export { Tokens, PaneCell }
+
+// Slint Component Gallery showcasing Origami & Ayame widget libraries.
+export component AppWindow inherits Window {
+    title: "Origami & Ayame Slint Component Showcase";
+    preferred-width: 1040px;
+    preferred-height: 760px;
+    background: Tokens.background;
+
+    in-out property <int> current-tab: 0;
+
+    // PanePage property forwardings
+    in-out property <[PaneCell]> pane-cells: [];
+    in-out property <int> maximized-leaf-id: -1;
+    in-out property <string> pane-status: "Ready";
+
+    callback relayout(length, length);
+    callback select-tab(int, int);
+    callback close-tab(int, int);
+    callback toggle-drawer(int);
+    callback convert-group(int);
+    callback toggle-maximize(int);
+    callback close-leaf(int, int);
+    callback detach-leaf(int, int);
+    callback resize-divider-start(int, int);
+    callback resize-divider(int, int, float, float);
+    callback resize-divider-end();
+    callback tab-drag-ended(int, int, length, length);
+    callback drag-hover(length, length);
+    callback set-active-leaf(int);
+
+    VerticalLayout {
+        // Top navigation bar
+        Rectangle {
+            height: 56px;
+            background: Tokens.surface;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border;
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-large;
+                padding-right: Tokens.spacing-large;
+                spacing: Tokens.spacing-medium;
+                alignment: center;
+
+                HorizontalLayout {
+                    spacing: Tokens.spacing-medium;
+                    alignment: center;
+
+                    Rectangle {
+                        width: 26px;
+                        height: 26px;
+                        border-radius: 6px;
+                        background: Tokens.accent;
+
+                        Text {
+                            text: "O";
+                            color: white;
+                            font-size: 15px;
+                            font-weight: 800;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Text {
+                        text: "Origami Gallery";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large;
+                        color: Tokens.text-primary;
+                        vertical-alignment: center;
+                    }
+                }
+
+                Rectangle { horizontal-stretch: 1; }
+
+                // Segmented Tab Bar (4 Tabs)
+                Rectangle {
+                    height: 38px;
+                    background: Tokens.surface-raised;
+                    border-radius: Tokens.corner-radius + 2px;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border;
+
+                    HorizontalLayout {
+                        padding: 3px;
+                        spacing: 2px;
+
+                        tab0 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 0 ? Tokens.accent : (tab0-touch.has-hover ? Tokens.hover : transparent);
+                            animate background { duration: 100ms; }
+
+                            HorizontalLayout {
+                                padding-left: Tokens.spacing-medium;
+                                padding-right: Tokens.spacing-medium;
+                                alignment: center;
+                                Text {
+                                    text: "Widgets";
+                                    color: root.current-tab == 0 ? white : Tokens.text-secondary;
+                                    font-size: Tokens.font-size-normal;
+                                    font-weight: root.current-tab == 0 ? 600 : 400;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            tab0-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 0; }
+                            }
+                        }
+
+                        tab1 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 1 ? Tokens.accent : (tab1-touch.has-hover ? Tokens.hover : transparent);
+                            animate background { duration: 100ms; }
+
+                            HorizontalLayout {
+                                padding-left: Tokens.spacing-medium;
+                                padding-right: Tokens.spacing-medium;
+                                alignment: center;
+                                Text {
+                                    text: "Regions & Shell";
+                                    color: root.current-tab == 1 ? white : Tokens.text-secondary;
+                                    font-size: Tokens.font-size-normal;
+                                    font-weight: root.current-tab == 1 ? 600 : 400;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            tab1-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 1; }
+                            }
+                        }
+
+                        tab2 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 2 ? Tokens.accent : (tab2-touch.has-hover ? Tokens.hover : transparent);
+                            animate background { duration: 100ms; }
+
+                            HorizontalLayout {
+                                padding-left: Tokens.spacing-medium;
+                                padding-right: Tokens.spacing-medium;
+                                alignment: center;
+                                Text {
+                                    text: "Pane System";
+                                    color: root.current-tab == 2 ? white : Tokens.text-secondary;
+                                    font-size: Tokens.font-size-normal;
+                                    font-weight: root.current-tab == 2 ? 600 : 400;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            tab2-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 2; }
+                            }
+                        }
+
+                        tab3 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 3 ? Tokens.accent : (tab3-touch.has-hover ? Tokens.hover : transparent);
+                            animate background { duration: 100ms; }
+
+                            HorizontalLayout {
+                                padding-left: Tokens.spacing-medium;
+                                padding-right: Tokens.spacing-medium;
+                                alignment: center;
+                                Text {
+                                    text: "Ayame Basics";
+                                    color: root.current-tab == 3 ? white : Tokens.text-secondary;
+                                    font-size: Tokens.font-size-normal;
+                                    font-weight: root.current-tab == 3 ? 600 : 400;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            tab3-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 3; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.current-tab == 0: OrigamiPage { horizontal-stretch: 1; vertical-stretch: 1; }
+        if root.current-tab == 1: RegionsPage { horizontal-stretch: 1; vertical-stretch: 1; }
+        if root.current-tab == 2: PanePage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            cells: root.pane-cells;
+            maximized-leaf-id: root.maximized-leaf-id;
+            status: root.pane-status;
+            relayout(w, h) => { root.relayout(w, h); }
+            select-tab(id, idx) => { root.select-tab(id, idx); }
+            close-tab(id, child) => { root.close-tab(id, child); }
+            toggle-drawer(id) => { root.toggle-drawer(id); }
+            convert-group(id) => { root.convert-group(id); }
+            toggle-maximize(id) => { root.toggle-maximize(id); }
+            close-leaf(id, child) => { root.close-leaf(id, child); }
+            detach-leaf(id, child) => { root.detach-leaf(id, child); }
+            resize-divider-start(id, idx) => { root.resize-divider-start(id, idx); }
+            resize-divider(id, idx, extra, delta) => { root.resize-divider(id, idx, extra, delta); }
+            resize-divider-end() => { root.resize-divider-end(); }
+            tab-drag-ended(g, c, x, y) => { root.tab-drag-ended(g, c, x, y); }
+            drag-hover(x, y) => { root.drag-hover(x, y); }
+            set-active-leaf(id) => { root.set-active-leaf(id); }
+        }
+        if root.current-tab == 3: AyamePage { horizontal-stretch: 1; vertical-stretch: 1; }
+    }
+}

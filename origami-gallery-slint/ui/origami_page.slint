@@ -1,0 +1,597 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton } from "@ayame/components.slint";
+import { ThemedMenu, MenuItemEntry } from "@origami/themed_menu.slint";
+import { ModalDialog } from "@origami/modal_dialog.slint";
+import { ConfirmDialog } from "@origami/confirm_dialog.slint";
+import { IoErrorBanner } from "@origami/io_error_banner.slint";
+import { ToastNotification } from "@origami/toast_notification.slint";
+import { ColorPickerPopup } from "@origami/color_picker_popup.slint";
+import { Breadcrumb, BreadcrumbSegment } from "@origami/breadcrumb.slint";
+import { CollapsibleTextField } from "@origami/collapsible_text_field.slint";
+import { EditableListView, EditableListEntry } from "@origami/editable_list_view.slint";
+import { ActionButton, IconButton, RoundButton, ToggleButton, DetailToggleButton } from "@origami/action_button.slint";
+import { ToggleGroup, ToggleItem } from "@origami/toggle_group.slint";
+import { NumberInput } from "@origami/number_input.slint";
+import { ViewTypePicker, PickerRow } from "@origami/view_type_picker.slint";
+import { FileGrid, FileGridCell } from "@origami/file_grid.slint";
+import { Icons } from "@ayame/icons.slint";
+
+// Live, interactive showcase of every `origami-slint` widget.
+export component OrigamiPage inherits Rectangle {
+    property <string> status: "Interact with a widget below to see its callback fire here.";
+    property <color> demo-color: #3b82f6;
+
+    property <float> demo-number: 42;
+    property <int> toggle-group-idx: 0;
+    property <bool> demo-toggle: true;
+    property <bool> demo-detail-toggle: false;
+
+    property <[FileGridCell]> demo-files: [
+        { name: "Documents", path: "/vault/Documents", is-dir: true, has-thumbnail: false },
+        { name: "Projects", path: "/vault/Projects", is-dir: true, has-thumbnail: false },
+        { name: "notes.md", path: "/vault/notes.md", is-dir: false, has-thumbnail: false },
+        { name: "architecture.png", path: "/vault/architecture.png", is-dir: false, has-thumbnail: false },
+        { name: "settings.json", path: "/vault/settings.json", is-dir: false, has-thumbnail: false },
+    ];
+
+    property <[PickerRow]> demo-picker-rows: [
+        { is-header: true, label: "VIEWS", view-type: "" },
+        { is-header: false, label: "Kanban Board", view-type: "board" },
+        { is-header: false, label: "Calendar View", view-type: "calendar" },
+        { is-header: false, label: "Table Spreadsheet", view-type: "table" },
+        { is-header: true, label: "CATALOGS", view-type: "" },
+        { is-header: false, label: "File Browser", view-type: "file-grid" },
+    ];
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height - 34px;
+        viewport-height: content.preferred-height + 24px;
+
+        content := VerticalLayout {
+            width: parent.width;
+            padding: Tokens.spacing-large;
+            spacing: Tokens.spacing-large;
+
+            // Page Header Card
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-small;
+
+                    Text {
+                        text: "origami-slint Widgets";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large + 2px;
+                        color: Tokens.text-primary;
+                    }
+                    Text {
+                        text: "Interactive showcase of desktop widgets, inputs, dialogues, menus, file tiles, and pickers.";
+                        color: Tokens.text-secondary;
+                        font-size: Tokens.font-size-normal;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+
+            // -- ActionButton & IconButton Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ActionButton & IconButton"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        alignment: center;
+
+                        ActionButton {
+                            text: "Save File";
+                            shortcut-text: "Ctrl+S";
+                            primary: true;
+                            clicked => { root.status = "ActionButton: Save File clicked"; }
+                        }
+                        ActionButton {
+                            text: "Notifications";
+                            badge-text: "3";
+                            clicked => { root.status = "ActionButton: Notifications clicked"; }
+                        }
+                        ActionButton {
+                            text: "Delete Pane";
+                            destructive: true;
+                            clicked => { root.status = "ActionButton: Delete Pane clicked"; }
+                        }
+                    }
+                }
+            }
+
+            // -- RoundButton & ToggleButton & DetailToggleButton Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "RoundButton & ToggleButton & DetailToggleButton"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        alignment: center;
+
+                        RoundButton {
+                            icon: Icons.plus;
+                            primary: true;
+                            clicked => { root.status = "RoundButton: Add (+) clicked"; }
+                        }
+                        RoundButton {
+                            icon: Icons.folder;
+                            clicked => { root.status = "RoundButton: Folder clicked"; }
+                        }
+                        RoundButton {
+                            icon: Icons.maximize;
+                            active: true;
+                            clicked => { root.status = "RoundButton: Maximize clicked"; }
+                        }
+
+                        ToggleButton {
+                            text: "Pin Header";
+                            checked: root.demo-toggle;
+                            toggled(c) => {
+                                root.demo-toggle = c;
+                                root.status = "ToggleButton: Pin Header = " + (c ? "true" : "false");
+                            }
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+
+                        DetailToggleButton {
+                            horizontal-stretch: 1;
+                            title: "Vulkan Hardware Acceleration";
+                            detail: "Use GPU pipeline for layout & rendering";
+                            checked: root.demo-detail-toggle;
+                            toggled(c) => {
+                                root.demo-detail-toggle = c;
+                                root.status = "DetailToggleButton: Vulkan HW = " + (c ? "true" : "false");
+                            }
+                        }
+                        DetailToggleButton {
+                            horizontal-stretch: 1;
+                            title: "Real-time File Watcher";
+                            detail: "Auto-sync directory changes from disk";
+                            checked: true;
+                            toggled(c) => {
+                                root.status = "DetailToggleButton: Watcher = " + (c ? "true" : "false");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -- ToggleGroup Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ToggleGroup (Segmented Buttons)"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    ToggleGroup {
+                        items: [
+                            { id: "grid", label: "Grid View", has-icon: false },
+                            { id: "list", label: "List View", has-icon: false },
+                            { id: "tree", label: "Tree View", has-icon: false },
+                        ];
+                        selected-index: root.toggle-group-idx;
+                        selected(idx, id) => {
+                            root.toggle-group-idx = idx;
+                            root.status = "ToggleGroup: selected " + id + " (index " + idx + ")";
+                        }
+                    }
+                }
+            }
+
+            // -- NumberInput Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "NumberInput (SpinBox)"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-large;
+                        alignment: center;
+
+                        HorizontalLayout {
+                            spacing: Tokens.spacing-small;
+                            alignment: center;
+                            Text { text: "Font Size:"; color: Tokens.text-secondary; font-size: Tokens.font-size-normal; vertical-alignment: center; }
+                            NumberInput {
+                                value: root.demo-number;
+                                minimum: 8;
+                                maximum: 72;
+                                step: 2;
+                                suffix: "px";
+                                value-changed(v) => {
+                                    root.demo-number = v;
+                                    root.status = "NumberInput: value = " + v;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -- ViewTypePicker Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ViewTypePicker"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        open-picker-btn := AppButton {
+                            text: "Open ViewTypePicker";
+                            clicked => { picker.show(); }
+                        }
+                        picker := ViewTypePicker {
+                            x: open-picker-btn.x;
+                            y: open-picker-btn.y + open-picker-btn.height;
+                            rows: root.demo-picker-rows;
+                            picked(vt, label) => {
+                                root.status = "ViewTypePicker: picked " + label + " (" + vt + ")";
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -- FileGrid Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "FileGrid (FileTile Grid)"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    FileGrid {
+                        height: 180px;
+                        cells: root.demo-files;
+                        activated(idx) => {
+                            root.status = "FileGrid: activated index " + idx + " (" + root.demo-files[idx].name + ")";
+                        }
+                    }
+                }
+            }
+
+            // -- ThemedMenu Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ThemedMenu"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-small;
+                        open-menu-btn := AppButton {
+                            text: "Open menu";
+                            clicked => { menu.show(); }
+                        }
+                        menu := ThemedMenu {
+                            x: open-menu-btn.x;
+                            y: open-menu-btn.y + open-menu-btn.height;
+                            items: [
+                                { kind: "item", label: "Rename", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                                { kind: "item", label: "Duplicate", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                                { kind: "separator", label: "", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                                { kind: "item", label: "Delete", icon: @image-url(""), has-icon: false, enabled: false, selected: false, submenu: [] },
+                                { kind: "submenu", label: "Convert to", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [
+                                    { label: "Board", icon: @image-url(""), has-icon: false, enabled: true, selected: true },
+                                    { label: "Calendar", icon: @image-url(""), has-icon: false, enabled: true, selected: false },
+                                ] },
+                            ];
+                            triggered(i) => { root.status = "ThemedMenu: triggered(" + i + ")"; }
+                            submenu-triggered(i, j) => { root.status = "ThemedMenu: submenu-triggered(" + i + ", " + j + ")"; }
+                        }
+                    }
+                }
+            }
+
+            // -- ModalDialog & ConfirmDialog Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ModalDialog & ConfirmDialog"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        open-modal-btn := AppButton {
+                            text: "Open ModalDialog";
+                            clicked => { modal.show(); }
+                        }
+                        modal := ModalDialog {
+                            x: open-modal-btn.x;
+                            y: open-modal-btn.y + open-modal-btn.height;
+                            title: "Base ModalDialog";
+                            Text { text: "Arbitrary @children content goes here."; color: Tokens.text-secondary; }
+                        }
+                        open-confirm-btn := AppButton {
+                            text: "Open ConfirmDialog";
+                            clicked => { confirm.show(); }
+                        }
+                        confirm := ConfirmDialog {
+                            x: open-confirm-btn.x;
+                            y: open-confirm-btn.y + open-confirm-btn.height;
+                            title: "Delete this pane?";
+                            message: "This cannot be undone.";
+                            is-destructive: true;
+                            confirmed => { root.status = "ConfirmDialog: confirmed"; }
+                            cancelled => { root.status = "ConfirmDialog: cancelled"; }
+                        }
+                    }
+                }
+            }
+
+            // -- IoErrorBanner Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "IoErrorBanner"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    AppButton {
+                        text: banner.message == "" ? "Trigger error" : "Clear error";
+                        clicked => {
+                            banner.message = banner.message == "" ? "Failed to save board.json: permission denied" : "";
+                        }
+                    }
+                    banner := IoErrorBanner {
+                        width: parent.width;
+                        dismissed => { banner.message = ""; }
+                    }
+                }
+            }
+
+            // -- ToastNotification Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ToastNotification"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        AppButton {
+                            text: "Show info toast";
+                            clicked => {
+                                toast.message = "Saved successfully";
+                                toast.toast-type = "success";
+                                toast.showing = true;
+                            }
+                        }
+                        AppButton {
+                            text: "Show error toast";
+                            clicked => {
+                                toast.message = "Something went wrong";
+                                toast.toast-type = "negative";
+                                toast.showing = true;
+                            }
+                        }
+                    }
+                    toast := ToastNotification { }
+                }
+            }
+
+            // -- ColorPickerPopup Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "ColorPickerPopup"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    HorizontalLayout {
+                        spacing: Tokens.spacing-medium;
+                        alignment: center;
+
+                        open-color-btn := AppButton {
+                            text: "Open color picker";
+                            clicked => { picker2.show(); }
+                        }
+                        Rectangle {
+                            width: 30px;
+                            height: 30px;
+                            border-radius: Tokens.corner-radius;
+                            background: root.demo-color;
+                            border-width: Tokens.border-width;
+                            border-color: Tokens.border;
+                        }
+                        picker2 := ColorPickerPopup {
+                            x: open-color-btn.x;
+                            y: open-color-btn.y + open-color-btn.height;
+                            selected-color <=> root.demo-color;
+                            color-accepted(c) => { root.status = "ColorPickerPopup: accepted"; }
+                        }
+                    }
+                }
+            }
+
+            // -- Breadcrumb Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "Breadcrumb"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    Breadcrumb {
+                        height: 34px;
+                        width: parent.width;
+                        segments: [
+                            { label: "vault", path: "/vault" },
+                            { label: "Projects", path: "/vault/Projects" },
+                            { label: "cettila", path: "/vault/Projects/cettila" },
+                        ];
+                        navigated(p) => { root.status = "Breadcrumb: navigated(" + p + ")"; }
+                    }
+                }
+            }
+
+            // -- CollapsibleTextField Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "CollapsibleTextField"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    CollapsibleTextField {
+                        width: 240px;
+                        placeholder-text: "Search components...";
+                        accepted => { root.status = "CollapsibleTextField: accepted (" + self.text + ")"; }
+                    }
+                }
+            }
+
+            // -- EditableListView Card --
+            Rectangle {
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text { text: "EditableListView"; font-weight: 700; font-size: Tokens.font-size-normal; color: Tokens.text-primary; }
+
+                    EditableListView {
+                        items: [
+                            { label: "Layer 1" },
+                            { label: "Layer 2" },
+                            { label: "Layer 3" },
+                        ];
+                        add-requested => { root.status = "EditableListView: add-requested"; }
+                        remove-requested(i) => { root.status = "EditableListView: remove-requested(" + i + ")"; }
+                        move-up-requested(i) => { root.status = "EditableListView: move-up-requested(" + i + ")"; }
+                        move-down-requested(i) => { root.status = "EditableListView: move-down-requested(" + i + ")"; }
+                    }
+                }
+            }
+        }
+    }
+
+    // Status bar at bottom
+    Rectangle {
+        y: parent.height - 34px;
+        width: parent.width;
+        height: 34px;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+
+        HorizontalLayout {
+            padding-left: Tokens.spacing-large;
+            padding-right: Tokens.spacing-large;
+            spacing: Tokens.spacing-medium;
+            alignment: center;
+
+            Rectangle {
+                width: 8px;
+                height: 8px;
+                border-radius: 4px;
+                background: Tokens.accent;
+            }
+
+            Text {
+                text: root.status;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+    }
+}

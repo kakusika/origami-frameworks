@@ -92,4 +92,75 @@ QtObject {
         if (entry)
             entry.window.destroy();
     }
+
+    // Writes out every currently-open FloatingWindow as a JSON-able plain
+    // array -- same "viewType string + optional paneSerialize() props"
+    // shape PaneView.qml's own _serializeNode() uses for a docked "pane"
+    // node, plus geometry/window-state fields a FloatingWindow additionally
+    // needs (unlike a docked pane, a FloatingWindow *is* its own geometry).
+    // A window whose windowViewType is empty (plain `content` children, or
+    // a hostedItem moved in from a docked pane -- see FloatingWindow.qml's
+    // own windowViewType comment) is skipped: there's no Component to hand
+    // restoreWindows() below, so it could never be recreated after a
+    // reload -- same graceful-drop PaneView.qml's own restoreTree() gives
+    // an unknown viewType.
+    function serializeWindows() {
+        return root.windows.map(function (entry) {
+            return entry.window;
+        }).filter(function (win) {
+            return win.windowViewType.length > 0;
+        }).map(function (win) {
+            return {
+                viewType: win.windowViewType,
+                title: win.title,
+                props: (win._contentItem && win._contentItem.paneSerialize) ? win._contentItem.paneSerialize() : {},
+                x: win.x,
+                y: win.y,
+                width: win.width,
+                height: win.height,
+                minimized: win.minimized,
+                maximized: win.maximized
+            };
+        });
+    }
+
+    // Restores previously-serialized FloatingWindows (see serializeWindows()
+    // above), creating one `component` (a FloatingWindow.qml, per the
+    // caller) instance per entry. `componentRegistry` is passed in rather
+    // than assumed -- this registry has no notion of view types itself
+    // (that's app-specific, see this file's own class comment on staying a
+    // generalized version of PaneWindowRegistry.qml) -- the caller already
+    // has the same registry it hands PaneView.componentRegistry. An entry
+    // whose viewType isn't in componentRegistry is dropped, same
+    // graceful-degradation PaneView.qml's own restoreTree() gives a pane
+    // whose viewType has disappeared since it was saved.
+    function restoreWindows(component, saved, componentRegistry) {
+        (saved || []).forEach(function (entry) {
+            var viewComponent = componentRegistry[entry.viewType];
+            if (!viewComponent) {
+                console.warn("FloatingWindowRegistry.restoreWindows: unknown viewType, dropping saved window:", entry.viewType);
+                return;
+            }
+            var win = root.open(component, {
+                title: entry.title,
+                windowComponent: viewComponent,
+                windowViewType: entry.viewType,
+                restoreProps: entry.props || {},
+                x: entry.x,
+                y: entry.y,
+                width: entry.width,
+                height: entry.height
+            });
+            if (!win)
+                return;
+            // Applied after creation (not as initial properties): both
+            // toggle functions snapshot/restore against whatever geometry
+            // the window already has, which is the x/y/width/height just
+            // set above.
+            if (entry.minimized)
+                win.toggleMinimize();
+            if (entry.maximized)
+                win.toggleMaximize();
+        });
+    }
 }

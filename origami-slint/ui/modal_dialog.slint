@@ -1,0 +1,46 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Shared chrome for a modal prompt/dialog popup: centered positioning, a
+// bold title, and a content slot (`@children`) for everything below it
+// (message text, form fields, a button row -- whatever the composing
+// dialog needs). Ported from origami/qml/widgets/popups/ModalDialog.qml
+// -- QQC2's `default property alias content: contentArea.data` becomes
+// Slint's own `@children` mechanism, the same one `ayame-slint`'s
+// `CollapsibleSection` already uses for its body slot.
+//
+// Deliberately just a reusable base component, not a stack/manager
+// singleton: a consumer instantiates and `.show()`s it themselves, same
+// spirit as the QML original. No separate footer/button-row slot either
+// -- composing dialogs (`ConfirmDialog`) declare their own button row as
+// part of `@children`, same as the QML original's composing dialogs did.
+export component ModalDialog inherits PopupWindow {
+    in property <string> title: "";
+    in property <length> dialog-width: 260px;
+    close-policy: PopupClosePolicy.close-on-click-outside;
+
+    Rectangle {
+        width: root.dialog-width;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+        border-radius: Tokens.corner-radius;
+
+        VerticalLayout {
+            padding: Tokens.spacing-large;
+            spacing: Tokens.spacing-large;
+
+            Text {
+                text: root.title;
+                font-weight: 700;
+                font-size: Tokens.font-size-large;
+                color: Tokens.text-primary;
+                overflow: elide;
+            }
+
+            VerticalLayout {
+                spacing: Tokens.spacing-large;
+                @children
+            }
+        }
+    }
+}

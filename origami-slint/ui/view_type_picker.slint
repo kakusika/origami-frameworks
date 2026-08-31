@@ -1,0 +1,110 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Slint port of origami/qml/pane/picker/ViewTypePickerButton.qml +
+// ViewTypePickerPopup.qml. The registry itself (which view types exist,
+// their titles/categories) is pushed in as a flat, pre-grouped-or-filtered
+// list of rows -- category headers are real rows (`is-header: true`)
+// rather than a nested data structure, matching this codebase's
+// established "flatten to a plain list, let Rust do the grouping" pattern.
+export struct PickerRow {
+    is-header: bool,
+    label: string,
+    view-type: string,
+}
+
+export component ViewTypePicker inherits PopupWindow {
+    in property <[PickerRow]> rows: [];
+    callback search-changed(string);
+    // (view-type, title) of the chosen entry.
+    callback picked(string, string);
+
+    width: 240px;
+    height: 280px;
+    close-policy: PopupClosePolicy.close-on-click-outside;
+
+    Rectangle {
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+        border-radius: Tokens.corner-radius;
+        clip: true;
+
+        VerticalLayout {
+            padding: Tokens.spacing-medium;
+            spacing: Tokens.spacing-small;
+
+            // Search input field
+            Rectangle {
+                height: 28px;
+                background: Tokens.background;
+                border-width: Tokens.border-width;
+                border-color: search-input.has-focus ? Tokens.accent : Tokens.border;
+                border-radius: Tokens.corner-radius;
+
+                animate border-color { duration: 100ms; }
+
+                search-input := TextInput {
+                    x: Tokens.spacing-small;
+                    width: parent.width - Tokens.spacing-small * 2;
+                    height: parent.height;
+                    font-size: Tokens.font-size-small;
+                    color: Tokens.text-primary;
+                    vertical-alignment: center;
+                    edited => { root.search-changed(self.text); }
+                }
+
+                if search-input.text == "" && !search-input.has-focus: Text {
+                    x: Tokens.spacing-small;
+                    width: parent.width - Tokens.spacing-small * 2;
+                    height: parent.height;
+                    text: "Search view types...";
+                    color: Tokens.text-disabled;
+                    font-size: Tokens.font-size-small;
+                    vertical-alignment: center;
+                }
+            }
+
+            Flickable {
+                vertical-stretch: 1;
+
+                VerticalLayout {
+                    width: parent.width;
+                    spacing: 2px;
+
+                    for row in root.rows: Rectangle {
+                        height: row.is-header ? 24px : 30px;
+
+                        if row.is-header: Text {
+                            text: row.label;
+                            color: Tokens.text-secondary;
+                            font-size: Tokens.font-size-small;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                            x: Tokens.spacing-small;
+                        }
+
+                        if !row.is-header: Rectangle {
+                            background: item-area.has-hover ? Tokens.hover : transparent;
+                            border-radius: Tokens.corner-radius;
+
+                            animate background { duration: 80ms; }
+
+                            Text {
+                                text: row.label;
+                                color: item-area.has-hover ? Tokens.accent : Tokens.text-primary;
+                                font-size: Tokens.font-size-normal;
+                                vertical-alignment: center;
+                                x: Tokens.spacing-medium;
+                            }
+
+                            item-area := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.picked(row.view-type, row.label); }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,96 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Slint port of origami/qml/widgets/inputs/NumberInput.qml.
+// Spin-box style numerical input with increment/decrement buttons and range bounding.
+export component NumberInput inherits Rectangle {
+    in-out property <float> value: 0;
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    in property <float> step: 1;
+    in property <int> decimals: 0;
+    in property <string> prefix: "";
+    in property <string> suffix: "";
+    callback value-changed(float);
+
+    height: 30px;
+    width: 110px;
+    background: Tokens.background;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: val-input.has-focus ? Tokens.accent : Tokens.border;
+
+    animate border-color { duration: 100ms; }
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-small;
+        padding-right: 2px;
+        spacing: 2px;
+        alignment: center;
+
+        val-input := TextInput {
+            horizontal-stretch: 1;
+            text: (root.prefix != "" ? root.prefix + " " : "") + root.value + (root.suffix != "" ? " " + root.suffix : "");
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-small;
+            font-weight: 500;
+            vertical-alignment: center;
+            edited => {
+                // Parse float on edit
+                // Handled in callback
+            }
+            accepted => {
+                // Commit value
+            }
+        }
+
+        // Stepper buttons
+        VerticalLayout {
+            width: 18px;
+            spacing: 1px;
+
+            up-btn := Rectangle {
+                height: 12px;
+                border-radius: 2px;
+                background: up-touch.has-hover ? Tokens.hover : transparent;
+
+                Text {
+                    text: "▲";
+                    font-size: 8px;
+                    color: up-touch.has-hover ? Tokens.accent : Tokens.text-secondary;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                up-touch := TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => {
+                        root.value = min(root.maximum, root.value + root.step);
+                        root.value-changed(root.value);
+                    }
+                }
+            }
+
+            down-btn := Rectangle {
+                height: 12px;
+                border-radius: 2px;
+                background: down-touch.has-hover ? Tokens.hover : transparent;
+
+                Text {
+                    text: "▼";
+                    font-size: 8px;
+                    color: down-touch.has-hover ? Tokens.accent : Tokens.text-secondary;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                down-touch := TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => {
+                        root.value = max(root.minimum, root.value - root.step);
+                        root.value-changed(root.value);
+                    }
+                }
+            }
+        }
+    }
+}

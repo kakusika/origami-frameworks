@@ -18,11 +18,7 @@ pub struct GpuBuffer {
 
 /// Compiles a WGSL source string to SPIR-V (as a `u32` word stream) for the
 /// given entry point.
-pub fn compile_spirv(
-    src: &str,
-    stage: naga::ShaderStage,
-    entry_point: &str,
-) -> Result<Vec<u32>> {
+pub fn compile_spirv(src: &str, stage: naga::ShaderStage, entry_point: &str) -> Result<Vec<u32>> {
     let module = naga::front::wgsl::parse_str(src).context("WGSL parse error")?;
     let info = naga::valid::Validator::new(
         naga::valid::ValidationFlags::all(),

@@ -1,0 +1,81 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+export struct ToggleItem {
+    id: string,
+    label: string,
+    icon: image,
+    has-icon: bool,
+}
+
+// Slint port of origami/qml/widgets/buttons/ToggleGroup.qml.
+// Segmented group of toggle buttons for mutually-exclusive mode or view switching.
+export component ToggleGroup inherits Rectangle {
+    in property <[ToggleItem]> items: [];
+    in-out property <int> selected-index: 0;
+    callback selected(int, string);
+
+    height: 32px;
+    property <length> item-w: 90px;
+    width: root.items.length * root.item-w + 6px;
+    background: Tokens.surface-raised;
+    border-radius: Tokens.corner-radius + 2px;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+
+    // Single continuous sliding indicator
+    if root.selected-index >= 0 && root.selected-index < root.items.length: pill := Rectangle {
+        x: 3px + root.selected-index * root.item-w;
+        y: 3px;
+        width: root.item-w;
+        height: parent.height - 6px;
+        border-radius: Tokens.corner-radius;
+        background: Tokens.accent;
+
+        animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate width { duration: Tokens.anim-very-short * 1ms; }
+    }
+
+    HorizontalLayout {
+        padding: 3px;
+        spacing: 0px;
+
+        for item[i] in root.items: Rectangle {
+            width: root.item-w;
+            height: parent.height;
+            border-radius: Tokens.corner-radius;
+            background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            item-layout := HorizontalLayout {
+                spacing: Tokens.spacing-small;
+                alignment: center;
+
+                if item.has-icon: Icon {
+                    source: item.icon;
+                    color: i == root.selected-index ? white : Tokens.text-secondary;
+                    width: 14px;
+                    height: 14px;
+                    vertical-alignment: center;
+                }
+
+                if item.label != "": Text {
+                    text: item.label;
+                    color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    font-size: Tokens.font-size-normal;
+                    font-weight: i == root.selected-index ? 600 : 400;
+                    vertical-alignment: center;
+                    animate color { duration: Tokens.anim-very-short * 1ms; }
+                }
+            }
+
+            item-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.selected-index = i;
+                    root.selected(i, item.id);
+                }
+            }
+        }
+    }
+}

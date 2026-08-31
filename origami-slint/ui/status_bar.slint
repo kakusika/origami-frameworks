@@ -1,0 +1,70 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Slint port of origami/qml/regions/statusbar/StatusBar.qml.
+// Window bottom bar displaying runtime status, active state, indicators, and info text.
+export component StatusBar inherits Rectangle {
+    in property <string> status-text: "Ready";
+    in property <string> status-type: "normal"; // "normal" | "busy" | "error" | "success"
+    in property <string> right-info-text: "";
+    in property <string> center-text: "";
+
+    height: 28px;
+    background: Tokens.surface-raised;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-medium;
+        alignment: center;
+
+        // Left status indicator + text
+        HorizontalLayout {
+            spacing: Tokens.spacing-small;
+            alignment: center;
+
+            Rectangle {
+                width: 8px;
+                height: 8px;
+                border-radius: 4px;
+                background: root.status-type == "busy" ? #f59e0b :
+                            root.status-type == "error" ? Tokens.destructive :
+                            root.status-type == "success" ? #10b981 :
+                            Tokens.accent;
+            }
+
+            Text {
+                text: root.status-text;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                vertical-alignment: center;
+            }
+        }
+
+        // Center space / text
+        Rectangle {
+            horizontal-stretch: 1;
+
+            if root.center-text != "": Text {
+                text: root.center-text;
+                color: Tokens.text-secondary;
+                font-size: Tokens.font-size-small;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        // Right info text
+        if root.right-info-text != "": Text {
+            text: root.right-info-text;
+            color: Tokens.text-secondary;
+            font-size: Tokens.font-size-small;
+            vertical-alignment: center;
+        }
+
+        // Slot for custom right-side elements
+        @children
+    }
+}

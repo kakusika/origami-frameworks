@@ -1,0 +1,52 @@
+// Shared design-token global -- the Slint side's equivalent of `crates/
+// stylekit`'s QML `Theme`/`Units` singletons. Imported by consuming apps
+// via slint-build's library-path mechanism (e.g. `import { Tokens } from
+// "@ayame/tokens.slint";`), NOT copied per app.
+//
+// Every property is `in-out` (not `out`) so a consuming app's own Rust glue
+// can push resolved values in at runtime (see this crate's own `src/
+// lib.rs::resolve()`, which computes these from the same `ayame_config::
+// Settings` the QML `Units.qml`/`ThemeSettings` already read/write). The
+// literal defaults below are just a sane compile-time fallback so a UI
+// still renders sensibly before that push happens -- mirrors `src/
+// lib.rs`'s `ColorTokens`/`ShapeTokens`/`SpacingTokens` 1:1; keep both in
+// sync by hand if either changes.
+export global Tokens {
+    // -- Colors (Ayame Blue-Violet & White Palette) --
+    in-out property <color> background: #1a1a24;
+    in-out property <color> surface: #222230;
+    in-out property <color> surface-raised: #2a2a3c;
+    in-out property <color> border: #38384f;
+    in-out property <color> divider: #444460;
+    in-out property <color> hover: #323246;
+    in-out property <color> pressed: #40405a;
+    in-out property <color> accent: #6e62e4;
+    in-out property <color> text-primary: #f1f3f9;
+    in-out property <color> text-secondary: #9a9cb8;
+    in-out property <color> text-disabled: #636582;
+    in-out property <color> destructive: #da4453;
+    in-out property <color> selected-surface: #332f5e;
+
+    // -- Spacing --
+    in-out property <length> spacing-small: 4px;
+    in-out property <length> spacing-medium: 8px;
+    in-out property <length> spacing-large: 16px;
+
+    // -- Shape --
+    in-out property <length> corner-radius: 4px;
+    in-out property <length> border-width: 1px;
+
+    // -- Typography (not yet resolved from settings -- no persisted font
+    // setting this crate reads today, kept as fixed literals) --
+    in-out property <length> font-size-small: 11px;
+    in-out property <length> font-size-normal: 13px;
+    in-out property <length> font-size-large: 15px;
+
+    // -- Animation (ms) -- 0 means "apply immediately, no animation" (see
+    // `AnimationTokens` doc comment), consuming .slint files should treat
+    // 0 as a valid, meaningful duration, not a placeholder.
+    in-out property <int> anim-very-short: 60;
+    in-out property <int> anim-short: 180;
+    in-out property <int> anim-long: 360;
+    in-out property <int> anim-very-long: 600;
+}

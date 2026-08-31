@@ -1,0 +1,10 @@
+[package]
+name = "origami-slint"
+version.workspace = true
+edition.workspace = true
+links = "origami_slint"
+build = "build.rs"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

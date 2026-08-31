@@ -1,0 +1,60 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton } from "@ayame/components.slint";
+import { ModalDialog } from "modal_dialog.slint";
+
+// A generic confirmation/message dialog popup: standard title, message,
+// confirm/cancel buttons, and destructive-action styling. Ported from
+// origami/qml/widgets/popups/ConfirmDialog.qml, composed on top of
+// `ModalDialog` the same way the QML original composed `Origami.
+// ModalDialog`. `AppButton`'s existing `primary`/`destructive` flags
+// already cover what the QML original did with a manual `background`
+// override for the destructive case, so no per-button style override is
+// needed here.
+//
+// `title` has no hardcoded default here (unlike the QML original's own
+// `title: "Confirm Action"`) -- overriding an inherited `in` property's
+// default from within a derived component while still letting an outer
+// instantiator override it further is not a pattern this port relies on;
+// pass `title:` explicitly at each call site instead.
+export component ConfirmDialog inherits ModalDialog {
+    in property <string> message: "Are you sure you want to proceed?";
+    in property <string> confirm-text: "OK";
+    in property <string> cancel-text: "Cancel";
+    in property <bool> is-destructive: false;
+    in property <bool> show-cancel: true;
+
+    callback confirmed();
+    callback cancelled();
+
+    Text {
+        text: root.message;
+        color: Tokens.text-secondary;
+        font-size: Tokens.font-size-normal;
+        wrap: word-wrap;
+    }
+
+    Rectangle { height: 1px; background: Tokens.divider; }
+
+    HorizontalLayout {
+        alignment: end;
+        spacing: Tokens.spacing-small;
+
+        if root.show-cancel: AppButton {
+            text: root.cancel-text;
+            clicked => {
+                root.cancelled();
+                root.close();
+            }
+        }
+
+        AppButton {
+            text: root.confirm-text;
+            primary: !root.is-destructive;
+            destructive: root.is-destructive;
+            clicked => {
+                root.confirmed();
+                root.close();
+            }
+        }
+    }
+}

@@ -1,0 +1,161 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { AppButton } from "@ayame/components.slint";
+import { PaneHost, PaneCell } from "@origami/pane_host.slint";
+
+// Live showcase of Origami Pane Layout System (PaneHost, split panes, tabs, drawer).
+export component PanePage inherits Rectangle {
+    in-out property <[PaneCell]> cells: [];
+    in-out property <int> maximized-leaf-id: -1;
+    in-out property <string> status: "Drag dividers or switch tabs to interact with PaneHost.";
+
+    callback relayout(length, length);
+    callback select-tab(int, int);
+    callback close-tab(int, int);
+    callback toggle-drawer(int);
+    callback convert-group(int);
+    callback toggle-maximize(int);
+    callback close-leaf(int, int);
+    callback detach-leaf(int, int);
+    callback resize-divider-start(int, int);
+    callback resize-divider(int, int, float, float);
+    callback resize-divider-end();
+    callback tab-drag-ended(int, int, length, length);
+    callback drag-hover(length, length);
+    callback set-active-leaf(int);
+
+    VerticalLayout {
+        // Top banner hint
+        Rectangle {
+            height: 36px;
+            background: Tokens.surface-raised;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border;
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-large;
+                padding-right: Tokens.spacing-large;
+                spacing: Tokens.spacing-medium;
+                alignment: center;
+
+                Text {
+                    text: "Pane System Live Engine";
+                    font-weight: 700;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-normal;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: "— Real-time tile splitting, tab docking, divider resizing & drawer rails.";
+                    color: Tokens.text-secondary;
+                    font-size: Tokens.font-size-small;
+                    vertical-alignment: center;
+                }
+
+                Rectangle { horizontal-stretch: 1; }
+
+                AppButton {
+                    text: "Reset Layout";
+                    clicked => {
+                        root.relayout(pane-area.width, pane-area.height);
+                    }
+                }
+            }
+        }
+
+        // Pane Host Work Area
+        pane-area := Rectangle {
+            vertical-stretch: 1;
+            background: Tokens.background;
+
+            // Content cells rendering under PaneHost
+            for cell in root.cells: Rectangle {
+                x: cell.x;
+                y: cell.y;
+                width: cell.width;
+                height: cell.height;
+
+                if cell.kind == "content": Rectangle {
+                    background: cell.view-type == "board" ? #1e3a2f :
+                                cell.view-type == "calendar" ? #1e2f3a :
+                                cell.view-type == "notes" ? #3a2e1e : #252830;
+                    border-radius: Tokens.corner-radius;
+                    border-width: 1px;
+                    border-color: Tokens.border;
+
+                    VerticalLayout {
+                        padding: Tokens.spacing-large;
+                        spacing: Tokens.spacing-small;
+                        alignment: center;
+
+                        Text {
+                            text: cell.title != "" ? cell.title : "Pane Content (" + cell.view-type + ")";
+                            color: white;
+                            font-weight: 700;
+                            font-size: Tokens.font-size-large;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: "Type: " + cell.kind + " | ID: " + cell.id;
+                            color: white.transparentize(40%);
+                            font-size: Tokens.font-size-small;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            pane-host := PaneHost {
+                width: 100%;
+                height: 100%;
+                cells: root.cells;
+                maximized-leaf-id: root.maximized-leaf-id;
+
+                relayout(w, h) => { root.relayout(w, h); }
+                select-tab(id, index) => { root.select-tab(id, index); }
+                close-tab(id, child) => { root.close-tab(id, child); }
+                toggle-drawer(id) => { root.toggle-drawer(id); }
+                convert-group(id) => { root.convert-group(id); }
+                toggle-maximize(id) => { root.toggle-maximize(id); }
+                close-leaf(id, child) => { root.close-leaf(id, child); }
+                detach-leaf(id, child) => { root.detach-leaf(id, child); }
+                resize-divider-start(id, index) => { root.resize-divider-start(id, index); }
+                resize-divider(id, index, extra, delta) => { root.resize-divider(id, index, extra, delta); }
+                resize-divider-end() => { root.resize-divider-end(); }
+                tab-drag-ended(group, child, x, y) => { root.tab-drag-ended(group, child, x, y); }
+                drag-hover(x, y) => { root.drag-hover(x, y); }
+                set-active-leaf(id) => { root.set-active-leaf(id); }
+            }
+        }
+
+        // Status bar
+        Rectangle {
+            height: 28px;
+            background: Tokens.surface-raised;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border;
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-large;
+                padding-right: Tokens.spacing-large;
+                spacing: Tokens.spacing-medium;
+                alignment: center;
+
+                Rectangle {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 4px;
+                    background: Tokens.accent;
+                }
+
+                Text {
+                    text: root.status;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-small;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

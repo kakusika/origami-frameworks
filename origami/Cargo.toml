@@ -17,6 +17,7 @@ notify = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sysinfo = { workspace = true }
+trash = { workspace = true }
 
 [build-dependencies]
 cxx-qt-build = { workspace = true }

@@ -1,0 +1,319 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Slint port of origami/qml/widgets/buttons/IconButton.qml.
+// Compact icon-only button commonly used in toolbars, headers, and floating panes.
+export component IconButton inherits Rectangle {
+    in property <image> icon;
+    in property <bool> enabled: true;
+    in property <bool> active: false;
+    in property <length> icon-size: 16px;
+    in property <color> icon-color: root.active ? Tokens.accent : (touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+    callback clicked();
+
+    width: 30px;
+    height: 30px;
+    border-radius: Tokens.corner-radius;
+    background: !root.enabled ? transparent : (root.active ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent));
+    border-width: root.active ? Tokens.border-width : 0px;
+    border-color: root.active ? Tokens.accent : transparent;
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    Icon {
+        source: root.icon;
+        color: !root.enabled ? Tokens.text-disabled : root.icon-color;
+        width: root.icon-size;
+        height: root.icon-size;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Slint port of origami/qml/widgets/buttons/ActionButton.qml.
+// Extended action button with icon, title label, keyboard shortcut hint, and badge support.
+export component ActionButton inherits Rectangle {
+    in property <image> icon;
+    in property <bool> has-icon: root.icon.width > 0;
+    in property <string> text: "";
+    in property <string> shortcut-text: "";
+    in property <string> badge-text: "";
+    in property <bool> enabled: true;
+    in property <bool> active: false;
+    in property <bool> primary: false;
+    in property <bool> destructive: false;
+    callback clicked();
+
+    height: 32px;
+    width: layout.preferred-width + Tokens.spacing-medium * 2;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border :
+                  root.destructive ? (touch.has-hover ? Tokens.destructive.darker(0.2) : Tokens.destructive) :
+                  root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) :
+                  root.active ? Tokens.accent :
+                  (touch.has-hover ? Tokens.accent : Tokens.border);
+
+    background: !root.enabled ? Tokens.surface :
+                root.destructive ? (touch.has-hover ? Tokens.destructive.darker(0.1) : Tokens.destructive) :
+                root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) :
+                root.active ? Tokens.selected-surface :
+                (touch.has-hover ? Tokens.hover : Tokens.surface);
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    layout := HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+        alignment: center;
+
+        if root.has-icon: Icon {
+            source: root.icon;
+            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+            width: 16px;
+            height: 16px;
+            vertical-alignment: center;
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+            font-size: Tokens.font-size-normal;
+            font-weight: (root.primary || root.active) ? 600 : 400;
+            vertical-alignment: center;
+        }
+
+        if root.shortcut-text != "": Text {
+            text: root.shortcut-text;
+            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white.transparentize(30%) : Tokens.text-secondary);
+            font-size: Tokens.font-size-small;
+            vertical-alignment: center;
+        }
+
+        if root.badge-text != "": Rectangle {
+            background: Tokens.accent;
+            border-radius: 6px;
+            height: 16px;
+            width: max(16px, badge-label.preferred-width + 6px);
+
+            badge-label := Text {
+                text: root.badge-text;
+                color: white;
+                font-size: 10px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Slint port of origami/qml/widgets/buttons/RoundButton.qml.
+export component RoundButton inherits Rectangle {
+    in property <image> icon;
+    in property <bool> has-icon: root.icon.width > 0;
+    in property <string> text: "";
+    in property <bool> enabled: true;
+    in property <bool> active: false;
+    in property <bool> primary: false;
+    in property <length> size: 36px;
+    callback clicked();
+
+    width: root.size;
+    height: root.size;
+    border-radius: self.height / 2;
+    border-width: Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border :
+                  root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) :
+                  root.active ? Tokens.accent :
+                  (touch.has-hover ? Tokens.accent : Tokens.border);
+    background: !root.enabled ? Tokens.surface :
+                root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) :
+                root.active ? Tokens.selected-surface :
+                (touch.has-hover ? Tokens.hover : Tokens.surface);
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    if root.has-icon: Icon {
+        source: root.icon;
+        color: !root.enabled ? Tokens.text-disabled : (root.primary ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+        width: root.size * 0.45;
+        height: root.size * 0.45;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+    }
+
+    if !root.has-icon && root.text != "": Text {
+        text: root.text;
+        color: !root.enabled ? Tokens.text-disabled : (root.primary ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+        font-size: Tokens.font-size-normal;
+        font-weight: (root.primary || root.active) ? 600 : 400;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Slint port of origami/qml/widgets/buttons/ToggleButton.qml.
+export component ToggleButton inherits Rectangle {
+    in property <string> text: "";
+    in property <image> icon;
+    in property <bool> has-icon: root.icon.width > 0;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback toggled(bool);
+
+    height: 32px;
+    width: layout.preferred-width + Tokens.spacing-medium * 2;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border :
+                  root.checked ? Tokens.accent :
+                  (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+    background: !root.enabled ? Tokens.surface :
+                root.checked ? Tokens.selected-surface :
+                (touch.has-hover ? Tokens.hover : Tokens.surface);
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    layout := HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+        alignment: center;
+
+        if root.has-icon: Icon {
+            source: root.icon;
+            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-primary);
+            width: 16px;
+            height: 16px;
+            vertical-alignment: center;
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-primary);
+            font-size: Tokens.font-size-normal;
+            font-weight: root.checked ? 600 : 400;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}
+
+// Rich toggle button with title, subtitle/detail, and selection checkmark.
+export component DetailToggleButton inherits Rectangle {
+    in property <string> title: "";
+    in property <string> detail: "";
+    in property <image> icon;
+    in property <bool> has-icon: root.icon.width > 0;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback toggled(bool);
+
+    height: max(48px, layout.preferred-height + Tokens.spacing-small * 2);
+    min-width: 180px;
+    border-radius: Tokens.corner-radius + 2px;
+    border-width: root.checked ? 2px : Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border :
+                  root.checked ? Tokens.accent :
+                  (touch.has-hover ? Tokens.accent.with-alpha(0.5) : Tokens.border);
+    background: !root.enabled ? Tokens.surface :
+                root.checked ? Tokens.selected-surface :
+                (touch.has-hover ? Tokens.hover : Tokens.surface);
+
+    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+
+    layout := HorizontalLayout {
+        padding: Tokens.spacing-medium;
+        spacing: Tokens.spacing-medium;
+        alignment: center;
+
+        if root.has-icon: Icon {
+            source: root.icon;
+            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-secondary);
+            width: 22px;
+            height: 22px;
+            vertical-alignment: center;
+        }
+
+        VerticalLayout {
+            spacing: 2px;
+            horizontal-stretch: 1;
+            alignment: center;
+
+            Text {
+                text: root.title;
+                color: !root.enabled ? Tokens.text-disabled : Tokens.text-primary;
+                font-size: Tokens.font-size-normal;
+                font-weight: root.checked ? 600 : 500;
+                overflow: elide;
+            }
+
+            if root.detail != "": Text {
+                text: root.detail;
+                color: Tokens.text-secondary;
+                font-size: Tokens.font-size-small;
+                overflow: elide;
+            }
+        }
+
+        Rectangle {
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            border-width: 1.5px;
+            border-color: root.checked ? Tokens.accent : Tokens.border;
+            background: root.checked ? Tokens.accent : transparent;
+
+            if root.checked: Icon {
+                source: Icons.check;
+                color: white;
+                width: 10px;
+                height: 10px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+            }
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}

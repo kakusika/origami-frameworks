@@ -1,0 +1,102 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Slint port of origami/qml/views/FileTile.qml and catalogs grid view.
+// A responsive grid layout for file/folder tiles with thumbnail preview,
+// icon fallback, single-click selection, and double-click/activation.
+export struct FileGridCell {
+    name: string,
+    path: string,
+    is-dir: bool,
+    thumbnail: image,
+    has-thumbnail: bool,
+}
+
+export component FileGrid inherits Rectangle {
+    in property <[FileGridCell]> cells: [];
+    in property <length> desired-cell-width: 120px;
+    in-out property <int> selected-index: -1;
+    callback activated(int);
+
+    in property <brush> custom-background: Tokens.background;
+    background: root.custom-background;
+
+    property <int> columns: max(1, floor(self.width / root.desired-cell-width));
+    property <length> cell-w: self.width / root.columns;
+    property <length> cell-h: root.cell-w * 1.15;
+    property <length> gap: 6px;
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        viewport-width: parent.width;
+        viewport-height: max(parent.height, ceil(root.cells.length / root.columns) * root.cell-h + root.gap * 2);
+
+        for cell[i] in root.cells: Rectangle {
+            property <int> grid-col: mod(i, root.columns);
+            property <int> grid-row: floor(i / root.columns);
+
+            x: self.grid-col * root.cell-w + root.gap;
+            y: self.grid-row * root.cell-h + root.gap;
+            width: root.cell-w - root.gap * 2;
+            height: root.cell-h - root.gap * 2;
+            border-radius: Tokens.corner-radius + 2px;
+            background: i == root.selected-index ? Tokens.selected-surface : (area.has-hover ? Tokens.hover : Tokens.surface);
+            border-width: i == root.selected-index ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
+            border-color: i == root.selected-index ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
+
+            animate background { duration: 80ms; }
+            animate border-color { duration: 80ms; }
+
+            VerticalLayout {
+                padding: Tokens.spacing-small;
+                spacing: Tokens.spacing-small;
+
+                thumb := Rectangle {
+                    border-radius: Tokens.corner-radius;
+                    clip: true;
+                    background: Tokens.surface-raised;
+
+                    if cell.has-thumbnail: Image {
+                        source: cell.thumbnail;
+                        width: parent.width;
+                        height: parent.height;
+                        image-fit: cover;
+                    }
+
+                    if !cell.has-thumbnail: Icon {
+                        source: cell.is-dir ? Icons.folder : Icons.file;
+                        color: i == root.selected-index ? Tokens.accent : Tokens.text-secondary;
+                        width: min(48px, max(24px, parent.width * 0.38));
+                        height: min(48px, max(24px, parent.height * 0.38));
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                Text {
+                    text: cell.name;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-small;
+                    font-weight: i == root.selected-index ? 600 : 400;
+                    horizontal-alignment: center;
+                    overflow: elide;
+                    height: 18px;
+                }
+            }
+
+            area := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    if (root.selected-index == i) {
+                        root.activated(i);
+                    } else {
+                        root.selected-index = i;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+// Thin wrapper around `Image` for the vendored Tabler icons (icons/*.svg,
+// see icons/LICENSE.md) -- `colorize` re-tints the whole (monochrome,
+// stroke-only) icon per call site, since Slint has no way to pick an
+// `@image-url` path at runtime, only a fixed literal per call site.
+export component Icon inherits Image {
+    in property <brush> color: black;
+    width: 16px;
+    height: 16px;
+    colorize: root.color;
+}
+
+// `@image-url()` literals are always resolved relative to the `.slint`
+// file they appear in -- a consumer crate writing `Icon { source:
+// @image-url("icons/x.svg") }` in its *own* file would resolve against
+// its *own* `icons/` directory, not this crate's vendored one, even
+// though `Icon` itself was imported from here. This global exposes each
+// vendored icon as a plain `image` value instead, so a consumer just
+// writes `Icon { source: Icons.x; }` -- the literal (and therefore the
+// path resolution) stays inside this file.
+export global Icons {
+    out property <image> check: @image-url("icons/check.svg");
+    out property <image> chevron-down: @image-url("icons/chevron-down.svg");
+    out property <image> chevron-right: @image-url("icons/chevron-right.svg");
+    out property <image> external-link: @image-url("icons/external-link.svg");
+    out property <image> file: @image-url("icons/file.svg");
+    out property <image> folder: @image-url("icons/folder.svg");
+    out property <image> grip-vertical: @image-url("icons/grip-vertical.svg");
+    out property <image> maximize: @image-url("icons/maximize.svg");
+    out property <image> minimize: @image-url("icons/minimize.svg");
+    out property <image> plus: @image-url("icons/plus.svg");
+    out property <image> switch-horizontal: @image-url("icons/switch-horizontal.svg");
+    out property <image> x: @image-url("icons/x.svg");
+}

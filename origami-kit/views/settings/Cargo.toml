@@ -1,0 +1,13 @@
+[package]
+name = "origami-view-settings"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+origami = { workspace = true }
+ayame = { workspace = true }
+cxx-qt = { workspace = true }
+cxx-qt-lib = { workspace = true, features = ["qt_full"] }
+
+[build-dependencies]
+cxx-qt-build = { workspace = true }

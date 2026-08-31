@@ -108,8 +108,19 @@ Item {
     // children rather than windowComponent, which has no Component object
     // to hand back at all -- extractTab() still works, just produces an
     // item-only tab that a save/reload can't reconstruct (same graceful
-    // drop an unknown viewType already gets elsewhere).
+    // drop an unknown viewType already gets elsewhere). Also gates whether
+    // FloatingWindowRegistry.serializeWindows() includes this window at
+    // all -- see its own comment.
     property string windowViewType: ""
+
+    // Optional, paired with windowComponent: a previously-saved props bag
+    // (FloatingWindowRegistry.restoreWindows()' own `entry.props`) applied
+    // to the freshly created item via its optional paneRestore(props) --
+    // same shape/optional-interface PaneView.qml's own materialize() uses
+    // for a docked pane's saved state (e.g. GraphView.qml's collapsible-
+    // panel open/closed state). Ignored if left null, or if the created
+    // item doesn't implement paneRestore.
+    property var restoreProps: null
 
     signal closeRequested
 
@@ -123,27 +134,79 @@ Item {
     }
 
     // Keeps this window's top-left corner within the host's current
-    // bounds. x/y are absolute and otherwise only ever touched by the
-    // titlebar drag/resize-handle MouseAreas below -- without this, a
-    // window sitting near the host's trailing/bottom edge ends up entirely
-    // outside the host's new bounds (off-screen, no visible way to drag it
-    // back) the moment the host shrinks, e.g. the app's own window being
-    // resized smaller. Clamped to [0, host.size - this.size], which
-    // degrades to pinning at (0, 0) if this window is itself bigger than
-    // the shrunk host. See the Connections below for when this runs.
-    function _clampToHost() {
+    // bounds, clamped to [0, host.size - this.size] -- degrades to pinning
+    // at (0, 0) if this window is itself bigger than the host. x/y are
+    // absolute and otherwise only ever touched by the titlebar drag/
+    // resize-handle MouseAreas below. Used both as _scaleToHost()'s own
+    // final safety step (rounding/the minimumWidth/minimumHeight floor can
+    // still push a corner outside the host despite scaling) and after
+    // toggleMaximize()'s own un-maximize restore (the saved geometry was
+    // valid before maximizing but may no longer fit if the host shrank
+    // while maximized).
+    function _clampPosition() {
+        var host = root.parent;
+        if (!host)
+            return;
+        root.x = Math.min(Math.max(root.x, 0), Math.max(0, host.width - root.width));
+        root.y = Math.min(Math.max(root.y, 0), Math.max(0, host.height - root.height));
+    }
+
+    // Tracks the host size this window's own geometry was last scaled
+    // against -- see _scaleToHost() below, which needs the *previous* size
+    // to compute a resize ratio (onWidthChanged/onHeightChanged only ever
+    // hand us the *new* one). Seeded from the host's size at creation time
+    // (Component.onCompleted below), then kept current by every place that
+    // changes this window's relationship to the host: _scaleToHost() itself
+    // and toggleMaximize() (both branches -- entering fill-the-host mode,
+    // and leaving it back to a restored geometry that may itself no longer
+    // match whatever the host resized to while maximized).
+    property real _lastHostWidth: 0
+    property real _lastHostHeight: 0
+
+    // Scales this window's geometry proportionally with the host --
+    // resizing the app's own window resizes/repositions every floating
+    // window right along with it (not just keeps them from ending up
+    // off-screen), the same "everything scales together" behavior a
+    // percentage-based/flex layout gives, which is generally more useful
+    // than a fixed pixel size becoming a shrinking fraction of a growing
+    // window or an overflowing fraction of a shrinking one. Independent X/Y
+    // scale factors (not one uniform ratio) so a host resize that's
+    // asymmetric (e.g. only widened, not made taller) distorts floating
+    // windows to match, rather than reacting only to whichever axis moved
+    // least. See the Connections below for when this runs.
+    function _scaleToHost() {
         var host = root.parent;
         if (!host)
             return;
         if (root.maximized) {
-            // Definitionally fills the host -- re-fill to the host's new
-            // size directly rather than clamping the old one.
+            // Still just fills -- nothing to scale, see toggleMaximize().
             root.width = host.width;
             root.height = host.height;
+            root._lastHostWidth = host.width;
+            root._lastHostHeight = host.height;
             return;
         }
-        root.x = Math.min(Math.max(root.x, 0), Math.max(0, host.width - root.width));
-        root.y = Math.min(Math.max(root.y, 0), Math.max(0, host.height - root.height));
+
+        var scaleX = root._lastHostWidth > 0 ? host.width / root._lastHostWidth : 1;
+        var scaleY = root._lastHostHeight > 0 ? host.height / root._lastHostHeight : 1;
+
+        root.x *= scaleX;
+        root.y *= scaleY;
+        root.width = Math.max(root.minimumWidth, root.width * scaleX);
+        // While minimized, root.height is pinned to the header rows' own
+        // combined height (see toggleMinimize()), not a meaningful size to
+        // scale -- scale the saved pre-minimize height instead, so
+        // restoring later lands at a proportionally correct size rather
+        // than whatever it happened to be when this window was collapsed.
+        if (root.minimized)
+            root._restoreHeight = Math.max(root.minimumHeight, root._restoreHeight * scaleY);
+        else
+            root.height = Math.max(root.minimumHeight, root.height * scaleY);
+
+        root._clampPosition();
+
+        root._lastHostWidth = host.width;
+        root._lastHostHeight = host.height;
     }
 
     // Collapses to just the two header rows ("window shade"), hiding
@@ -166,7 +229,7 @@ Item {
     }
 
     // Fills the host entirely, remembering prior geometry to restore on
-    // toggle-off. See _clampToHost() above for what keeps a maximized
+    // toggle-off. See _scaleToHost() above for what keeps a maximized
     // window filling the host if the host itself is resized meanwhile.
     function toggleMaximize() {
         var host = root.parent;
@@ -178,7 +241,15 @@ Item {
             root.y = root._restoreGeometry.y;
             root.width = root._restoreGeometry.width;
             root.height = root._restoreGeometry.height;
-            root._clampToHost();
+            // The restored geometry was valid before maximizing, but the
+            // host may have resized while this window was maximized (see
+            // _scaleToHost()'s own maximized branch) -- clamp it back into
+            // bounds, and refresh the scale-tracking baseline to the
+            // host's current size rather than leaving it stale from
+            // whenever this window was last actually scaled.
+            root._clampPosition();
+            root._lastHostWidth = host.width;
+            root._lastHostHeight = host.height;
         } else {
             root._restoreGeometry = Qt.rect(root.x, root.y, root.width, root.height);
             root.maximized = true;
@@ -186,6 +257,8 @@ Item {
             root.y = 0;
             root.width = host.width;
             root.height = host.height;
+            root._lastHostWidth = host.width;
+            root._lastHostHeight = host.height;
         }
     }
 
@@ -345,6 +418,14 @@ Item {
 
     Component.onCompleted: {
         root.floatingWindowId = Origami.FloatingWindowRegistry.registerWindow(root, root.title);
+        // Seeds _scaleToHost()'s own ratio baseline -- registerWindow()
+        // above reparents root under the host if it wasn't already (see
+        // its own comment), so root.parent is guaranteed to be the host by
+        // this point regardless of how this window was created.
+        if (root.parent) {
+            root._lastHostWidth = root.parent.width;
+            root._lastHostHeight = root.parent.height;
+        }
         if (root.hostedItem) {
             root.hostedItem.parent = contentArea;
             root.hostedItem.anchors.fill = contentArea;
@@ -355,6 +436,8 @@ Item {
             if (item) {
                 item.anchors.fill = contentArea;
                 root._contentItem = item;
+                if (root.restoreProps && item.paneRestore)
+                    item.paneRestore(root.restoreProps);
             } else {
                 console.warn("FloatingWindow: " + root.windowComponent.errorString());
             }
@@ -379,10 +462,10 @@ Item {
     Connections {
         target: root.parent
         function onWidthChanged() {
-            root._clampToHost();
+            root._scaleToHost();
         }
         function onHeightChanged() {
-            root._clampToHost();
+            root._scaleToHost();
         }
     }
 

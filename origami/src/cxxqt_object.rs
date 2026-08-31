@@ -423,7 +423,11 @@ pub struct VaultManagerRust;
 
 impl ffi::VaultManager {
     fn active_vault_path(self: Pin<&mut Self>) -> QString {
-        QString::from(origami_config::vault::active_vault_root().to_string_lossy().as_ref())
+        QString::from(
+            origami_config::vault::active_vault_root()
+                .to_string_lossy()
+                .as_ref(),
+        )
     }
 
     fn recent_vaults(self: Pin<&mut Self>) -> QStringList {
@@ -435,8 +439,7 @@ impl ffi::VaultManager {
 
     fn set_active_vault(self: Pin<&mut Self>, path: &QUrl) {
         let local_path = path.to_local_file_or_default().to_string();
-        if let Err(err) =
-            origami_config::vault::set_active_vault(std::path::Path::new(&local_path))
+        if let Err(err) = origami_config::vault::set_active_vault(std::path::Path::new(&local_path))
         {
             eprintln!("origami: failed to set active vault: {err}");
         }

@@ -1,0 +1,10 @@
+[package]
+name = "ayame-slint"
+version.workspace = true
+edition.workspace = true
+links = "ayame_slint"
+build = "build.rs"
+
+[dependencies]
+ayame-colors = { workspace = true }
+ayame-config = { workspace = true }

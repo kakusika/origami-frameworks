@@ -1,0 +1,70 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Clickable path breadcrumb -- ported from origami/qml/views/
+// Breadcrumb.qml. The QML original computes its `segments` list from a
+// raw path string via JS `.split`/`.filter`/`.slice` -- Slint's
+// expression language has no string-splitting primitives at all, so
+// this takes pre-computed segments instead, matching this whole
+// codebase's established "Rust flattens, Slint renders" pattern
+// (`origami_slint::layout`/`view_types.rs`/`picker.slint`'s
+// `PickerRow`) rather than reimplementing path-splitting logic here.
+export struct BreadcrumbSegment {
+    label: string,
+    path: string,
+}
+
+export component Breadcrumb inherits Rectangle {
+    in property <[BreadcrumbSegment]> segments: [];
+    callback navigated(string);
+
+    clip: true;
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        viewport-width: max(parent.width, layout.preferred-width);
+
+        layout := HorizontalLayout {
+            spacing: 2px;
+            alignment: start;
+
+            for seg[i] in root.segments: HorizontalLayout {
+                spacing: 2px;
+                alignment: center;
+
+                seg-touch := TouchArea {
+                    width: label.preferred-width + Tokens.spacing-medium * 2;
+                    mouse-cursor: pointer;
+                    clicked => { root.navigated(seg.path); }
+
+                    Rectangle {
+                        width: parent.width;
+                        height: 26px;
+                        background: seg-touch.has-hover ? Tokens.hover : transparent;
+                        border-radius: Tokens.corner-radius;
+
+                        animate background { duration: 80ms; }
+
+                        label := Text {
+                            text: seg.label;
+                            color: seg-touch.has-hover ? Tokens.accent : (i == root.segments.length - 1 ? Tokens.text-primary : Tokens.text-secondary);
+                            font-size: Tokens.font-size-normal;
+                            font-weight: i == root.segments.length - 1 ? 600 : 400;
+                            vertical-alignment: center;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+
+                if i < root.segments.length - 1: Text {
+                    text: "/";
+                    color: Tokens.text-disabled;
+                    font-size: Tokens.font-size-normal;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

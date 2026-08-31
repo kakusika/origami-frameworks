@@ -1,0 +1,86 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+
+// Floating transient toast overlay -- ported from origami/qml/widgets/
+// popups/ToastNotification.qml. No `ToastBus`-style global-singleton
+// listener (app-shell-level plumbing, not this component's concern) --
+// a consumer's Rust sets `message`/`toast-type`/`duration-ms` then flips
+// `showing` to `true` directly, same "consumer writes state, component
+// reacts" shape every other `in`/`in-out` property in this crate already
+// uses, rather than a bespoke show-toast entry point. Auto-hide timing
+// is handled by Slint's own `Timer` element (`changed showing` arms
+// it), so a consumer never needs to round-trip a "hide now" call back
+// into Slint.
+//
+// Dropped the QML original's own `iconName` (a freedesktop icon-name
+// string, e.g. "dialog-information-symbolic") -- `ayame-slint`'s own
+// `icons.slint` has no runtime name-to-asset lookup at all (a fixed,
+// small vendored set, resolved per call site as `Icons.x`-style plain
+// values, see that file's own comment on why) and no info/warning/check
+// icon in that set regardless, so a per-call icon name has nothing
+// meaningful to resolve to here. The colored border (by `toast-type`)
+// alone carries the semantic distinction instead.
+//
+// Positioning (bottom-center overlay is the QML original's own
+// convention) is left to a consumer -- this component only sizes itself
+// to its own content.
+export component ToastNotification inherits Rectangle {
+    in property <string> message: "";
+    in property <string> toast-type: "info"; // "info" | "success" | "negative"
+    in property <int> duration-ms: 3000;
+    in-out property <bool> showing: false;
+
+    width: banner.width;
+    height: banner.height;
+
+    changed showing => {
+        hide-timer.running = root.showing;
+    }
+
+    hide-timer := Timer {
+        interval: root.duration-ms * 1ms;
+        running: false;
+        triggered => { root.showing = false; }
+    }
+
+    banner := Rectangle {
+        width: layout.preferred-width + Tokens.spacing-large * 2;
+        height: 40px;
+        border-radius: Tokens.corner-radius;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: root.toast-type == "success" ? #4caf50 : root.toast-type == "negative" ? Tokens.destructive : Tokens.accent;
+
+        opacity: root.showing ? 0.98 : 0.0;
+        animate opacity { duration: Tokens.anim-short * 1ms; easing: ease-out; }
+
+        layout := HorizontalLayout {
+            padding-left: Tokens.spacing-large;
+            padding-right: Tokens.spacing-medium;
+            spacing: Tokens.spacing-medium;
+
+            Text {
+                text: root.message;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-normal;
+                font-weight: 500;
+                vertical-alignment: center;
+            }
+
+            close-touch := TouchArea {
+                width: 20px;
+                height: 20px;
+                mouse-cursor: pointer;
+                clicked => { root.showing = false; }
+                Icon {
+                    source: Icons.x;
+                    color: close-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    width: 12px;
+                    height: 12px;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+            }
+        }
+    }
+}

@@ -264,6 +264,7 @@ fn layout_node(
                 let mut header = PaneRect::new(*id, Rect::new(rect.x, rect.y, rect.w, header_h), 1, CellKind::Header);
                 header.child_id = -1; // no owning group -- a bare standalone pane
                 header.title = title.clone();
+                header.view_type = view_type.clone();
                 header.active = active_leaf_id == Some(*id);
                 out.push(header);
 
@@ -381,6 +382,13 @@ fn pane_title(node: &PaneNode) -> String {
     }
 }
 
+fn pane_view_type(node: &PaneNode) -> String {
+    match node {
+        PaneNode::Pane { view_type, .. } => view_type.clone(),
+        _ => String::new(),
+    }
+}
+
 // PaneLeaf.qml/PaneTabBar.qml: a fixed-height tab strip above a body
 // showing only `current_index`'s child. Framing (border+radius+margin)
 // applies to Tabs/Drawer, not Split/Pane (PaneNode.qml's exclusion rule);
@@ -436,6 +444,7 @@ fn layout_tabs(
         header.child_id = id;
         header.index = current_index as i32;
         header.title = pane_title(&current.node);
+        header.view_type = pane_view_type(&current.node);
         header.active = active_leaf_id == Some(id);
         out.push(header);
 
@@ -504,6 +513,7 @@ fn layout_drawer(
             header.child_id = id;
             header.index = current_index as i32;
             header.title = pane_title(&current.node);
+            header.view_type = pane_view_type(&current.node);
             header.active = active_leaf_id == Some(id);
             out.push(header);
 

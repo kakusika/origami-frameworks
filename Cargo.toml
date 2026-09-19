@@ -2,11 +2,12 @@
 resolver = "3"
 
 members = [
-  "origami",
-  "origami-gallery",
+  # "origami",
+  # "origami-gallery",
   "origami-gallery-slint",
   "origami-kit/config",
-  "origami-kit/views/settings",
+  "origami-kit/panes",
+  # "origami-kit/views/settings",
   "origami-kit/vulkan-bridge",
   "origami-slint",
   "origami-slint-build",
@@ -19,20 +20,21 @@ members = [
   "ayame/slint-build",
 ]
 
-default-members = ["origami"]
+# default-members = ["origami"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-origami = { path = "origami" }
+# origami = { path = "origami" }
 origami-config = { path = "origami-kit/config" }
-origami-view-settings = { path = "origami-kit/views/settings" }
+origami-panes = { path = "origami-kit/panes" }
+# origami-view-settings = { path = "origami-kit/views/settings" }
 origami-vulkan-bridge = { path = "origami-kit/vulkan-bridge" }
 origami-slint = { path = "origami-slint" }
 origami-slint-build = { path = "origami-slint-build" }
-ayame = { git = "https://github.com/kakusika/ayame" }
+# ayame = { git = "https://github.com/kakusika/ayame" }
 ayame-colors = { path = "ayame/colors" }
 ayame-config = { path = "ayame/config" }
 ayame-icons = { path = "ayame/icons" }

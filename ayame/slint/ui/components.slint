@@ -29,6 +29,8 @@ export component AppButton inherits Rectangle {
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
 
     label := Text {
+        width: 100%;
+        height: 100%;
         text: root.text;
         color: (root.primary || root.destructive) ? white : Tokens.text-primary;
         font-size: Tokens.font-size-normal;
@@ -54,9 +56,9 @@ export component ToggleSwitch inherits Rectangle {
 
     layout := HorizontalLayout {
         spacing: Tokens.spacing-medium;
-        alignment: start;
 
         if root.text != "": Text {
+            height: 100%;
             text: root.text;
             color: Tokens.text-primary;
             font-size: Tokens.font-size-normal;
@@ -114,18 +116,28 @@ export component DropdownButton inherits Rectangle {
     HorizontalLayout {
         padding-left: Tokens.spacing-medium;
         padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+
         Text {
+            height: 100%;
             text: root.text;
             color: Tokens.text-primary;
             font-size: Tokens.font-size-normal;
             vertical-alignment: center;
             horizontal-stretch: 1;
         }
-        Icon {
-            source: @image-url("icons/chevron-down.svg");
-            color: Tokens.text-secondary;
+
+        Rectangle {
             width: 14px;
-            height: 14px;
+            height: 100%;
+
+            Icon {
+                y: (parent.height - self.height) / 2;
+                source: @image-url("icons/chevron-down.svg");
+                color: Tokens.text-secondary;
+                width: 14px;
+                height: 14px;
+            }
         }
     }
 
@@ -238,6 +250,10 @@ export component OptionSlider inherits Rectangle {
 
         track := Rectangle {
             height: 24px;
+
+            property <float> progress: root.maximum > root.minimum ? max(0.0, min(1.0, (root.value - root.minimum) / (root.maximum - root.minimum))) : 0.0;
+
+            // Background track
             Rectangle {
                 y: (parent.height - self.height) / 2;
                 height: 6px;
@@ -247,38 +263,46 @@ export component OptionSlider inherits Rectangle {
                 border-width: Tokens.border-width;
                 border-color: Tokens.border;
             }
+
+            // Filled active track from left edge to handle center
             Rectangle {
                 y: (parent.height - self.height) / 2;
                 height: 6px;
-                width: parent.width * (root.maximum > root.minimum ? (root.value - root.minimum) / (root.maximum - root.minimum) : 0);
+                x: 0px;
+                width: handle.x + handle.width / 2;
                 border-radius: 3px;
                 background: Tokens.accent;
             }
+
+            // Draggable handle knob
             handle := Rectangle {
-                width: slider-touch.pressed ? 22px : (slider-touch.has-hover ? 18px : 16px);
-                height: slider-touch.pressed ? 22px : (slider-touch.has-hover ? 18px : 16px);
+                width: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
+                height: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
                 border-radius: self.height / 2;
                 background: slider-touch.pressed ? Tokens.accent.brighter(0.2) : white;
                 border-width: slider-touch.pressed ? 3px : (slider-touch.has-hover ? 2px : 1px);
                 border-color: slider-touch.pressed ? Tokens.accent : Tokens.border;
                 y: (parent.height - self.height) / 2;
-                x: (parent.width - self.width) * (root.maximum > root.minimum ? (root.value - root.minimum) / (root.maximum - root.minimum) : 0);
+                x: (parent.width - self.width) * track.progress;
                 animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
                 animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
                 animate background { duration: Tokens.anim-very-short * 1ms; }
                 animate border-color { duration: Tokens.anim-very-short * 1ms; }
             }
+
             slider-touch := TouchArea {
                 mouse-cursor: pointer;
                 moved => {
-                    if (self.pressed) {
+                    if (self.pressed && track.width > 0px) {
                         root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
                         root.value-changed(root.value);
                     }
                 }
                 clicked => {
-                    root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
-                    root.value-changed(root.value);
+                    if (track.width > 0px) {
+                        root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
+                        root.value-changed(root.value);
+                    }
                 }
             }
         }
@@ -313,38 +337,53 @@ export component CollapsibleSection inherits Rectangle {
             HorizontalLayout {
                 padding-left: Tokens.spacing-medium;
                 padding-right: Tokens.spacing-medium;
-                spacing: Tokens.spacing-medium;
+                spacing: Tokens.spacing-small;
 
-                header-click-area := HorizontalLayout {
-                    spacing: Tokens.spacing-small;
-                    horizontal-stretch: 1;
+                // Chevron container
+                Rectangle {
+                    width: 16px;
+                    height: 100%;
 
                     Icon {
+                        y: (parent.height - self.height) / 2;
                         source: root.expanded ? @image-url("icons/chevron-down.svg") : @image-url("icons/chevron-right.svg");
                         color: Tokens.text-primary;
                         width: 14px;
                         height: 14px;
-                        vertical-alignment: center;
-                    }
-
-                    Text {
-                        text: root.title;
-                        color: Tokens.text-primary;
-                        font-size: Tokens.font-size-normal;
-                        font-weight: 600;
-                        vertical-alignment: center;
-                        horizontal-stretch: 1;
                     }
                 }
 
-                if root.show-toggle: ToggleSwitch {
-                    checked: root.toggle-checked;
-                    toggled(checked) => { root.toggle-requested(checked); }
+                // Title text (left aligned, full height vertically centered)
+                Text {
+                    height: 100%;
+                    text: root.title;
+                    color: Tokens.text-primary;
+                    font-size: Tokens.font-size-normal;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+
+                if root.show-toggle: toggle-wrap := Rectangle {
+                    width: 44px;
+                    height: 100%;
+
+                    ToggleSwitch {
+                        y: (parent.height - self.height) / 2;
+                        checked: root.toggle-checked;
+                        toggled(checked) => {
+                            root.toggle-checked = checked;
+                            root.toggle-requested(checked);
+                        }
+                    }
                 }
             }
 
             header-touch := TouchArea {
-                width: parent.width - (root.show-toggle ? 60px : 0px);
+                x: 0px;
+                y: 0px;
+                width: root.show-toggle ? parent.width - 50px : parent.width;
+                height: parent.height;
                 mouse-cursor: pointer;
                 clicked => { root.expanded = !root.expanded; }
             }
@@ -364,6 +403,8 @@ export component CollapsibleSection inherits Rectangle {
 export component SidebarCategoryList inherits Rectangle {
     in property <[string]> categories: [];
     in-out property <int> current-index: 0;
+    callback selected(int);
+    callback category-selected(int, string);
 
     width: 160px;
     background: Tokens.surface;
@@ -404,7 +445,11 @@ export component SidebarCategoryList inherits Rectangle {
 
             itemArea := TouchArea {
                 mouse-cursor: pointer;
-                clicked => { root.current-index = i; }
+                clicked => {
+                    root.current-index = i;
+                    root.selected(i);
+                    root.category-selected(i, cat);
+                }
             }
         }
 
@@ -750,33 +795,45 @@ export component TabBar inherits Rectangle {
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             HorizontalLayout {
+                width: 100%;
+                height: 100%;
                 alignment: center;
                 spacing: Tokens.spacing-small;
 
-                if tab.has-icon: Icon {
-                    source: tab.icon;
-                    color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : Tokens.text-secondary;
+                if tab.has-icon: Rectangle {
                     width: 16px;
-                    height: 16px;
-                    vertical-alignment: center;
+                    height: 100%;
+
+                    Icon {
+                        y: (parent.height - self.height) / 2;
+                        source: tab.icon;
+                        color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : Tokens.text-secondary;
+                        width: 16px;
+                        height: 16px;
+                    }
                 }
 
                 Text {
+                    height: 100%;
                     text: tab.title;
                     color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : (tab-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
                     font-size: Tokens.font-size-normal;
                     font-weight: i == root.current-index ? 600 : 400;
                     vertical-alignment: center;
+                    horizontal-alignment: center;
                     animate color { duration: Tokens.anim-very-short * 1ms; }
                 }
 
                 if tab.badge != "": Rectangle {
+                    y: (parent.height - self.height) / 2;
                     background: i == root.current-index ? (root.pill-style ? white.with-alpha(0.25) : Tokens.accent) : Tokens.surface-raised;
                     border-radius: 6px;
                     height: 16px;
                     width: max(16px, badge-text.preferred-width + 6px);
 
                     badge-text := Text {
+                        width: 100%;
+                        height: 100%;
                         text: tab.badge;
                         color: i == root.current-index ? white : Tokens.text-secondary;
                         font-size: 10px;
@@ -844,24 +901,45 @@ export component ButtonGroup inherits Rectangle {
             background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
-            item-content := HorizontalLayout {
+            if !item.has-icon: Text {
+                width: 100%;
+                height: 100%;
+                text: item.text;
+                color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                font-size: Tokens.font-size-normal;
+                font-weight: i == root.selected-index ? 600 : 400;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+                animate color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            if item.has-icon: HorizontalLayout {
+                width: 100%;
+                height: 100%;
                 spacing: Tokens.spacing-small;
                 alignment: center;
 
-                if item.has-icon: Icon {
-                    source: item.icon;
-                    color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                Rectangle {
                     width: 14px;
-                    height: 14px;
-                    vertical-alignment: center;
+                    height: 100%;
+
+                    Icon {
+                        y: (parent.height - self.height) / 2;
+                        source: item.icon;
+                        color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                        width: 14px;
+                        height: 14px;
+                    }
                 }
 
                 if item.text != "": Text {
+                    height: 100%;
                     text: item.text;
                     color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
                     font-size: Tokens.font-size-normal;
                     font-weight: i == root.selected-index ? 600 : 400;
                     vertical-alignment: center;
+                    horizontal-alignment: center;
                     animate color { duration: Tokens.anim-very-short * 1ms; }
                 }
             }

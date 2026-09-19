@@ -2,12 +2,12 @@ import { Tokens } from "@ayame/tokens.slint";
 import { Icon, Icons } from "@ayame/icons.slint";
 
 // Slint port of origami/qml/floating/FloatingWindow.qml.
-// Draggable, resizable, minimizable floating virtual window widget.
+// Draggable, 8-way resizable, minimizable floating virtual window widget.
 export component FloatingWindow inherits Rectangle {
     in-out property <length> window-x: 40px;
     in-out property <length> window-y: 40px;
-    in-out property <length> window-width: 320px;
-    in-out property <length> window-height: 240px;
+    in-out property <length> window-width: 340px;
+    in-out property <length> window-height: 260px;
 
     in property <string> title: "Floating Window";
     in-out property <bool> is-minimized: false;
@@ -17,26 +17,32 @@ export component FloatingWindow inherits Rectangle {
     callback closed();
     callback focused();
 
-    // Internal drag state
+    // Internal drag & resize state
     property <length> drag-start-x: 0px;
     property <length> drag-start-y: 0px;
-    property <length> resize-start-w: 0px;
-    property <length> resize-start-h: 0px;
+    property <length> geo-start-x: 0px;
+    property <length> geo-start-y: 0px;
+    property <length> geo-start-w: 0px;
+    property <length> geo-start-h: 0px;
 
     // Normal restored geometry
     property <length> normal-x: 40px;
     property <length> normal-y: 40px;
-    property <length> normal-w: 320px;
-    property <length> normal-h: 240px;
+    property <length> normal-w: 340px;
+    property <length> normal-h: 260px;
 
     in property <length> host-width: 800px;
     in property <length> host-height: 600px;
 
+    property <length> min-w: 220px;
+    property <length> min-h: 120px;
+    property <length> resize-border: 6px;
+
     visible: root.is-open;
     x: root.is-maximized ? 0px : root.window-x;
     y: root.is-maximized ? 0px : root.window-y;
-    width: root.is-maximized ? root.host-width : max(200px, root.window-width);
-    height: root.is-maximized ? root.host-height : (root.is-minimized ? 36px : max(100px, root.window-height));
+    width: root.is-maximized ? root.host-width : max(root.min-w, root.window-width);
+    height: root.is-maximized ? root.host-height : (root.is-minimized ? 36px : max(root.min-h, root.window-height));
 
     background: Tokens.surface-raised;
     border-radius: root.is-maximized ? 0px : Tokens.corner-radius + 2px;
@@ -56,26 +62,26 @@ export component FloatingWindow inherits Rectangle {
                 padding-left: Tokens.spacing-medium;
                 padding-right: Tokens.spacing-small;
                 spacing: Tokens.spacing-small;
-                alignment: center;
 
                 // Window Icon / Indicator
                 Rectangle {
-                    width: 14px;
-                    height: 14px;
+                    y: (parent.height - self.height) / 2;
+                    width: 16px;
+                    height: 16px;
                     border-radius: 3px;
                     background: Tokens.accent;
 
                     Text {
                         text: "W";
                         color: white;
-                        font-size: 8px;
+                        font-size: 9px;
                         font-weight: 800;
                         horizontal-alignment: center;
                         vertical-alignment: center;
                     }
                 }
 
-                // Window Title
+                // Window Title (stretches to fill available space, pushing buttons to right)
                 title-label := Text {
                     text: root.title;
                     color: Tokens.text-primary;
@@ -87,81 +93,86 @@ export component FloatingWindow inherits Rectangle {
                 }
 
                 // Window Control Buttons (Minimize, Maximize, Close)
-                min-btn := Rectangle {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 4px;
-                    background: min-touch.has-hover ? Tokens.hover : transparent;
+                buttons-row := HorizontalLayout {
+                    spacing: 2px;
+                    alignment: center;
 
-                    Text {
-                        text: root.is-minimized ? "□" : "—";
-                        font-size: 11px;
-                        color: Tokens.text-secondary;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
-                    }
+                    min-btn := Rectangle {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 4px;
+                        background: min-touch.has-hover ? Tokens.hover : transparent;
 
-                    min-touch := TouchArea {
-                        mouse-cursor: pointer;
-                        clicked => {
-                            root.is-minimized = !root.is-minimized;
+                        Text {
+                            text: root.is-minimized ? "□" : "—";
+                            font-size: 11px;
+                            color: Tokens.text-secondary;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
                         }
-                    }
-                }
 
-                max-btn := Rectangle {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 4px;
-                    background: max-touch.has-hover ? Tokens.hover : transparent;
-
-                    Text {
-                        text: root.is-maximized ? "❐" : "▢";
-                        font-size: 11px;
-                        color: Tokens.text-secondary;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
-                    }
-
-                    max-touch := TouchArea {
-                        mouse-cursor: pointer;
-                        clicked => {
-                            if (!root.is-maximized) {
-                                root.normal-x = root.window-x;
-                                root.normal-y = root.window-y;
-                                root.normal-w = root.window-width;
-                                root.normal-h = root.window-height;
-                                root.is-maximized = true;
-                            } else {
-                                root.window-x = root.normal-x;
-                                root.window-y = root.normal-y;
-                                root.window-width = root.normal-w;
-                                root.window-height = root.normal-h;
-                                root.is-maximized = false;
+                        min-touch := TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                root.is-minimized = !root.is-minimized;
                             }
                         }
                     }
-                }
 
-                close-btn := Rectangle {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 4px;
-                    background: close-touch.has-hover ? Tokens.destructive : transparent;
+                    max-btn := Rectangle {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 4px;
+                        background: max-touch.has-hover ? Tokens.hover : transparent;
 
-                    Text {
-                        text: "✕";
-                        font-size: 11px;
-                        color: close-touch.has-hover ? white : Tokens.text-secondary;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                        Text {
+                            text: root.is-maximized ? "❐" : "▢";
+                            font-size: 11px;
+                            color: Tokens.text-secondary;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+
+                        max-touch := TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                if (!root.is-maximized) {
+                                    root.normal-x = root.window-x;
+                                    root.normal-y = root.window-y;
+                                    root.normal-w = root.window-width;
+                                    root.normal-h = root.window-height;
+                                    root.is-maximized = true;
+                                } else {
+                                    root.window-x = root.normal-x;
+                                    root.window-y = root.normal-y;
+                                    root.window-width = root.normal-w;
+                                    root.window-height = root.normal-h;
+                                    root.is-maximized = false;
+                                }
+                            }
+                        }
                     }
 
-                    close-touch := TouchArea {
-                        mouse-cursor: pointer;
-                        clicked => {
-                            root.is-open = false;
-                            root.closed();
+                    close-btn := Rectangle {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 4px;
+                        background: close-touch.has-hover ? Tokens.destructive : transparent;
+
+                        Text {
+                            text: "✕";
+                            font-size: 11px;
+                            color: close-touch.has-hover ? white : Tokens.text-secondary;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+
+                        close-touch := TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                root.is-open = false;
+                                root.closed();
+                            }
                         }
                     }
                 }
@@ -169,7 +180,7 @@ export component FloatingWindow inherits Rectangle {
 
             header-touch := TouchArea {
                 mouse-cursor: move;
-                width: parent.width - 80px;
+                width: parent.width - 86px;
                 pointer-event(event) => {
                     if (event.kind == PointerEventKind.down) {
                         root.drag-start-x = self.mouse-x;
@@ -194,40 +205,182 @@ export component FloatingWindow inherits Rectangle {
             clip: true;
 
             @children
+        }
+    }
 
-            // Bottom-right Resize Grip Handle
-            if !root.is-maximized: resize-handle := Rectangle {
-                x: parent.width - 16px;
-                y: parent.height - 16px;
-                width: 16px;
-                height: 16px;
-                background: resize-touch.has-hover ? Tokens.accent.transparentize(50%) : transparent;
+    // --- 8-direction Resize Perimeter Handles (Active when not maximized) ---
+    if !root.is-maximized && !root.is-minimized: top-edge := TouchArea {
+        x: root.resize-border;
+        y: 0px;
+        width: parent.width - root.resize-border * 2;
+        height: root.resize-border;
+        mouse-cursor: MouseCursor.n-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-y = root.window-y;
+                root.geo-start-h = root.window-height;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-y = root.geo-start-y + min(root.geo-start-h - root.min-h, self.mouse-y - root.drag-start-y);
+                root.window-height = max(root.min-h, root.geo-start-h - (self.mouse-y - root.drag-start-y));
+            }
+        }
+    }
 
-                Text {
-                    text: "◢";
-                    font-size: 10px;
-                    color: resize-touch.has-hover ? Tokens.accent : Tokens.text-disabled;
-                    horizontal-alignment: right;
-                    vertical-alignment: bottom;
-                }
+    if !root.is-maximized && !root.is-minimized: bottom-edge := TouchArea {
+        x: root.resize-border;
+        y: parent.height - root.resize-border;
+        width: parent.width - root.resize-border * 2;
+        height: root.resize-border;
+        mouse-cursor: MouseCursor.s-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-h = root.window-height;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-height = max(root.min-h, root.geo-start-h + (self.mouse-y - root.drag-start-y));
+            }
+        }
+    }
 
-                resize-touch := TouchArea {
-                    mouse-cursor: se-resize;
-                    pointer-event(event) => {
-                        if (event.kind == PointerEventKind.down) {
-                            root.resize-start-w = root.window-width;
-                            root.resize-start-h = root.window-height;
-                            root.drag-start-x = self.mouse-x;
-                            root.drag-start-y = self.mouse-y;
-                        }
-                    }
-                    moved => {
-                        if (self.pressed) {
-                            root.window-width = max(200px, root.window-width + self.mouse-x - root.drag-start-x);
-                            root.window-height = max(100px, root.window-height + self.mouse-y - root.drag-start-y);
-                        }
-                    }
-                }
+    if !root.is-maximized && !root.is-minimized: left-edge := TouchArea {
+        x: 0px;
+        y: root.resize-border;
+        width: root.resize-border;
+        height: parent.height - root.resize-border * 2;
+        mouse-cursor: MouseCursor.w-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-x = root.window-x;
+                root.geo-start-w = root.window-width;
+                root.drag-start-x = self.mouse-x;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-x = root.geo-start-x + min(root.geo-start-w - root.min-w, self.mouse-x - root.drag-start-x);
+                root.window-width = max(root.min-w, root.geo-start-w - (self.mouse-x - root.drag-start-x));
+            }
+        }
+    }
+
+    if !root.is-maximized && !root.is-minimized: right-edge := TouchArea {
+        x: parent.width - root.resize-border;
+        y: root.resize-border;
+        width: root.resize-border;
+        height: parent.height - root.resize-border * 2;
+        mouse-cursor: MouseCursor.e-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-w = root.window-width;
+                root.drag-start-x = self.mouse-x;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-width = max(root.min-w, root.geo-start-w + (self.mouse-x - root.drag-start-x));
+            }
+        }
+    }
+
+    if !root.is-maximized && !root.is-minimized: top-left-corner := TouchArea {
+        x: 0px;
+        y: 0px;
+        width: root.resize-border * 2;
+        height: root.resize-border * 2;
+        mouse-cursor: MouseCursor.nw-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-x = root.window-x;
+                root.geo-start-y = root.window-y;
+                root.geo-start-w = root.window-width;
+                root.geo-start-h = root.window-height;
+                root.drag-start-x = self.mouse-x;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-x = root.geo-start-x + min(root.geo-start-w - root.min-w, self.mouse-x - root.drag-start-x);
+                root.window-y = root.geo-start-y + min(root.geo-start-h - root.min-h, self.mouse-y - root.drag-start-y);
+                root.window-width = max(root.min-w, root.geo-start-w - (self.mouse-x - root.drag-start-x));
+                root.window-height = max(root.min-h, root.geo-start-h - (self.mouse-y - root.drag-start-y));
+            }
+        }
+    }
+
+    if !root.is-maximized && !root.is-minimized: top-right-corner := TouchArea {
+        x: parent.width - root.resize-border * 2;
+        y: 0px;
+        width: root.resize-border * 2;
+        height: root.resize-border * 2;
+        mouse-cursor: MouseCursor.ne-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-y = root.window-y;
+                root.geo-start-w = root.window-width;
+                root.geo-start-h = root.window-height;
+                root.drag-start-x = self.mouse-x;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-y = root.geo-start-y + min(root.geo-start-h - root.min-h, self.mouse-y - root.drag-start-y);
+                root.window-width = max(root.min-w, root.geo-start-w + (self.mouse-x - root.drag-start-x));
+                root.window-height = max(root.min-h, root.geo-start-h - (self.mouse-y - root.drag-start-y));
+            }
+        }
+    }
+
+    if !root.is-maximized && !root.is-minimized: bottom-left-corner := TouchArea {
+        x: 0px;
+        y: parent.height - root.resize-border * 2;
+        width: root.resize-border * 2;
+        height: root.resize-border * 2;
+        mouse-cursor: MouseCursor.sw-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-x = root.window-x;
+                root.geo-start-w = root.window-width;
+                root.geo-start-h = root.window-height;
+                root.drag-start-x = self.mouse-x;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-x = root.geo-start-x + min(root.geo-start-w - root.min-w, self.mouse-x - root.drag-start-x);
+                root.window-width = max(root.min-w, root.geo-start-w - (self.mouse-x - root.drag-start-x));
+                root.window-height = max(root.min-h, root.geo-start-h + (self.mouse-y - root.drag-start-y));
+            }
+        }
+    }
+
+    if !root.is-maximized && !root.is-minimized: bottom-right-corner := TouchArea {
+        x: parent.width - root.resize-border * 2;
+        y: parent.height - root.resize-border * 2;
+        width: root.resize-border * 2;
+        height: root.resize-border * 2;
+        mouse-cursor: MouseCursor.se-resize;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.geo-start-w = root.window-width;
+                root.geo-start-h = root.window-height;
+                root.drag-start-x = self.mouse-x;
+                root.drag-start-y = self.mouse-y;
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.window-width = max(root.min-w, root.geo-start-w + (self.mouse-x - root.drag-start-x));
+                root.window-height = max(root.min-h, root.geo-start-h + (self.mouse-y - root.drag-start-y));
             }
         }
     }

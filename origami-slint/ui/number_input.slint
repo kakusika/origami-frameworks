@@ -1,94 +1,155 @@
 import { Tokens } from "@ayame/tokens.slint";
 
-// Slint port of origami/qml/widgets/inputs/NumberInput.qml.
-// Spin-box style numerical input with increment/decrement buttons and range bounding.
+// Blender-style number field: drag-to-scrub / click-to-edit + step arrows.
+// Full Slint port of origami/qml/widgets/inputs/NumberInput.qml.
 export component NumberInput inherits Rectangle {
     in-out property <float> value: 0;
     in property <float> minimum: 0;
     in property <float> maximum: 100;
     in property <float> step: 1;
     in property <int> decimals: 0;
+    in property <string> label: "";
     in property <string> prefix: "";
     in property <string> suffix: "";
+    in property <bool> enabled: true;
     callback value-changed(float);
 
+    property <bool> editing: false;
+    property <length> drag-threshold: 3px;
+    property <length> press-x: 0px;
+    property <float> start-value: 0;
+    property <bool> is-dragging: false;
+
     height: 30px;
-    width: 110px;
-    background: Tokens.background;
+    width: 140px;
+    background: Tokens.surface;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: val-input.has-focus ? Tokens.accent : Tokens.border;
+    border-color: root.editing ? Tokens.accent : (drag-touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+    opacity: root.enabled ? 1.0 : 0.45;
+    clip: true;
 
-    animate border-color { duration: 100ms; }
+    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
 
     HorizontalLayout {
-        padding-left: Tokens.spacing-small;
-        padding-right: 2px;
-        spacing: 2px;
-        alignment: center;
+        padding: 0px;
+        spacing: 0px;
 
-        val-input := TextInput {
-            horizontal-stretch: 1;
-            text: (root.prefix != "" ? root.prefix + " " : "") + root.value + (root.suffix != "" ? " " + root.suffix : "");
-            color: Tokens.text-primary;
-            font-size: Tokens.font-size-small;
-            font-weight: 500;
-            vertical-alignment: center;
-            edited => {
-                // Parse float on edit
-                // Handled in callback
+        // Left Step Down Arrow Button (<)
+        step-down-rect := Rectangle {
+            width: 22px;
+            height: parent.height;
+            background: step-down-touch.has-hover ? Tokens.hover : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            Text {
+                text: "‹";
+                color: root.value <= root.minimum ? Tokens.text-disabled : (step-down-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
             }
-            accepted => {
-                // Commit value
+
+            step-down-touch := TouchArea {
+                enabled: root.enabled && !root.editing && root.value > root.minimum;
+                mouse-cursor: self.enabled ? pointer : default;
+                clicked => {
+                    root.value = max(root.minimum, root.value - root.step);
+                    root.value-changed(root.value);
+                }
             }
         }
 
-        // Stepper buttons
-        VerticalLayout {
-            width: 18px;
-            spacing: 1px;
+        // Center Scrub / Edit Area
+        center-area := Rectangle {
+            horizontal-stretch: 1;
+            height: parent.height;
 
-            up-btn := Rectangle {
-                height: 12px;
-                border-radius: 2px;
-                background: up-touch.has-hover ? Tokens.hover : transparent;
+            // Display Label / Value when not editing
+            if !root.editing: display-text := Text {
+                width: 100%;
+                height: 100%;
+                text: (root.label != "" ? root.label + ": " : "") +
+                      (root.prefix != "" ? root.prefix + " " : "") +
+                      (root.decimals > 0 ? (Math.round(root.value * Math.pow(10, root.decimals)) / Math.pow(10, root.decimals)) : Math.round(root.value)) +
+                      (root.suffix != "" ? " " + root.suffix : "");
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                font-weight: 500;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
 
-                Text {
-                    text: "▲";
-                    font-size: 8px;
-                    color: up-touch.has-hover ? Tokens.accent : Tokens.text-secondary;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                }
-
-                up-touch := TouchArea {
-                    mouse-cursor: pointer;
-                    clicked => {
-                        root.value = min(root.maximum, root.value + root.step);
-                        root.value-changed(root.value);
-                    }
+            // Text Input Field when in edit mode
+            if root.editing: edit-input := TextInput {
+                width: 100%;
+                height: 100%;
+                text: root.value;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                font-weight: 600;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                accepted => {
+                    root.editing = false;
                 }
             }
 
-            down-btn := Rectangle {
-                height: 12px;
-                border-radius: 2px;
-                background: down-touch.has-hover ? Tokens.hover : transparent;
+            drag-touch := TouchArea {
+                enabled: root.enabled && !root.editing;
+                mouse-cursor: MouseCursor.ew-resize;
 
-                Text {
-                    text: "▼";
-                    font-size: 8px;
-                    color: down-touch.has-hover ? Tokens.accent : Tokens.text-secondary;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
+                pointer-event(event) => {
+                    if (event.kind == PointerEventKind.down) {
+                        root.press-x = self.mouse-x;
+                        root.start-value = root.value;
+                        root.is-dragging = false;
+                    }
+                    if (event.kind == PointerEventKind.up) {
+                        if (!root.is-dragging) {
+                            root.editing = true;
+                        }
+                        root.is-dragging = false;
+                    }
                 }
 
-                down-touch := TouchArea {
-                    mouse-cursor: pointer;
-                    clicked => {
-                        root.value = max(root.minimum, root.value - root.step);
-                        root.value-changed(root.value);
+                moved => {
+                    if (self.pressed) {
+                        if (!root.is-dragging && Math.abs(self.mouse-x - root.press-x) >= root.drag-threshold) {
+                            root.is-dragging = true;
+                        }
+                        if (root.is-dragging && center-area.width > 0px) {
+                            root.value = max(root.minimum, min(root.maximum, root.start-value + ((self.mouse-x - root.press-x) / center-area.width) * (root.maximum - root.minimum)));
+                            root.value-changed(root.value);
+                        }
                     }
+                }
+            }
+        }
+
+        // Right Step Up Arrow Button (>)
+        step-up-rect := Rectangle {
+            width: 22px;
+            height: parent.height;
+            background: step-up-touch.has-hover ? Tokens.hover : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            Text {
+                text: "›";
+                color: root.value >= root.maximum ? Tokens.text-disabled : (step-up-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            step-up-touch := TouchArea {
+                enabled: root.enabled && !root.editing && root.value < root.maximum;
+                mouse-cursor: self.enabled ? pointer : default;
+                clicked => {
+                    root.value = min(root.maximum, root.value + root.step);
+                    root.value-changed(root.value);
                 }
             }
         }

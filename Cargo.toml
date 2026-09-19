@@ -34,7 +34,6 @@ origami-panes = { path = "origami-kit/panes" }
 origami-vulkan-bridge = { path = "origami-kit/vulkan-bridge" }
 origami-slint = { path = "origami-slint" }
 origami-slint-build = { path = "origami-slint-build" }
-# ayame = { git = "https://github.com/kakusika/ayame" }
 ayame-colors = { path = "ayame/colors" }
 ayame-config = { path = "ayame/config" }
 ayame-icons = { path = "ayame/icons" }
@@ -61,22 +60,3 @@ tracy-client = { version = "0.18", default-features = false }
 time = "0.3"
 trash = "5.2.6"
 toml = "0.8"
-
-# cxx-qt-build 0.9.1 unconditionally tries to write a `.qmlls.ini` IDE-helper
-# file into its own CARGO_MANIFEST_DIR. That panics whenever the crate using
-# it (e.g. `ayame`, pulled in as a `git` dependency) is vendored into a
-# read-only source tree, as crane/Nix does for non-path dependencies. Patched
-# on a fork until this is fixed upstream: https://github.com/kakusika/cxx-qt/tree/fix/qmlls-ini-readonly-source
-#
-# cxx-qt, cxx-qt-build, cxx-qt-gen, cxx-qt-lib, cxx-qt-macro and
-# qt-build-utils all live in that one KDAB/cxx-qt workspace, so all of them
-# must be patched to the same rev together -- otherwise Cargo resolves two
-# copies of the sibling crates (one from crates.io, one from git) and the
-# build fails with type mismatches across the crate boundary.
-[patch.crates-io]
-cxx-qt = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }
-cxx-qt-build = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }
-cxx-qt-gen = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }
-cxx-qt-lib = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }
-cxx-qt-macro = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }
-qt-build-utils = { git = "https://github.com/kakusika/cxx-qt", branch = "fix/qmlls-ini-readonly-source" }

@@ -26,7 +26,6 @@ flake-parts.lib.mkFlake { inherit inputs; } {
 
       devShells.default = pkgs.callPackage ./dev.nix {
         inherit inputs craneLib;
-        ayame = inputs.ayame.packages.${pkgs.stdenv.hostPlatform.system}.default;
       };
 
       treefmt = import ./formatter.nix;

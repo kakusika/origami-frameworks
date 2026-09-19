@@ -9,7 +9,7 @@ readme = "README.md"
 ayame = { workspace = true }
 origami-config = { workspace = true }
 
-# === Crates.io ===
+#[ Crates.io ]
 cxx = { workspace = true }
 cxx-qt = { workspace = true }
 cxx-qt-lib = { workspace = true, features = ["qt_full"] }

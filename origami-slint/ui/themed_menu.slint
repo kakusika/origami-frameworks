@@ -52,7 +52,7 @@ export component ThemedMenu inherits PopupWindow {
     close-policy: PopupClosePolicy.close-on-click-outside;
 
     Rectangle {
-        width: layout.preferred-width + Tokens.spacing-small * 2;
+        width: max(180px, layout.preferred-width + Tokens.spacing-small * 2);
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
         border-color: Tokens.border;
@@ -94,6 +94,7 @@ export component ThemedMenu inherits PopupWindow {
                         padding-left: Tokens.spacing-medium;
                         padding-right: Tokens.spacing-medium;
                         spacing: Tokens.spacing-small;
+                        alignment: center;
 
                         if row.has-icon: Icon {
                             source: row.icon;
@@ -134,10 +135,11 @@ export component ThemedMenu inherits PopupWindow {
                     submenu-popup := PopupWindow {
                         x: parent.width + 4px;
                         y: 0px;
-                        width: sub-layout.preferred-width + Tokens.spacing-small * 2;
+                        width: max(160px, sub-layout.preferred-width + Tokens.spacing-small * 2);
                         close-policy: PopupClosePolicy.close-on-click-outside;
 
                         Rectangle {
+                            width: max(160px, sub-layout.preferred-width + Tokens.spacing-small * 2);
                             background: Tokens.surface-raised;
                             border-width: Tokens.border-width;
                             border-color: Tokens.border;
@@ -158,6 +160,7 @@ export component ThemedMenu inherits PopupWindow {
                                         padding-left: Tokens.spacing-medium;
                                         padding-right: Tokens.spacing-medium;
                                         spacing: Tokens.spacing-small;
+                                        alignment: center;
 
                                         if sub.has-icon: Icon {
                                             source: sub.icon;

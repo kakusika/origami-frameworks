@@ -40,31 +40,51 @@ export component ToggleGroup inherits Rectangle {
         padding: 3px;
         spacing: 0px;
 
-        for item[i] in root.items: Rectangle {
+        for item[i] in root.items: item-btn := Rectangle {
             width: root.item-w;
             height: parent.height;
             border-radius: Tokens.corner-radius;
             background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
-            item-layout := HorizontalLayout {
+            if !item.has-icon: Text {
+                width: 100%;
+                height: 100%;
+                text: item.label;
+                color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                font-size: Tokens.font-size-normal;
+                font-weight: i == root.selected-index ? 600 : 400;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                animate color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            if item.has-icon: HorizontalLayout {
+                width: 100%;
+                height: 100%;
                 spacing: Tokens.spacing-small;
                 alignment: center;
 
-                if item.has-icon: Icon {
-                    source: item.icon;
-                    color: i == root.selected-index ? white : Tokens.text-secondary;
+                Rectangle {
                     width: 14px;
-                    height: 14px;
-                    vertical-alignment: center;
+                    height: 100%;
+                    Icon {
+                        y: (parent.height - self.height) / 2;
+                        source: item.icon;
+                        color: i == root.selected-index ? white : Tokens.text-secondary;
+                        width: 14px;
+                        height: 14px;
+                    }
                 }
 
-                if item.label != "": Text {
+                Text {
+                    height: 100%;
                     text: item.label;
                     color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
                     font-size: Tokens.font-size-normal;
                     font-weight: i == root.selected-index ? 600 : 400;
                     vertical-alignment: center;
+                    horizontal-alignment: center;
                     animate color { duration: Tokens.anim-very-short * 1ms; }
                 }
             }

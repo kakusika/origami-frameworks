@@ -1,0 +1,9 @@
+[package]
+name = "origami-panes"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

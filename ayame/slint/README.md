@@ -17,11 +17,11 @@ Add `ayame-slint` to dependencies and `ayame-slint-build` / `slint-build` to bui
 ```toml
 [dependencies]
 slint = "1.17"
-ayame-slint = { git = "https://github.com/kakusika/ayame" }
+ayame-slint = { workspace = true }
 
 [build-dependencies]
 slint-build = "1.17"
-ayame-slint-build = { git = "https://github.com/kakusika/ayame" }
+ayame-slint-build = { workspace = true }
 ```
 
 ### 2. In `build.rs`

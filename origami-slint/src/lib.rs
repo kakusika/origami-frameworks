@@ -5,5 +5,7 @@
 //! call sites don't need to change.
 
 pub use origami_panes::drop;
+pub use origami_panes::edit;
 pub use origami_panes::layout;
+pub use origami_panes::outline;
 pub use origami_panes::pane_tree;

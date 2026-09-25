@@ -85,6 +85,35 @@ impl PaneNode {
         current.max(child_max)
     }
 
+    /// Finds a node by ID (shared reference).
+    pub fn find(&self, target_id: i32) -> Option<&PaneNode> {
+        if self.id() == Some(target_id) {
+            return Some(self);
+        }
+        match self {
+            PaneNode::Split { children, .. } => {
+                children.iter().find_map(|c| c.node.find(target_id))
+            }
+            PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
+                children.iter().find_map(|c| c.node.find(target_id))
+            }
+            PaneNode::Pane { .. } => None,
+        }
+    }
+
+    /// Position of `tab_id` within the tabs/drawer group `group_id`,
+    /// searching the whole subtree. Slint's pane host reports a dragged tab
+    /// as `(group_id, child_id)`, while `drop::apply_index_drop` and
+    /// `DragSource` need an index.
+    pub fn tab_index(&self, group_id: i32, tab_id: i32) -> Option<usize> {
+        match self.find(group_id)? {
+            PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
+                children.iter().position(|c| c.node.id() == Some(tab_id))
+            }
+            _ => None,
+        }
+    }
+
     /// Finds a node by ID (mutable reference)
     pub fn find_node_mut(&mut self, target_id: i32) -> Option<&mut PaneNode> {
         if self.id() == Some(target_id) {

@@ -148,9 +148,42 @@ pub struct PaneTree {
 impl PaneTree {
     pub fn new(root: Option<PaneNode>) -> Self {
         let max_id = root.as_ref().map(|r| r.max_id()).unwrap_or(0);
-        Self {
+        let mut tree = Self {
             root,
             next_id: max_id + 1,
+        };
+        tree.assign_missing_ids();
+        tree
+    }
+
+    /// Gives every split that has no id one. Operations that create a split
+    /// (`split_pane`, `split_root`, a drop that wraps a pane in a new split)
+    /// leave its id empty, and a split without an id cannot be resized: its
+    /// divider is reported with id -1, which nothing can look up. The
+    /// mutating methods here and in `drop` call this before returning, so a
+    /// tree built through them always has resizable dividers.
+    pub fn assign_missing_ids(&mut self) {
+        fn walk(node: &mut PaneNode, next_id: &mut i32) {
+            match node {
+                PaneNode::Split { id, children, .. } => {
+                    if id.is_none() {
+                        *id = Some(*next_id);
+                        *next_id += 1;
+                    }
+                    for child in children {
+                        walk(&mut child.node, next_id);
+                    }
+                }
+                PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
+                    for child in children {
+                        walk(&mut child.node, next_id);
+                    }
+                }
+                PaneNode::Pane { .. } => {}
+            }
+        }
+        if let Some(root) = self.root.as_mut() {
+            walk(root, &mut self.next_id);
         }
     }
 
@@ -295,6 +328,18 @@ impl PaneTree {
         new_view_type: &str,
         new_title: &str,
     ) -> Option<i32> {
+        let result = self.split_pane_inner(target_id, orientation, new_view_type, new_title);
+        self.assign_missing_ids();
+        result
+    }
+
+    fn split_pane_inner(
+        &mut self,
+        target_id: i32,
+        orientation: &str,
+        new_view_type: &str,
+        new_title: &str,
+    ) -> Option<i32> {
         let new_id = self.gen_id();
         let new_pane = PaneNode::Pane {
             id: new_id,
@@ -314,6 +359,18 @@ impl PaneTree {
     /// Split the root node with a new pane, placing the new pane at the root
     /// boundary specified by `orientation` and `first` (true = first/left/top, false = last/right/bottom).
     pub fn split_root(
+        &mut self,
+        orientation: &str,
+        first: bool,
+        new_view_type: &str,
+        new_title: &str,
+    ) -> Option<i32> {
+        let result = self.split_root_inner(orientation, first, new_view_type, new_title);
+        self.assign_missing_ids();
+        result
+    }
+
+    fn split_root_inner(
         &mut self,
         orientation: &str,
         first: bool,
@@ -425,6 +482,18 @@ impl PaneTree {
 
     /// Move a tab from `from_group_id` at `from_index` to `to_group_id` at `to_index`.
     pub fn move_tab(
+        &mut self,
+        from_group_id: i32,
+        from_index: usize,
+        to_group_id: i32,
+        to_index: usize,
+    ) -> bool {
+        let moved = self.move_tab_inner(from_group_id, from_index, to_group_id, to_index);
+        self.assign_missing_ids();
+        moved
+    }
+
+    fn move_tab_inner(
         &mut self,
         from_group_id: i32,
         from_index: usize,
@@ -545,19 +614,20 @@ fn renormalize_sizes(children: &mut [SplitChild]) {
     }
 }
 
-/// Overwrites `container` in place with `remaining`'s content, keeping
-/// `container`'s own id where `remaining`'s node kind has one -- mirrors
+/// Overwrites `container` in place with `remaining`'s content -- mirrors
 /// PaneView.qml's `_collapseInto()`. Used when a "split" drops to a single
 /// remaining child, which then takes the collapsing split's place.
+///
+/// The survivor keeps its own id: ids of panes and groups are their identity
+/// (an app keys open files and editor groups by them), and the split that
+/// wrapped it is only structure. Only a survivor that is itself a split
+/// without an id adopts the container's.
 fn collapse_into(container: &mut PaneNode, remaining: PaneNode) {
-    let kept_id = container.id();
+    let container_id = container.id();
     *container = remaining;
-    match container {
-        PaneNode::Split { id, .. } => *id = kept_id,
-        PaneNode::Tabs { id, .. } | PaneNode::Drawer { id, .. } | PaneNode::Pane { id, .. } => {
-            if let Some(kept_id) = kept_id {
-                *id = kept_id;
-            }
+    if let PaneNode::Split { id, .. } = container {
+        if id.is_none() {
+            *id = container_id;
         }
     }
 }
@@ -1157,6 +1227,50 @@ mod tests {
         }
 
         assert!(!tree.remove_standalone(999));
+    }
+
+    #[test]
+    fn splits_created_by_split_pane_and_split_root_get_ids() {
+        let mut tree = PaneTree::new(Some(PaneNode::Pane {
+            id: 1,
+            title: "a".into(),
+            view_type: "text".into(),
+            props: json!({}),
+        }));
+        assert!(tree.split_pane(1, "horizontal", "text", "b").is_some());
+        let Some(PaneNode::Split { id: Some(first), .. }) = &tree.root else {
+            panic!("expected a split with an id, got {:?}", tree.root);
+        };
+        let first = *first;
+        assert!(tree.divider_baseline(first, 0).is_some());
+
+        assert!(tree.split_root("vertical", false, "text", "c").is_some());
+        let Some(PaneNode::Split { id: Some(second), .. }) = &tree.root else {
+            panic!("expected the new root split to have an id, got {:?}", tree.root);
+        };
+        assert_ne!(*second, first, "each split gets its own id");
+    }
+
+    #[test]
+    fn a_collapsing_split_leaves_the_survivor_its_own_id() {
+        // An app keys files and editor groups by pane/group id, so wrapping a
+        // pane in a split and later unwrapping it must not renumber it.
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: Some(50),
+            orientation: "horizontal".into(),
+            children: vec![
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Pane { id: 1, title: "a".into(), view_type: "text".into(), props: json!({}) },
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Tabs { id: 2, children: vec![], current_index: 0 },
+                },
+            ],
+        }));
+        assert!(tree.remove_standalone(1));
+        assert!(matches!(tree.root, Some(PaneNode::Tabs { id: 2, .. })), "got {:?}", tree.root);
     }
 
     #[test]

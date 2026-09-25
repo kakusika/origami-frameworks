@@ -290,13 +290,18 @@ export component PaneHost inherits Rectangle {
                             width: 120px;
                             close-policy: PopupClosePolicy.close-on-click-outside;
 
+                            // The popup needs a size of its own: on close, Slint repaints only the
+                            // area the popup covered, and an unsized popup covers nothing, leaving a
+                            // stale image of the menu behind.
+                            height: mode-list.preferred-height;
+
                             Rectangle {
                                 background: Tokens.surface-raised;
                                 border-width: Tokens.border-width;
                                 border-color: Tokens.border;
                                 border-radius: Tokens.corner-radius;
 
-                                VerticalLayout {
+                                mode-list := VerticalLayout {
                                     padding: 4px;
                                     spacing: 2px;
 
@@ -381,13 +386,18 @@ export component PaneHost inherits Rectangle {
                             width: 140px;
                             close-policy: PopupClosePolicy.close-on-click-outside;
 
+                            // The popup needs a size of its own: on close, Slint repaints only the
+                            // area the popup covered, and an unsized popup covers nothing, leaving a
+                            // stale image of the menu behind.
+                            height: file-list.preferred-height;
+
                             Rectangle {
                                 background: Tokens.surface-raised;
                                 border-width: Tokens.border-width;
                                 border-color: Tokens.border;
                                 border-radius: Tokens.corner-radius;
 
-                                VerticalLayout {
+                                file-list := VerticalLayout {
                                     padding: 4px;
                                     spacing: 2px;
 
@@ -492,13 +502,18 @@ export component PaneHost inherits Rectangle {
                             width: 150px;
                             close-policy: PopupClosePolicy.close-on-click-outside;
 
+                            // The popup needs a size of its own: on close, Slint repaints only the
+                            // area the popup covered, and an unsized popup covers nothing, leaving a
+                            // stale image of the menu behind.
+                            height: add-menu-list.preferred-height;
+
                             Rectangle {
                                 background: Tokens.surface-raised;
                                 border-width: Tokens.border-width;
                                 border-color: Tokens.border;
                                 border-radius: Tokens.corner-radius;
 
-                                VerticalLayout {
+                                add-menu-list := VerticalLayout {
                                     padding: 4px;
                                     spacing: 2px;
 
@@ -580,13 +595,18 @@ export component PaneHost inherits Rectangle {
                             width: 170px;
                             close-policy: PopupClosePolicy.close-on-click-outside;
 
+                            // The popup needs a size of its own: on close, Slint repaints only the
+                            // area the popup covered, and an unsized popup covers nothing, leaving a
+                            // stale image of the menu behind.
+                            height: view-list.preferred-height;
+
                             Rectangle {
                                 background: Tokens.surface-raised;
                                 border-width: Tokens.border-width;
                                 border-color: Tokens.border;
                                 border-radius: Tokens.corner-radius;
 
-                                VerticalLayout {
+                                view-list := VerticalLayout {
                                     padding: 4px;
                                     spacing: 2px;
 

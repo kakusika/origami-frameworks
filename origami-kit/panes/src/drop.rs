@@ -185,6 +185,12 @@ pub fn tab_insertion_line_rect(rects: &[PaneRect], group_id: i32, index: usize) 
 /// rightward within the same strip would always land one slot short of
 /// where it visually looked like it was dropped.
 pub fn apply_index_drop(tree: &mut PaneTree, source: DragSource, target_group_id: i32, index: usize) -> bool {
+    let applied = apply_index_drop_inner(tree, source, target_group_id, index);
+    tree.assign_missing_ids();
+    applied
+}
+
+fn apply_index_drop_inner(tree: &mut PaneTree, source: DragSource, target_group_id: i32, index: usize) -> bool {
     let Some(root) = tree.root.as_mut() else {
         return false;
     };
@@ -539,6 +545,12 @@ fn extract_standalone(node: &mut PaneNode, target_id: i32) -> Option<PaneNode> {
 /// original Split position no longer resolves, wrapped back in at the
 /// tree's root) so nothing is silently lost.
 pub fn apply_drop(tree: &mut PaneTree, source: DragSource, target_leaf_id: i32, zone: DropZone, is_root: bool) -> bool {
+    let applied = apply_drop_inner(tree, source, target_leaf_id, zone, is_root);
+    tree.assign_missing_ids();
+    applied
+}
+
+fn apply_drop_inner(tree: &mut PaneTree, source: DragSource, target_leaf_id: i32, zone: DropZone, is_root: bool) -> bool {
     let new_id = tree.gen_id();
 
     let Some(root) = tree.root.as_mut() else {
@@ -713,6 +725,67 @@ mod tests {
             }
         } else {
             panic!("expected Split root");
+        }
+    }
+
+    /// Every split id in the tree, in order.
+    fn split_ids(node: &PaneNode, out: &mut Vec<Option<i32>>) {
+        match node {
+            PaneNode::Split { id, children, .. } => {
+                out.push(*id);
+                children.iter().for_each(|c| split_ids(&c.node, out));
+            }
+            PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
+                children.iter().for_each(|c| split_ids(&c.node, out));
+            }
+            PaneNode::Pane { .. } => {}
+        }
+    }
+
+    #[test]
+    fn a_split_created_by_a_drop_gets_an_id_so_its_divider_can_be_resized() {
+        let mut tree = PaneTree::new(Some(PaneNode::Tabs {
+            id: 10,
+            current_index: 0,
+            children: vec![GroupChild { node: pane(1, "board") }, GroupChild { node: pane(2, "table") }],
+        }));
+        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 10, DropZone::Left, false));
+
+        let Some(PaneNode::Split { id: Some(split_id), .. }) = &tree.root else {
+            panic!("the new split needs an id, got {:?}", tree.root);
+        };
+        let split_id = *split_id;
+        assert!(tree.divider_baseline(split_id, 0).is_some(), "the divider must be resizable");
+    }
+
+    #[test]
+    fn nested_splits_created_by_drops_all_have_distinct_ids() {
+        // Split(0) [ pane 1, tabs 10 [pane 2, pane 3] ]: drag tab 3 onto the
+        // bottom of pane 1, which wraps pane 1 in a new vertical split.
+        let mut tree = PaneTree::new(Some(PaneNode::Split {
+            id: Some(0),
+            orientation: "horizontal".to_string(),
+            children: vec![
+                SplitChild { size: 0.5, node: pane(1, "board") },
+                SplitChild {
+                    size: 0.5,
+                    node: PaneNode::Tabs {
+                        id: 10,
+                        current_index: 0,
+                        children: vec![GroupChild { node: pane(2, "table") }, GroupChild { node: pane(3, "text") }],
+                    },
+                },
+            ],
+        }));
+        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 1, DropZone::Bottom, false));
+
+        let mut ids = Vec::new();
+        split_ids(tree.root.as_ref().unwrap(), &mut ids);
+        assert_eq!(ids.len(), 2, "expected a nested split, got {ids:?}");
+        assert!(ids.iter().all(Option::is_some), "{ids:?}");
+        assert_ne!(ids[0], ids[1], "split ids must be distinct: {ids:?}");
+        for id in ids.into_iter().flatten() {
+            assert!(tree.divider_baseline(id, 0).is_some(), "split {id} must be resizable");
         }
     }
 

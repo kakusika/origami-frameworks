@@ -52,6 +52,11 @@ export component ThemedMenu inherits PopupWindow {
     close-policy: PopupClosePolicy.close-on-click-outside;
 
     Rectangle {
+        // Explicit x/y: a PopupWindow has no size of its own, and a child
+        // without them is centered in it, which would center the menu on the
+        // popup's (x, y) instead of hanging it from there.
+        x: 0px;
+        y: 0px;
         width: max(180px, layout.preferred-width + Tokens.spacing-small * 2);
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;

@@ -1,9 +1,9 @@
-import { Tokens } from "@ayame/tokens.slint";
-import { SectionLabel, AppButton, ToggleSwitch, DropdownButton, ColorSwatchRow, OptionSlider, CollapsibleSection, SidebarCategoryList, CheckBox, RadioButton, AppTextField, AppTextArea, ProgressBar, Badge, Divider, Card, ButtonGroup, ButtonGroupItem, ToolTip, TabBar, TabItem } from "@ayame/components.slint";
-import { Icons } from "@ayame/icons.slint";
+import { Tokens } from "@origami/tokens.slint";
+import { SectionLabel, AppButton, ToggleSwitch, DropdownButton, ColorSwatchRow, OptionSlider, CollapsibleSection, SidebarCategoryList, CheckBox, RadioButton, AppTextField, AppTextArea, ProgressBar, Badge, Divider, Card, ButtonGroup, ButtonGroupItem, ToolTip, TabBar, TabItem } from "@origami/components.slint";
+import { Icons } from "@origami/icons.slint";
 
-// Live showcase of every `ayame-slint` basic design system component grouped into collapsible sections.
-export component AyamePage inherits Rectangle {
+// Live showcase of every basic design-system component grouped into collapsible sections.
+export component FoundationPage inherits Rectangle {
     property <string> status: "Interact with a widget below to see its callback fire here.";
 
     property <float> slider-value: 0.4;
@@ -11,7 +11,7 @@ export component AyamePage inherits Rectangle {
     property <int> swatch-selected: 3;
     property <bool> demo-checkbox: true;
     property <int> demo-radio: 0;
-    property <string> demo-input: "Ayame Slint UI";
+    property <string> demo-input: "Origami Slint UI";
     property <float> demo-progress: 0.68;
     property <int> demo-button-group: 0;
     property <int> demo-tab: 0;
@@ -41,13 +41,13 @@ export component AyamePage inherits Rectangle {
                     spacing: Tokens.spacing-small;
 
                     Text {
-                        text: "ayame-slint Foundation Components";
+                        text: "Foundation Components";
                         font-weight: 700;
                         font-size: Tokens.font-size-large + 2px;
                         color: Tokens.text-primary;
                     }
                     Text {
-                        text: "Ayame design-system tokens, basic buttons, selection controls, text fields, badges, and progress bars.";
+                        text: "Design-system tokens, basic buttons, selection controls, text fields, badges, and progress bars.";
                         color: Tokens.text-secondary;
                         font-size: Tokens.font-size-normal;
                         wrap: word-wrap;
@@ -317,7 +317,7 @@ export component AyamePage inherits Rectangle {
                     Card {
                         raised: true;
                         Text { text: "Card Container (Raised Surface)"; font-weight: 600; color: Tokens.text-primary; }
-                        Text { text: "Standard Ayame surface card with elevated backdrop and border."; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+                        Text { text: "Standard surface card with elevated backdrop and border."; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
                     }
                 }
             }

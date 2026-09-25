@@ -1,9 +1,9 @@
-//! Named color scheme registry: Ayame's own light/dark presets plus a
+//! Named color scheme registry: Origami's own light/dark presets plus a
 //! handful of well-known editor color schemes (TokyoNight, Catppuccin,
 //! Flexoki), each split into "scheme" (e.g. "Catppuccin") and "variant"
 //! (e.g. "Mocha").
 //!
-//! Every non-Ayame variant's base colors and `default_accent` are ported
+//! Every non-Origami variant's base colors and `default_accent` are ported
 //! from that project's own published palette (see doc comments below for
 //! exact sources) using one fixed mapping rule, since none of these
 //! projects define Qt `QPalette` roles themselves:
@@ -19,16 +19,16 @@
 //!   from `base`.
 //! - `tooltip_base`/`tooltip_text` = same as `window`/`text`.
 //! - `light` (QPalette::Light, a bevel-highlight shade lighter than
-//!   `window`) = white for light-mode variants (matching Ayame's own
+//!   `window`) = white for light-mode variants (matching Origami's own
 //!   `LIGHT_PRESET`), or the scheme's own lighter secondary
 //!   surface/foreground shade for dark-mode variants.
 
-use crate::{DARK_PRESET, LIGHT_PRESET, PalettePreset, RgbColor};
+use super::{DARK_PRESET, DEFAULT_ACCENT, LIGHT_PRESET, PalettePreset, RgbColor};
 
 /// One selectable palette within a `SchemeInfo`, e.g. Catppuccin's Mocha.
 /// `id` is the flat, persisted identifier (`origami_config::settings`'s
-/// `theme_mode` value) -- see `crate::preset_by_id`'s doc comment for the
-/// backward-compatibility reasoning behind why Ayame's own variants keep
+/// `theme_mode` value) -- see `super::preset_by_id`'s doc comment for the
+/// backward-compatibility reasoning behind why Origami's own variants keep
 /// bare `"light"`/`"dark"` ids while every other scheme's ids are
 /// `"<scheme>-<variant>"`.
 pub struct VariantInfo {
@@ -44,18 +44,18 @@ pub struct SchemeInfo {
     pub variants: &'static [VariantInfo],
 }
 
-const AYAME_VARIANTS: &[VariantInfo] = &[
+const ORIGAMI_VARIANTS: &[VariantInfo] = &[
     VariantInfo {
         id: "light",
         name: "ライト",
         preset: LIGHT_PRESET,
-        default_accent: crate::DEFAULT_ACCENT,
+        default_accent: DEFAULT_ACCENT,
     },
     VariantInfo {
         id: "dark",
         name: "ダーク",
         preset: DARK_PRESET,
-        default_accent: crate::DEFAULT_ACCENT,
+        default_accent: DEFAULT_ACCENT,
     },
 ];
 
@@ -254,9 +254,9 @@ const FLEXOKI_VARIANTS: &[VariantInfo] = &[
 
 pub const SCHEMES: &[SchemeInfo] = &[
     SchemeInfo {
-        id: "ayame",
-        name: "Ayame",
-        variants: AYAME_VARIANTS,
+        id: "origami",
+        name: "Origami",
+        variants: ORIGAMI_VARIANTS,
     },
     SchemeInfo {
         id: "tokyonight",
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn ayame_variants_still_use_the_original_presets() {
+    fn origami_variants_still_use_the_original_presets() {
         assert_eq!(find_variant("light").unwrap().preset, LIGHT_PRESET);
         assert_eq!(find_variant("dark").unwrap().preset, DARK_PRESET);
     }

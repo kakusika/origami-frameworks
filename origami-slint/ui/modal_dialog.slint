@@ -1,11 +1,11 @@
-import { Tokens } from "@ayame/tokens.slint";
+import { Tokens } from "@origami/tokens.slint";
 
 // Shared chrome for a modal prompt/dialog popup: centered positioning, a
 // bold title, and a content slot (`@children`) for everything below it
 // (message text, form fields, a button row -- whatever the composing
 // dialog needs). Ported from origami/qml/widgets/popups/ModalDialog.qml
 // -- QQC2's `default property alias content: contentArea.data` becomes
-// Slint's own `@children` mechanism, the same one `ayame-slint`'s
+// Slint's own `@children` mechanism, the same one `origami-slint`'s
 // `CollapsibleSection` already uses for its body slot.
 //
 // Deliberately just a reusable base component, not a stack/manager

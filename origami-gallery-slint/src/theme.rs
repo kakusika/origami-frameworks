@@ -1,10 +1,9 @@
-// Glue between `ayame-slint`'s resolved settings and the shared `Tokens`
-// global -- identical shape to `cettila-slint`'s own `src/theme.rs`,
-// duplicated here rather than shared since it's ~40 lines of pure
-// Rust-to-Slint property pushing with no other logic worth factoring
-// into a crate over.
+// Glue between `origami-theme`'s resolved tokens and the shared `Tokens`
+// global (`@origami/tokens.slint`) -- ~40 lines of pure Rust-to-Slint
+// property pushing, duplicated per app rather than shared since there is
+// no other logic worth factoring into a crate over.
 
-use ayame_slint::{ResolvedTheme, Rgba};
+use origami_theme::{ResolvedTheme, Rgba, ThemeSettings};
 use slint::{Color, ComponentHandle};
 
 use crate::{AppWindow, Tokens};
@@ -43,7 +42,7 @@ fn apply(app: &AppWindow, theme: &ResolvedTheme) {
     tokens.set_anim_very_long(theme.animation.very_long_ms);
 }
 
-pub fn load_and_apply(app: &AppWindow) {
-    let theme = ayame_slint::resolve();
-    apply(app, &theme);
+/// The gallery has no settings of its own: it shows the default theme.
+pub fn apply_default(app: &AppWindow) {
+    apply(app, &origami_theme::resolve(&ThemeSettings::default()));
 }

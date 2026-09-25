@@ -5,4 +5,3 @@ edition.workspace = true
 
 [dependencies]
 slint-build = { workspace = true }
-ayame-slint-build = { workspace = true }

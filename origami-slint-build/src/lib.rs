@@ -30,14 +30,14 @@ pub fn ui_dir() -> PathBuf {
     );
 }
 
-/// Returns a HashMap mapping both `"origami"` and `"ayame"` (re-exported dependency) to their UI directory paths.
+/// Returns a HashMap mapping `"origami"` to its UI directory path.
 pub fn library_paths() -> HashMap<String, PathBuf> {
-    let mut paths = ayame_slint_build::library_paths();
+    let mut paths = HashMap::new();
     paths.insert("origami".to_string(), ui_dir());
     paths
 }
 
-/// Injects `@origami` and `@ayame` library paths into a `slint_build::CompilerConfiguration`.
+/// Injects the `@origami` library path into a `slint_build::CompilerConfiguration`.
 pub fn configure(config: slint_build::CompilerConfiguration) -> slint_build::CompilerConfiguration {
     config.with_library_paths(library_paths())
 }

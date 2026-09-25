@@ -259,16 +259,22 @@ fn layout_node(
                 rect
             } else {
                 out.push(PaneRect::new(*id, rect, 0, CellKind::Leaf));
+                // Framed like a tabs/drawer body, so a standalone pane and a
+                // group sit side by side with the same border and rounding.
+                // Unlike a group there is no tab strip above the frame, so
+                // the frame wraps the whole rect and the header sits inside.
+                out.push(PaneRect::new(*id, rect, 0, CellKind::GroupFrame));
+                let inner = rect.inset(metrics.group_content_margin(), 0.0, metrics.group_content_margin(), metrics.group_content_margin());
 
-                let header_h = metrics.header_height().min(rect.h);
-                let mut header = PaneRect::new(*id, Rect::new(rect.x, rect.y, rect.w, header_h), 1, CellKind::Header);
+                let header_h = metrics.header_height().min(inner.h);
+                let mut header = PaneRect::new(*id, Rect::new(inner.x, inner.y, inner.w, header_h), 1, CellKind::Header);
                 header.child_id = -1; // no owning group -- a bare standalone pane
                 header.title = title.clone();
                 header.view_type = view_type.clone();
                 header.active = active_leaf_id == Some(*id);
                 out.push(header);
 
-                Rect::new(rect.x, rect.y + header_h, rect.w, (rect.h - header_h).max(0.0))
+                Rect::new(inner.x, inner.y + header_h, inner.w, (inner.h - header_h).max(0.0))
             };
 
             let mut r = PaneRect::new(*id, content_rect, 0, CellKind::Content);
@@ -568,9 +574,9 @@ mod tests {
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 2);
         // Below each bare pane's own 32px PaneHeader row (see
-        // `metrics.header_height()`).
-        assert_eq!(content[0].rect, Rect::new(0.0, 32.0, 100.0, 68.0));
-        assert_eq!(content[1].rect, Rect::new(100.0, 32.0, 100.0, 68.0));
+        // `metrics.header_height()`), inside its frame's 2px margin.
+        assert_eq!(content[0].rect, Rect::new(2.0, 32.0, 96.0, 66.0));
+        assert_eq!(content[1].rect, Rect::new(102.0, 32.0, 96.0, 66.0));
 
         let dividers: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Divider).collect();
         assert_eq!(dividers.len(), 1);
@@ -615,7 +621,7 @@ mod tests {
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
-        assert_eq!(content[0].rect, Rect::new(36.0, 32.0, 164.0, 68.0));
+        assert_eq!(content[0].rect, Rect::new(38.0, 32.0, 160.0, 66.0));
     }
 
     #[test]
@@ -628,7 +634,34 @@ mod tests {
         assert_eq!(headers[0].id, 1);
         assert_eq!(headers[0].child_id, -1);
         assert!(headers[0].active); // matches the passed-in active_leaf_id
-        assert_eq!(headers[0].rect, Rect::new(0.0, 0.0, 100.0, 32.0));
+        // Inset by the frame margin on the sides and bottom, flush with the top.
+        assert_eq!(headers[0].rect, Rect::new(2.0, 0.0, 96.0, 32.0));
+    }
+
+    #[test]
+    fn bare_pane_is_framed_like_a_group_body() {
+        let tree = pane(1, "board");
+        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), None, None);
+
+        let frames: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::GroupFrame).collect();
+        assert_eq!(frames.len(), 1);
+        assert_eq!(frames[0].id, 1);
+        assert_eq!(frames[0].rect, Rect::new(0.0, 0.0, 100.0, 100.0));
+
+        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        assert_eq!(content.len(), 1);
+        assert_eq!(content[0].rect, Rect::new(2.0, 32.0, 96.0, 66.0));
+    }
+
+    #[test]
+    fn pane_inside_a_group_gets_no_frame_of_its_own() {
+        let tree = PaneNode::Tabs {
+            id: 5,
+            current_index: 0,
+            children: vec![GroupChild { node: pane(1, "board") }],
+        };
+        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), None, None);
+        assert_eq!(rects.iter().filter(|r| r.kind == CellKind::GroupFrame).count(), 1, "only the group's frame");
     }
 
     #[test]
@@ -672,8 +705,9 @@ mod tests {
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
-        // Full viewport width, not its original 100px half-share.
-        assert_eq!(content[0].rect.w, 200.0);
+        // Full viewport width (less the frame's 2px side margins), not its
+        // original 100px half-share.
+        assert_eq!(content[0].rect.w, 196.0);
     }
 
     #[test]

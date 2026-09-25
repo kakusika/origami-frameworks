@@ -102,7 +102,15 @@ export component PaneHost inherits Rectangle {
                 }
             }
 
-            Rectangle { background: Tokens.divider; }
+            // The TouchArea is wider than the line so it is easy to grab;
+            // draw only the line itself (cell.width x cell.height).
+            Rectangle {
+                x: cell.width < cell.height ? 3px : 0px;
+                y: cell.width < cell.height ? 0px : 3px;
+                width: cell.width;
+                height: cell.height;
+                background: Tokens.divider;
+            }
         }
 
         if cell.kind == "group-frame": Rectangle {
@@ -168,7 +176,6 @@ export component PaneHost inherits Rectangle {
 
                     // 2. View Type Switcher Button (ViewTypePickerButton)
                     type-btn := Rectangle {
-                        height: 22px;
                         background: type-touch.has-hover ? Tokens.hover : transparent;
                         border-radius: 3px;
 
@@ -178,11 +185,17 @@ export component PaneHost inherits Rectangle {
                             spacing: 4px;
                             alignment: center;
 
-                            Icon {
-                                source: cell.view-type == "file-grid" ? Icons.folder : Icons.file;
-                                color: Tokens.text-secondary;
+                            Rectangle {
                                 width: 13px;
-                                height: 13px;
+
+                                Icon {
+                                    source: cell.view-type == "file-grid" ? Icons.folder : Icons.file;
+                                    color: Tokens.text-secondary;
+                                    width: 13px;
+                                    height: 13px;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
+                                }
                             }
 
                             Text {
@@ -193,11 +206,17 @@ export component PaneHost inherits Rectangle {
                                 vertical-alignment: center;
                             }
 
-                            Icon {
-                                source: Icons.chevron-down;
-                                color: Tokens.text-secondary;
+                            Rectangle {
                                 width: 10px;
-                                height: 10px;
+
+                                Icon {
+                                    source: Icons.chevron-down;
+                                    color: Tokens.text-secondary;
+                                    width: 10px;
+                                    height: 10px;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
+                                }
                             }
                         }
 
@@ -211,7 +230,6 @@ export component PaneHost inherits Rectangle {
 
                     // 3. Mode Switch Dropdown (paneHeaderModeSwitch for TextEditor)
                     if cell.view-type == "texteditor": mode-btn := Rectangle {
-                        height: 22px;
                         background: mode-touch.has-hover ? Tokens.hover : transparent;
                         border-radius: 3px;
 
@@ -228,11 +246,17 @@ export component PaneHost inherits Rectangle {
                                 vertical-alignment: center;
                             }
 
-                            Icon {
-                                source: Icons.chevron-down;
-                                color: Tokens.text-secondary;
+                            Rectangle {
                                 width: 10px;
-                                height: 10px;
+
+                                Icon {
+                                    source: Icons.chevron-down;
+                                    color: Tokens.text-secondary;
+                                    width: 10px;
+                                    height: 10px;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
+                                }
                             }
                         }
 
@@ -312,7 +336,6 @@ export component PaneHost inherits Rectangle {
                     // 4. Pane Header Menus (HeaderMenuGroup)
                     // "ファイル" Menu Button (for TextEditor and Board)
                     if cell.view-type == "texteditor" || cell.view-type == "board": menu-file-btn := Rectangle {
-                        height: 22px;
                         background: file-touch.has-hover ? Tokens.hover : transparent;
                         border-radius: 3px;
 
@@ -424,7 +447,6 @@ export component PaneHost inherits Rectangle {
 
                     // "追加" Menu Button (for Board)
                     if cell.view-type == "board": menu-add-btn := Rectangle {
-                        height: 22px;
                         background: add-menu-touch.has-hover ? Tokens.hover : transparent;
                         border-radius: 3px;
 
@@ -513,7 +535,6 @@ export component PaneHost inherits Rectangle {
 
                     // "表示" Menu Button (for all views)
                     menu-view-btn := Rectangle {
-                        height: 22px;
                         background: view-touch.has-hover ? Tokens.hover : transparent;
                         border-radius: 3px;
 
@@ -712,25 +733,30 @@ export component PaneHost inherits Rectangle {
 
         if cell.kind == "tab-add": Rectangle {
             background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
-            VerticalLayout {
-                add-touch := TouchArea {
-                    vertical-stretch: 1;
-                    clicked => {
-                        root.request-picker("add-tab", cell.id, cell.x, cell.y + cell.height);
-                    }
-                    Icon { source: Icons.plus; color: Tokens.text-primary; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; }
+
+            // "+" is centered in the whole cell; the small tabs<->drawer
+            // control sits over its bottom-right corner rather than
+            // stacking under it, which pushed the "+" up off-center.
+            add-touch := TouchArea {
+                clicked => {
+                    root.request-picker("add-tab", cell.id, cell.x, cell.y + cell.height);
                 }
-                convert-drawer-touch := TouchArea {
-                    height: 10px;
-                    clicked => { root.convert-group(cell.id); }
-                    Icon {
-                        source: Icons.switch-horizontal;
-                        color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
-                        width: 8px;
-                        height: 8px;
-                        x: (parent.width - self.width) / 2;
-                        y: (parent.height - self.height) / 2;
-                    }
+                Icon { source: Icons.plus; color: Tokens.text-primary; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; }
+            }
+
+            convert-drawer-touch := TouchArea {
+                x: parent.width - self.width;
+                y: parent.height - self.height;
+                width: 12px;
+                height: 12px;
+                clicked => { root.convert-group(cell.id); }
+                Icon {
+                    source: Icons.switch-horizontal;
+                    color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    width: 8px;
+                    height: 8px;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
                 }
             }
         }

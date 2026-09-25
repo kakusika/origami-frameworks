@@ -15,5 +15,7 @@
 //! compatibility with existing consumers.
 
 pub mod drop;
+pub mod edit;
 pub mod layout;
+pub mod outline;
 pub mod pane_tree;

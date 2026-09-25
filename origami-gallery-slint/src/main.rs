@@ -5,7 +5,9 @@ mod theme;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use origami_slint::outline::{OutlineKind, OutlineRow, outline};
 use origami_slint::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
+use origami_slint::edit::DividerDragBaseline;
 use origami_slint::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
 use serde_json::json;
 use slint::{Model, ModelRc, SharedString, VecModel};
@@ -100,46 +102,25 @@ fn to_cell(r: &PaneRect) -> PaneCell {
     }
 }
 
-#[derive(Clone, Copy)]
-struct DividerDragBaseline {
-    split_id: i32,
-    left_index: usize,
-    orig_a: f64,
-    orig_b: f64,
-}
-
-const MIN_CHILD_PX_HORIZONTAL: f64 = 80.0;
-const MIN_CHILD_PX_VERTICAL: f64 = 60.0;
-
-fn resize_pair(root: &mut PaneNode, baseline: DividerDragBaseline, pair_px: f32, total_delta_px: f32) {
-    if pair_px <= 0.0 {
-        return;
-    }
-    let DividerDragBaseline { split_id, left_index, orig_a, orig_b } = baseline;
-    if let Some(PaneNode::Split { orientation, children, .. }) = root.find_node_mut(split_id) {
-        if left_index + 1 >= children.len() {
-            return;
-        }
-        let min_child_px = if orientation == "horizontal" {
-            MIN_CHILD_PX_HORIZONTAL
-        } else {
-            MIN_CHILD_PX_VERTICAL
-        };
-        let pair_ratio = orig_a + orig_b;
-        let delta_ratio = (total_delta_px as f64 / pair_px as f64) * pair_ratio;
-        let min = (min_child_px / pair_px as f64) * pair_ratio;
-        let mut a = orig_a + delta_ratio;
-        let mut b = orig_b - delta_ratio;
-        if a < min {
-            b -= min - a;
-            a = min;
-        }
-        if b < min {
-            a -= min - b;
-            b = min;
-        }
-        children[left_index].size = a.max(0.0);
-        children[left_index + 1].size = b.max(0.0);
+fn to_outline_row(r: &OutlineRow) -> PaneOutlineRow {
+    PaneOutlineRow {
+        depth: r.depth as i32,
+        kind: SharedString::from(match r.kind {
+            OutlineKind::Pane => "pane",
+            OutlineKind::Tabs => "tabs",
+            OutlineKind::Drawer => "drawer",
+            OutlineKind::Split => "split",
+        }),
+        node_id: r.node_id.unwrap_or(-1),
+        leaf_id: r.enclosing_leaf_id.unwrap_or(-1),
+        title: SharedString::from(r.title.as_str()),
+        view_type: SharedString::from(r.view_type.as_str()),
+        child_count: r.child_count as i32,
+        horizontal: r.horizontal,
+        expanded: r.expanded,
+        is_current_tab: r.is_current_tab,
+        // The gallery keeps no active-leaf state of its own.
+        active: false,
     }
 }
 
@@ -161,7 +142,12 @@ fn relayout(state: &Rc<RefCell<AppState>>, app: &AppWindow) {
     let cells: Vec<PaneCell> = rects.iter().map(to_cell).collect();
     let model = st.cells_model.clone();
     app.set_maximized_leaf_id(st.maximized_leaf_id.unwrap_or(-1));
+    let outline_rows: Vec<PaneOutlineRow> = outline(st.tree.root.as_ref())
+        .iter()
+        .map(to_outline_row)
+        .collect();
     drop(st);
+    app.set_pane_outline(ModelRc::from(Rc::new(VecModel::from(outline_rows))));
 
     let new_len = cells.len();
     for (i, cell) in cells.into_iter().enumerate() {
@@ -237,14 +223,53 @@ fn main() -> Result<(), slint::PlatformError> {
         app.on_toggle_drawer(move |drawer_id| {
             if let Some(app) = app_weak.upgrade() {
                 {
-                    let mut st = state.borrow_mut();
-                    if let Some(root) = st.tree.root.as_mut() {
-                        if let Some(PaneNode::Drawer { expanded, .. }) = root.find_node_mut(drawer_id) {
-                            *expanded = !*expanded;
-                        }
-                    }
+                    state.borrow_mut().tree.toggle_drawer_expanded(drawer_id);
                 }
                 app.set_pane_status(format!("Toggled drawer {}", drawer_id).into());
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Structure viewer actions, applied with origami-panes' own tree edits.
+    // "activate" only reports: the gallery keeps no active-leaf state.
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_manager_action(move |node_id, leaf_id, name| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    let mut st = state.borrow_mut();
+                    let tree = &mut st.tree;
+                    match name.as_str() {
+                        "toggle-expanded" => {
+                            tree.toggle_drawer_expanded(node_id);
+                        }
+                        "convert-to-drawer" | "convert-to-tabs" => {
+                            tree.convert_group(node_id);
+                        }
+                        "close-all-tabs" => {
+                            tree.close_all_tabs(node_id);
+                        }
+                        "close-group" => {
+                            tree.close_group(node_id);
+                        }
+                        "close" => {
+                            // A pane inside a group closes as a tab; a
+                            // standalone pane is its own leaf.
+                            if leaf_id == node_id {
+                                tree.remove_standalone(node_id);
+                            } else {
+                                tree.close_tab(leaf_id, node_id);
+                            }
+                        }
+                        _ => {}
+                    }
+                    tree.prune_empty_groups(&[]);
+                }
+                app.set_pane_status(
+                    format!("Manager: {} (node {}, leaf {})", name, node_id, leaf_id).into(),
+                );
                 relayout(&state, &app);
             }
         });
@@ -255,21 +280,7 @@ fn main() -> Result<(), slint::PlatformError> {
         let state = state.clone();
         app.on_resize_divider_start(move |split_id, index| {
             let mut st = state.borrow_mut();
-            let left_index = index as usize;
-            let sizes = st.tree.root.as_mut().and_then(|root| {
-                if let Some(PaneNode::Split { children, .. }) = root.find_node_mut(split_id) {
-                    if left_index + 1 < children.len() {
-                        return Some((children[left_index].size, children[left_index + 1].size));
-                    }
-                }
-                None
-            });
-            st.divider_drag = sizes.map(|(orig_a, orig_b)| DividerDragBaseline {
-                split_id,
-                left_index,
-                orig_a,
-                orig_b,
-            });
+            st.divider_drag = st.tree.divider_baseline(split_id, index as usize);
         });
     }
 
@@ -281,8 +292,8 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(app) = app_weak.upgrade() {
                 let mut st = state.borrow_mut();
                 let baseline = st.divider_drag.filter(|b| b.split_id == split_id);
-                if let (Some(baseline), Some(root)) = (baseline, st.tree.root.as_mut()) {
-                    resize_pair(root, baseline, pair_px, total_delta_px);
+                if let Some(baseline) = baseline {
+                    st.tree.resize_pair(baseline, pair_px, total_delta_px);
                 }
                 drop(st);
                 relayout(&state, &app);

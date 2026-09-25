@@ -15,8 +15,9 @@ import { Tokens } from "@origami/tokens.slint";
 //       BarEnd { IconButton { ... } }
 //   }
 //
-// Slots inset their content 2px top and bottom, so bordered or backgrounded
-// children stretched to the slot's height don't touch the bar's edges.
+// Slots inset their content 2px top and bottom by default (`padding-y`), so
+// bordered or backgrounded children stretched to the slot's height don't
+// touch the bar's edges.
 //
 // For a multi-row bar, stack Bars in a VerticalLayout (the old
 // MultiRowBar.qml did no more than that).
@@ -28,12 +29,16 @@ export component Bar inherits Rectangle {
 
 component BarSlot inherits Rectangle {
     in property <LayoutAlignment> slot-alignment: start;
+    // Space above and below the content. Fixed-height children sit at the
+    // top of the slot, so a bar taller than its content sets this to
+    // (bar height - content height) / 2 to center them.
+    in property <length> padding-y: 2px;
 
     HorizontalLayout {
         padding-left: Tokens.spacing-small;
         padding-right: Tokens.spacing-small;
-        padding-top: 2px;
-        padding-bottom: 2px;
+        padding-top: root.padding-y;
+        padding-bottom: root.padding-y;
         spacing: Tokens.spacing-small;
         alignment: root.slot-alignment;
 

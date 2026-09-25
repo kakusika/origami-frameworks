@@ -48,7 +48,7 @@ export component EditableListView inherits Rectangle {
                 y: 0px;
                 width: parent.width;
                 height: parent.height;
-                viewport-height: max(parent.height, list-layout.preferred-height);
+                content-height: max(parent.height, list-layout.preferred-height);
 
                 list-layout := VerticalLayout {
                     padding: Tokens.spacing-small;

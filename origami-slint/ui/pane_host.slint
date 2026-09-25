@@ -49,6 +49,8 @@ export component PaneHost inherits Rectangle {
     callback drag-hover(length, length);
     callback set-active-leaf(int);
 
+    // (kind, target id, x, y): where to open a picker, in window coordinates --
+    // the left edge and bottom edge of the button that asked for it.
     callback request-picker(string, int, length, length);
 
     changed width => { root.relayout(root.width, root.height); }
@@ -76,13 +78,18 @@ export component PaneHost inherits Rectangle {
         width: cell.width;
         height: cell.height;
 
+        // The divider fills the gap between two sibling panes. At rest it is
+        // three dots (a "you can drag here" hint that does not draw a line
+        // between the frames); hovering or dragging replaces them with a
+        // colored line.
         if cell.kind == "divider": TouchArea {
+            property <bool> vertical: cell.width < cell.height;
+            property <bool> active: self.has-hover || self.pressed;
+
             z: 500;
-            x: cell.width < cell.height ? -3px : 0px;
-            y: cell.width < cell.height ? 0px : -3px;
-            width: cell.width < cell.height ? cell.width + 6px : cell.width;
-            height: cell.width < cell.height ? cell.height : cell.height + 6px;
-            mouse-cursor: cell.width < cell.height ? MouseCursor.col-resize : MouseCursor.row-resize;
+            width: 100%;
+            height: 100%;
+            mouse-cursor: self.vertical ? MouseCursor.col-resize : MouseCursor.row-resize;
 
             pointer-event(event) => {
                 if (event.kind == PointerEventKind.down) {
@@ -102,14 +109,26 @@ export component PaneHost inherits Rectangle {
                 }
             }
 
-            // The TouchArea is wider than the line so it is easy to grab;
-            // draw only the line itself (cell.width x cell.height).
+            // Hover / drag: the line.
             Rectangle {
-                x: cell.width < cell.height ? 3px : 0px;
-                y: cell.width < cell.height ? 0px : 3px;
-                width: cell.width;
-                height: cell.height;
-                background: Tokens.divider;
+                visible: parent.active;
+                x: parent.vertical ? (parent.width - self.width) / 2 : 0px;
+                y: parent.vertical ? 0px : (parent.height - self.height) / 2;
+                width: parent.vertical ? 2px : parent.width;
+                height: parent.vertical ? parent.height : 2px;
+                border-radius: 1px;
+                background: Tokens.accent;
+            }
+
+            // At rest: three dots along the divider, centered.
+            for i in 3: Rectangle {
+                visible: !parent.active;
+                width: 3px;
+                height: 3px;
+                border-radius: 1.5px;
+                background: Tokens.text-disabled;
+                x: parent.vertical ? (parent.width - self.width) / 2 : (parent.width - 15px) / 2 + i * 6px;
+                y: parent.vertical ? (parent.height - 15px) / 2 + i * 6px : (parent.height - self.height) / 2;
             }
         }
 
@@ -223,7 +242,7 @@ export component PaneHost inherits Rectangle {
                         type-touch := TouchArea {
                             mouse-cursor: pointer;
                             clicked => {
-                                root.request-picker("change-type", cell.id, cell.x, cell.y + cell.height);
+                                root.request-picker("change-type", cell.id, type-btn.absolute-position.x, type-btn.absolute-position.y + type-btn.height);
                             }
                         }
                     }
@@ -731,7 +750,7 @@ export component PaneHost inherits Rectangle {
             }
         }
 
-        if cell.kind == "tab-add": Rectangle {
+        if cell.kind == "tab-add": tab-add-cell := Rectangle {
             background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
 
             // "+" is centered in the whole cell; the small tabs<->drawer
@@ -739,7 +758,7 @@ export component PaneHost inherits Rectangle {
             // stacking under it, which pushed the "+" up off-center.
             add-touch := TouchArea {
                 clicked => {
-                    root.request-picker("add-tab", cell.id, cell.x, cell.y + cell.height);
+                    root.request-picker("add-tab", cell.id, tab-add-cell.absolute-position.x, tab-add-cell.absolute-position.y + tab-add-cell.height);
                 }
                 Icon { source: Icons.plus; color: Tokens.text-primary; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; }
             }

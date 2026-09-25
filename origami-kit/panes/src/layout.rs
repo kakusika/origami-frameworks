@@ -58,6 +58,13 @@ impl LayoutMetrics {
         (self.small_spacing() / 2.0).floor().max(1.0)
     }
 
+    /// Space between two siblings of a split, in which the divider sits.
+    /// Each sibling's rect is pulled back by half of it on the shared edge,
+    /// so neighbouring frames do not touch.
+    pub fn split_gap(&self) -> f32 {
+        (self.grid_unit * 0.4).round()
+    }
+
     // PaneDrawer.qml: `railSize: StyleKit.Units.collapsedDrawerSize`, and
     // `Units.qml`: `collapsedDrawerSize = gridUnit * 1.8`.
     pub fn collapsed_drawer_size(&self) -> f32 {
@@ -264,7 +271,8 @@ fn layout_node(
                 // Unlike a group there is no tab strip above the frame, so
                 // the frame wraps the whole rect and the header sits inside.
                 out.push(PaneRect::new(*id, rect, 0, CellKind::GroupFrame));
-                let inner = rect.inset(metrics.group_content_margin(), 0.0, metrics.group_content_margin(), metrics.group_content_margin());
+                let margin = metrics.group_content_margin();
+                let inner = rect.inset(margin, margin, margin, margin);
 
                 let header_h = metrics.header_height().min(inner.h);
                 let mut header = PaneRect::new(*id, Rect::new(inner.x, inner.y, inner.w, header_h), 1, CellKind::Header);
@@ -348,29 +356,37 @@ fn layout_split(
         .collect();
     let sizes = effective_sizes(children, &fixed, total);
 
+    let gap = metrics.split_gap();
+    let last = children.len().saturating_sub(1);
     let mut offset = 0.0f32;
-    for (child, size) in children.iter().zip(&sizes) {
+    for (i, (child, size)) in children.iter().zip(&sizes).enumerate() {
+        // Pull back by half the gap on each edge shared with a sibling. This
+        // only shapes the child's rect: `sizes` (and so `Divider::extra`
+        // and the resize math) still measure boundary to boundary.
+        let lead = if i > 0 { gap / 2.0 } else { 0.0 };
+        let trail = if i < last { gap / 2.0 } else { 0.0 };
         let child_rect = if horizontal {
-            Rect::new(rect.x + offset, rect.y, *size, rect.h)
+            Rect::new(rect.x + offset + lead, rect.y, (*size - lead - trail).max(0.0), rect.h)
         } else {
-            Rect::new(rect.x, rect.y + offset, rect.w, *size)
+            Rect::new(rect.x, rect.y + offset + lead, rect.w, (*size - lead - trail).max(0.0))
         };
         layout_node(&child.node, child_rect, metrics, Some(orientation), active_leaf_id, false, out);
         offset += size;
     }
 
-    // Drag-resizable divider lines at each boundary. A split with no id
-    // (e.g. one created ad hoc and never assigned one) still renders its
-    // divider but with id=-1, which the resize-divider handler treats as
-    // "not resizable" (find_node_mut(-1) never matches a real node).
+    // Drag-resizable dividers, one per boundary, filling the gap between
+    // the siblings. A split with no id (e.g. one created ad hoc and never
+    // assigned one) still renders its divider but with id=-1, which the
+    // resize-divider handler treats as "not resizable" (find_node_mut(-1)
+    // never matches a real node).
     let mut offset = 0.0f32;
     for i in 0..sizes.len().saturating_sub(1) {
         offset += sizes[i];
         let pair_px = sizes[i] + sizes[i + 1];
         let d = if horizontal {
-            Rect::new(rect.x + offset - 0.5, rect.y, 1.0, rect.h)
+            Rect::new(rect.x + offset - gap / 2.0, rect.y, gap, rect.h)
         } else {
-            Rect::new(rect.x, rect.y + offset - 0.5, rect.w, 1.0)
+            Rect::new(rect.x, rect.y + offset - gap / 2.0, rect.w, gap)
         };
         let mut r = PaneRect::new(split_id.unwrap_or(-1), d, 1, CellKind::Divider);
         r.index = i as i32;
@@ -398,7 +414,7 @@ fn pane_view_type(node: &PaneNode) -> String {
 // PaneLeaf.qml/PaneTabBar.qml: a fixed-height tab strip above a body
 // showing only `current_index`'s child. Framing (border+radius+margin)
 // applies to Tabs/Drawer, not Split/Pane (PaneNode.qml's exclusion rule);
-// margin is 0 on top since the tab strip already provides the gap. A
+// the margin on top keeps the header clear of the frame's top border. A
 // fixed-width "add tab" button sits at the strip's right end (not part of
 // the real PaneTabBar.qml, an addition for interactive consumers).
 #[allow(clippy::too_many_arguments)]
@@ -433,7 +449,7 @@ fn layout_tabs(
     let margin = metrics.group_content_margin();
     let raw_body = Rect::new(rect.x, rect.y + bar_h, rect.w, (rect.h - bar_h).max(0.0));
     out.push(PaneRect::new(id, raw_body, 0, CellKind::GroupFrame));
-    let body = raw_body.inset(margin, 0.0, margin, margin);
+    let body = raw_body.inset(margin, margin, margin, margin);
 
     // PaneHeader.qml: a chrome row below the tab strip, for the *active*
     // tab's own pane (the grip here drags that specific pane out, same as
@@ -574,13 +590,16 @@ mod tests {
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 2);
         // Below each bare pane's own 32px PaneHeader row (see
-        // `metrics.header_height()`), inside its frame's 2px margin.
-        assert_eq!(content[0].rect, Rect::new(2.0, 32.0, 96.0, 66.0));
-        assert_eq!(content[1].rect, Rect::new(102.0, 32.0, 96.0, 66.0));
+        // `metrics.header_height()`), inside its frame's 2px margin. Each
+        // pane is also pulled back 4px (half the 8px split gap) from the
+        // boundary at x=100.
+        assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 92.0, 64.0));
+        assert_eq!(content[1].rect, Rect::new(106.0, 34.0, 92.0, 64.0));
 
         let dividers: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Divider).collect();
         assert_eq!(dividers.len(), 1);
-        assert!((dividers[0].rect.x - 99.5).abs() < 1e-6);
+        // The divider fills the 8px gap centered on the boundary at x=100.
+        assert_eq!(dividers[0].rect, Rect::new(96.0, 0.0, 8.0, 100.0));
         assert_eq!(dividers[0].id, 9);
         assert_eq!(dividers[0].index, 0);
         assert!((dividers[0].extra - 200.0).abs() < 1e-6);
@@ -621,7 +640,9 @@ mod tests {
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
-        assert_eq!(content[0].rect, Rect::new(38.0, 32.0, 160.0, 66.0));
+        // The rail is 36px; the pane pulls back 4px (half the 8px split gap)
+        // from it, then insets by its own 2px frame margin.
+        assert_eq!(content[0].rect, Rect::new(42.0, 34.0, 156.0, 64.0));
     }
 
     #[test]
@@ -634,8 +655,36 @@ mod tests {
         assert_eq!(headers[0].id, 1);
         assert_eq!(headers[0].child_id, -1);
         assert!(headers[0].active); // matches the passed-in active_leaf_id
-        // Inset by the frame margin on the sides and bottom, flush with the top.
-        assert_eq!(headers[0].rect, Rect::new(2.0, 0.0, 96.0, 32.0));
+        // Inset by the 2px frame margin on every side, so the header stays
+        // clear of the frame's border.
+        assert_eq!(headers[0].rect, Rect::new(2.0, 2.0, 96.0, 32.0));
+    }
+
+    #[test]
+    fn sibling_frames_leave_exactly_the_dividers_gap_between_them() {
+        for orientation in ["horizontal", "vertical"] {
+            let tree = PaneNode::Split {
+                id: Some(9),
+                orientation: orientation.to_string(),
+                children: vec![
+                    SplitChild { size: 0.5, node: pane(1, "a") },
+                    SplitChild { size: 0.5, node: pane(2, "b") },
+                ],
+            };
+            let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 200.0), &LayoutMetrics::default(), None, None);
+            let frame = |id: i32| rects.iter().find(|r| r.kind == CellKind::GroupFrame && r.id == id).unwrap().rect;
+            let div = rects.iter().find(|r| r.kind == CellKind::Divider).unwrap().rect;
+            let (a, b) = (frame(1), frame(2));
+            if orientation == "horizontal" {
+                assert_eq!(b.x - (a.x + a.w), 8.0, "gap between frames");
+                assert_eq!((div.x, div.w), (a.x + a.w, 8.0), "divider fills the gap");
+            } else {
+                assert_eq!(b.y - (a.y + a.h), 8.0, "gap between frames");
+                assert_eq!((div.y, div.h), (a.y + a.h, 8.0), "divider fills the gap");
+            }
+            // Outer edges are untouched.
+            assert_eq!((a.x, a.y), (0.0, 0.0));
+        }
     }
 
     #[test]
@@ -650,7 +699,7 @@ mod tests {
 
         let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
         assert_eq!(content.len(), 1);
-        assert_eq!(content[0].rect, Rect::new(2.0, 32.0, 96.0, 66.0));
+        assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 96.0, 64.0));
     }
 
     #[test]

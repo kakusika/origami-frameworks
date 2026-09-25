@@ -1,0 +1,188 @@
+import { Tokens } from "@origami/tokens.slint";
+import { Icon, Icons } from "@origami/icons.slint";
+import { MenuState } from "@origami/menu_state.slint";
+
+export struct MenuEntry {
+    // Reported to `triggered` when chosen.
+    id: string,
+    label: string,
+    enabled: bool,
+    // Drawn in the accent color (e.g. the current choice of a mode switch).
+    selected: bool,
+    // A dividing line; the other fields are ignored.
+    separator: bool,
+}
+
+export struct MenuBarMenu {
+    id: string,
+    // Empty for an icon-only button.
+    label: string,
+    icon: image,
+    has-icon: bool,
+    // A small down arrow after the label.
+    chevron: bool,
+    bold: bool,
+    items: [MenuEntry],
+}
+
+// A row of menu buttons whose popovers work like a desktop menu bar: while
+// one is open, hovering another button opens that one instead. Popovers are
+// ordinary child elements, not PopupWindows -- Slint routes no pointer
+// events outside an open PopupWindow, so hover-switching would be
+// impossible, and its close is not observable.
+//
+// Requirements on the caller:
+// - Give the bar's container a `z` above whatever it should overlap (the
+//   popover hangs below it, and the click-away layer covers the window).
+//   Later siblings otherwise draw over the popover.
+// - No ancestor may clip (`clip: true`), or the popover is cut off there.
+// - `owner` must be unique among the MenuBars of a window.
+export component MenuBar inherits Rectangle {
+    in property <string> owner;
+    in property <[MenuBarMenu]> menus: [];
+    // Absolute x (window coordinates) the popover must not extend past;
+    // it is pulled back to the left when it would.
+    in property <length> container-right: 100000px;
+    // (menu id, entry id)
+    callback triggered(string, string);
+
+    property <bool> any-open: MenuState.owner == root.owner && MenuState.index >= 0;
+
+    // Click-away layer: swallows a press anywhere else and closes. It sits
+    // below the buttons and popover in this subtree, so they still receive
+    // hover and clicks -- which is what lets hover-switching work.
+    if root.any-open: TouchArea {
+        x: -50000px;
+        y: -50000px;
+        width: 100000px;
+        height: 100000px;
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down {
+                MenuState.index = -1;
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 2px;
+        // Buttons keep their natural width instead of stretching to fill.
+        alignment: start;
+
+        for menu[i] in root.menus: btn := Rectangle {
+            property <bool> open: root.any-open && MenuState.index == i;
+
+            border-radius: Tokens.corner-radius;
+            background: btn.open ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent);
+
+            HorizontalLayout {
+                padding-left: 6px;
+                padding-right: 6px;
+                spacing: 4px;
+                alignment: center;
+
+                if menu.has-icon: Rectangle {
+                    width: 13px;
+
+                    Icon {
+                        source: menu.icon;
+                        color: menu.label == "" ? Tokens.text-primary : Tokens.text-secondary;
+                        width: 13px;
+                        height: 13px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+
+                if menu.label != "": Text {
+                    text: menu.label;
+                    color: menu.bold ? Tokens.text-primary : Tokens.text-secondary;
+                    font-size: Tokens.font-size-small;
+                    font-weight: menu.bold ? 600 : 400;
+                    vertical-alignment: center;
+                }
+
+                if menu.chevron: Rectangle {
+                    width: 10px;
+
+                    Icon {
+                        source: Icons.chevron-down;
+                        color: Tokens.text-secondary;
+                        width: 10px;
+                        height: 10px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                }
+            }
+
+            touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    if btn.open {
+                        MenuState.index = -1;
+                    } else {
+                        MenuState.owner = root.owner;
+                        MenuState.index = i;
+                    }
+                }
+                changed has-hover => {
+                    if self.has-hover && root.any-open && MenuState.index != i {
+                        MenuState.index = i;
+                    }
+                }
+            }
+
+            if btn.open: popover := Rectangle {
+                x: min(0px, root.container-right - (btn.absolute-position.x + self.width));
+                y: parent.height + 2px;
+                width: max(160px, list.preferred-width);
+                height: list.preferred-height;
+                background: Tokens.surface-raised;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border;
+                border-radius: Tokens.corner-radius;
+
+                list := VerticalLayout {
+                    padding: 4px;
+                    spacing: 2px;
+
+                    for entry[j] in menu.items: Rectangle {
+                        height: entry.separator ? 9px : 24px;
+                        background: (entry-touch.has-hover && entry.enabled && !entry.separator) ? Tokens.hover : transparent;
+                        border-radius: 3px;
+
+                        if entry.separator: Rectangle {
+                            y: (parent.height - self.height) / 2;
+                            height: 1px;
+                            background: Tokens.divider;
+                        }
+
+                        // A layout directly in the entry, so the entry reports its
+                        // text width and the popover can size to the widest one.
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+
+                            Text {
+                                text: entry.separator ? "" : entry.label;
+                                color: !entry.enabled ? Tokens.text-disabled : (entry.selected ? Tokens.accent : Tokens.text-primary);
+                                font-size: Tokens.font-size-small;
+                                font-weight: entry.selected ? 600 : 400;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        entry-touch := TouchArea {
+                            enabled: entry.enabled && !entry.separator;
+                            mouse-cursor: (entry.enabled && !entry.separator) ? pointer : default;
+                            clicked => {
+                                MenuState.index = -1;
+                                root.triggered(menu.id, entry.id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

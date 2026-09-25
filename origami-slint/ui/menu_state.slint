@@ -1,0 +1,8 @@
+// Which menu has a popover open, shared by every MenuBar in the window so
+// that only one popover is ever open, and so opening one closes another
+// bar's. `owner` is the open MenuBar's `owner` id, `index` the menu within
+// it; -1 means none.
+export global MenuState {
+    in-out property <string> owner: "";
+    in-out property <int> index: -1;
+}

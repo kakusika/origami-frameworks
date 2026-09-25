@@ -1,5 +1,5 @@
-import { Tokens } from "@ayame/tokens.slint";
-import { Icon, Icons } from "@ayame/icons.slint";
+import { Tokens } from "@origami/tokens.slint";
+import { Icon, Icons } from "@origami/icons.slint";
 
 // Floating transient toast overlay -- ported from origami/qml/widgets/
 // popups/ToastNotification.qml. No `ToastBus`-style global-singleton
@@ -13,7 +13,7 @@ import { Icon, Icons } from "@ayame/icons.slint";
 // into Slint.
 //
 // Dropped the QML original's own `iconName` (a freedesktop icon-name
-// string, e.g. "dialog-information-symbolic") -- `ayame-slint`'s own
+// string, e.g. "dialog-information-symbolic") -- `origami-slint`'s own
 // `icons.slint` has no runtime name-to-asset lookup at all (a fixed,
 // small vendored set, resolved per call site as `Icons.x`-style plain
 // values, see that file's own comment on why) and no info/warning/check

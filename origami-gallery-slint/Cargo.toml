@@ -9,12 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 slint = { workspace = true }
-# Ayame's Slint-side StyleKit equivalent (Tokens/basic components) --
-# see origami-slint's own ui/*.slint files for why every widget here
-# leans on it for styling. Qt-free (checked ../ayame/crates/slint/
-# Cargo.toml).
-ayame-slint = { workspace = true }
-ayame-config = { workspace = true }
+origami-theme = { workspace = true }
 origami-slint = { workspace = true }
 serde_json = { workspace = true }
 

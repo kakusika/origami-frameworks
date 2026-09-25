@@ -7,17 +7,11 @@ members = [
   "origami-gallery-slint",
   "origami-kit/config",
   "origami-kit/panes",
+  "origami-kit/theme",
   # "origami-kit/views/settings",
   "origami-kit/vulkan-bridge",
   "origami-slint",
   "origami-slint-build",
-
-  #[ Ayame Core & Slint ]
-  "ayame/colors",
-  "ayame/config",
-  "ayame/icons",
-  "ayame/slint",
-  "ayame/slint-build",
 ]
 
 # default-members = ["origami"]
@@ -30,15 +24,11 @@ edition = "2024"
 # origami = { path = "origami" }
 origami-config = { path = "origami-kit/config" }
 origami-panes = { path = "origami-kit/panes" }
+origami-theme = { path = "origami-kit/theme" }
 # origami-view-settings = { path = "origami-kit/views/settings" }
 origami-vulkan-bridge = { path = "origami-kit/vulkan-bridge" }
 origami-slint = { path = "origami-slint" }
 origami-slint-build = { path = "origami-slint-build" }
-ayame-colors = { path = "ayame/colors" }
-ayame-config = { path = "ayame/config" }
-ayame-icons = { path = "ayame/icons" }
-ayame-slint = { path = "ayame/slint" }
-ayame-slint-build = { path = "ayame/slint-build" }
 
 #[ Crates.io ]
 anyhow = "1"

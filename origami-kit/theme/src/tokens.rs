@@ -1,23 +1,10 @@
-//! `ayame-slint`: the Slint side of Ayame's own design system, alongside
-//! `crates/stylekit`'s QML `Theme`/`Units` singletons -- resolves the
-//! same persisted `ayame_config::Settings` (`~/.config/ayamerc`, the
-//! exact file `qt/qml6`'s `Units.qml`/`ThemeSettings` already read/write)
-//! into concrete values a Slint UI can bind to, plus ships a real
-//! importable `ui/` library (`tokens.slint`, `icons.slint`,
-//! `components.slint`, via `slint-build`'s library-path mechanism) so any
-//! Slint app in this workspace family gets the same look, sourced from
-//! the same settings, instead of hand-rolling its own token/widget set.
-//! Pure Rust, no `slint` dependency -- decoupled from any consuming app's
-//! Slint version.
-//!
-//! Originated as `cettila`'s own `cettila-slint-style` (a first PoC that
-//! read `origami-config`'s per-vault settings instead) -- moved here and
-//! switched to `ayame-config`'s global settings so it's genuinely shared
-//! with every other Ayame-styled app, not just cettila.
+//! Resolves a [`ThemeSettings`] into concrete design tokens (colors, shape,
+//! spacing, animation durations). The values mirror `ui/tokens.slint`'s
+//! `Tokens` global in `origami-slint` 1:1 -- keep both in sync by hand if
+//! either changes.
 
-pub use ayame_colors as palette;
-
-use palette::RgbColor;
+use crate::palette::{self, RgbColor};
+use crate::settings::{AnimationSpeed, BorderWidth, CornerRadius, ThemeSettings};
 
 /// 8-bit RGBA. `a: 255` unless a token is deliberately translucent (`hover`/
 /// `pressed`, matching `Theme.qml`'s own `paletteFor()`).
@@ -51,8 +38,7 @@ fn opaque_blend(fg: RgbColor, bg: RgbColor, alpha: f32) -> RgbColor {
     RgbColor::new(mix(fg.r, bg.r), mix(fg.g, bg.g), mix(fg.b, bg.b))
 }
 
-/// Mirrors `ui/tokens.slint`'s `Tokens` global 1:1 -- keep both in sync by
-/// hand if either changes.
+/// Mirrors `ui/tokens.slint`'s `Tokens` global 1:1.
 #[derive(Debug, Clone, Copy)]
 pub struct ColorTokens {
     pub background: Rgba,
@@ -70,7 +56,7 @@ pub struct ColorTokens {
     pub selected_surface: Rgba,
 }
 
-/// Ayame's own fixed semantic constant (`Theme.qml`'s `negativeTextColor`)
+/// A fixed semantic constant (`Theme.qml`'s `negativeTextColor`)
 /// -- not persisted/customizable, matches upstream: it's a hardcoded
 /// constant there too, independent of the active scheme/accent.
 const DESTRUCTIVE: RgbColor = RgbColor::new(0xda, 0x44, 0x53);
@@ -124,22 +110,21 @@ pub struct ShapeTokens {
     pub border_width_px: f32,
 }
 
-fn corner_radius_px(preset: &str) -> f32 {
+fn corner_radius_px(preset: CornerRadius) -> f32 {
     match preset {
-        "circle" => 9999.0,
-        "large" => 14.0,
-        "medium" => 8.0,
-        "small" => 4.0,
-        "disabled" => 0.0,
-        _ => 4.0,
+        CornerRadius::Circle => 9999.0,
+        CornerRadius::Large => 14.0,
+        CornerRadius::Medium => 8.0,
+        CornerRadius::Small => 4.0,
+        CornerRadius::Disabled => 0.0,
     }
 }
 
-fn border_width_px(preset: &str) -> f32 {
+fn border_width_px(preset: BorderWidth) -> f32 {
     match preset {
-        "thin" => 0.5,
-        "thick" => 2.0,
-        _ => 1.0,
+        BorderWidth::Thin => 0.5,
+        BorderWidth::Default => 1.0,
+        BorderWidth::Thick => 2.0,
     }
 }
 
@@ -160,11 +145,11 @@ const BASE_SPACING_SMALL_PX: f32 = 4.0;
 const BASE_SPACING_MEDIUM_PX: f32 = 8.0;
 const BASE_SPACING_LARGE_PX: f32 = 16.0;
 
-fn animation_speed_multiplier(preset: &str) -> f32 {
+fn animation_speed_multiplier(preset: AnimationSpeed) -> f32 {
     match preset {
-        "slow" => 1.75,
-        "fast" => 0.5,
-        _ => 1.2, // "normal"
+        AnimationSpeed::Slow => 1.75,
+        AnimationSpeed::Fast => 0.5,
+        AnimationSpeed::Normal => 1.2,
     }
 }
 
@@ -194,34 +179,31 @@ pub struct ResolvedTheme {
     pub animation: AnimationTokens,
 }
 
-/// Reads `ayame_config::Settings::load()` (the same global `~/.config/
-/// ayamerc` `qt/qml6`'s QML-exposed settings objects read/write) and
-/// resolves it into concrete values, the same way `Theme.qml`/`Units.qml`
-/// do for the QML side. Cheap (one small settings-file read + arithmetic,
-/// no image decoding or similar) -- safe to call again on every settings
-/// change rather than patching individual fields.
-pub fn resolve() -> ResolvedTheme {
-    let style = ayame_config::Settings::load().style;
-    let accent = RgbColor::from_hex(&style.accent_color).unwrap_or(palette::DEFAULT_ACCENT);
-    let preset = palette::preset_by_id(&style.theme_mode);
+/// Resolves `settings` into concrete token values. Pure arithmetic --
+/// cheap enough to call again on every settings change rather than patching
+/// individual fields.
+pub fn resolve(settings: &ThemeSettings) -> ResolvedTheme {
+    let accent = settings
+        .accent
+        .unwrap_or_else(|| palette::default_accent_for(&settings.variant));
+    let preset = palette::preset_by_id(&settings.variant);
 
-    let ui_scale = style.ui_scale as f32;
-    let multiplier = animation_speed_multiplier(&style.animation_speed);
-    let duration = |base_ms: f32| scaled_duration(base_ms, multiplier, style.animations_enabled);
+    let multiplier = animation_speed_multiplier(settings.animation_speed);
+    let duration = |base_ms: f32| scaled_duration(base_ms, multiplier, settings.animations_enabled);
 
     ResolvedTheme {
         colors: resolve_colors(preset, accent),
         shape: ShapeTokens {
-            corner_radius_px: corner_radius_px(&style.corner_radius),
-            border_width_px: border_width_px(&style.border_width),
+            corner_radius_px: corner_radius_px(settings.corner_radius),
+            border_width_px: border_width_px(settings.border_width),
         },
         spacing: SpacingTokens {
-            small_px: BASE_SPACING_SMALL_PX * ui_scale,
-            medium_px: BASE_SPACING_MEDIUM_PX * ui_scale,
-            large_px: BASE_SPACING_LARGE_PX * ui_scale,
+            small_px: BASE_SPACING_SMALL_PX * settings.ui_scale,
+            medium_px: BASE_SPACING_MEDIUM_PX * settings.ui_scale,
+            large_px: BASE_SPACING_LARGE_PX * settings.ui_scale,
         },
         animation: AnimationTokens {
-            enabled: style.animations_enabled,
+            enabled: settings.animations_enabled,
             very_short_ms: duration(50.0),
             short_ms: duration(150.0),
             long_ms: duration(300.0),
@@ -235,19 +217,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn corner_radius_presets_match_stylekit_units_qml() {
-        assert_eq!(corner_radius_px("circle"), 9999.0);
-        assert_eq!(corner_radius_px("large"), 14.0);
-        assert_eq!(corner_radius_px("medium"), 8.0);
-        assert_eq!(corner_radius_px("small"), 4.0);
-        assert_eq!(corner_radius_px("disabled"), 0.0);
+    fn corner_radius_presets() {
+        assert_eq!(corner_radius_px(CornerRadius::Circle), 9999.0);
+        assert_eq!(corner_radius_px(CornerRadius::Large), 14.0);
+        assert_eq!(corner_radius_px(CornerRadius::Medium), 8.0);
+        assert_eq!(corner_radius_px(CornerRadius::Small), 4.0);
+        assert_eq!(corner_radius_px(CornerRadius::Disabled), 0.0);
     }
 
     #[test]
-    fn border_width_presets_match_stylekit_units_qml() {
-        assert_eq!(border_width_px("thin"), 0.5);
-        assert_eq!(border_width_px("default"), 1.0);
-        assert_eq!(border_width_px("thick"), 2.0);
+    fn border_width_presets() {
+        assert_eq!(border_width_px(BorderWidth::Thin), 0.5);
+        assert_eq!(border_width_px(BorderWidth::Default), 1.0);
+        assert_eq!(border_width_px(BorderWidth::Thick), 2.0);
     }
 
     #[test]
@@ -258,38 +240,55 @@ mod tests {
 
     #[test]
     fn animation_speed_scales_base_durations() {
-        assert_eq!(scaled_duration(50.0, animation_speed_multiplier("slow"), true), 88);
-        assert_eq!(scaled_duration(500.0, animation_speed_multiplier("fast"), true), 250);
-        assert_eq!(scaled_duration(300.0, animation_speed_multiplier("normal"), true), 360);
+        assert_eq!(scaled_duration(50.0, animation_speed_multiplier(AnimationSpeed::Slow), true), 88);
+        assert_eq!(scaled_duration(500.0, animation_speed_multiplier(AnimationSpeed::Fast), true), 250);
+        assert_eq!(scaled_duration(300.0, animation_speed_multiplier(AnimationSpeed::Normal), true), 360);
+    }
+
+    #[test]
+    fn opaque_blend_matches_the_qml_formula() {
+        let white = RgbColor::new(255, 255, 255);
+        let black = RgbColor::new(0, 0, 0);
+        assert_eq!(opaque_blend(white, black, 0.5), RgbColor::new(128, 128, 128));
     }
 
     #[test]
     fn ui_scale_scales_spacing_only() {
-        // 2x ui_scale doubles spacing but must never touch shape tokens --
-        // confirmed corner-radius/border-width have no ui_scale factor at
-        // all in `resolve()`.
-        let small = BASE_SPACING_SMALL_PX * 2.0;
-        assert_eq!(small, 8.0);
-        assert_eq!(corner_radius_px("medium"), 8.0); // unaffected by any scale
+        let theme = resolve(&ThemeSettings { ui_scale: 2.0, ..ThemeSettings::default() });
+        assert_eq!(theme.spacing.small_px, 8.0);
+        assert_eq!(theme.spacing.medium_px, 16.0);
+        assert_eq!(theme.spacing.large_px, 32.0);
+        assert_eq!(theme.shape.corner_radius_px, 4.0, "shape is unaffected by ui_scale");
     }
 
     #[test]
-    fn opaque_blend_matches_theme_qml_formula() {
-        let white = RgbColor::new(255, 255, 255);
-        let black = RgbColor::new(0, 0, 0);
-        let half = opaque_blend(white, black, 0.5);
-        assert_eq!(half, RgbColor::new(128, 128, 128));
+    fn default_settings_use_the_dark_variant_with_its_own_accent() {
+        let theme = resolve(&ThemeSettings::default());
+        let accent = palette::DEFAULT_ACCENT;
+        assert_eq!(theme.colors.accent, Rgba::opaque(accent));
+        let dark = palette::DARK_PRESET;
+        assert_eq!(theme.colors.background, Rgba::opaque(dark.base));
     }
 
     #[test]
-    fn resolve_does_not_panic_regardless_of_host_ayamerc_state() {
-        // `resolve()` reads the real `~/.config/ayamerc` via
-        // `ayame_config::Settings::load()` (falls back to `Settings::
-        // default()` if missing/unparseable) -- this only checks it
-        // completes and produces in-range values for *any* preset
-        // string, not a specific host's actual settings.
-        let theme = resolve();
-        assert!(theme.shape.corner_radius_px >= 0.0);
-        assert!(theme.shape.border_width_px >= 0.0);
+    fn explicit_accent_and_variant_override_the_defaults() {
+        let accent = RgbColor::new(0x11, 0x22, 0x33);
+        let theme = resolve(&ThemeSettings {
+            variant: "catppuccin-mocha".to_string(),
+            accent: Some(accent),
+            ..ThemeSettings::default()
+        });
+        assert_eq!(theme.colors.accent, Rgba::opaque(accent));
+        let mocha = palette::preset_by_id("catppuccin-mocha");
+        assert_eq!(theme.colors.background, Rgba::opaque(mocha.base));
+    }
+
+    #[test]
+    fn variant_accent_is_used_when_none_is_given() {
+        let theme = resolve(&ThemeSettings {
+            variant: "catppuccin-mocha".to_string(),
+            ..ThemeSettings::default()
+        });
+        assert_eq!(theme.colors.accent, Rgba::opaque(palette::default_accent_for("catppuccin-mocha")));
     }
 }

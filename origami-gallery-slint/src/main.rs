@@ -164,7 +164,7 @@ fn relayout(state: &Rc<RefCell<AppState>>, app: &AppWindow) {
 
 fn main() -> Result<(), slint::PlatformError> {
     let app = AppWindow::new()?;
-    theme::load_and_apply(&app);
+    theme::apply_default(&app);
 
     let cells_model = Rc::new(VecModel::default());
     let state = Rc::new(RefCell::new(AppState {

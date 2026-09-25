@@ -1,14 +1,10 @@
-//! Ayame's own QPalette color data, decoupled from `crates/qml6/cpp/theme_palette.cpp`.
-//!
-//! This crate owns two things: the fixed light/dark palette presets (the
-//! colors that used to be hardcoded `QColor` literals in C++), and the
-//! logic to compose a preset with a user-chosen accent color into the full
-//! set of `QPalette` roles `theme_palette.cpp` applies. It has no build.rs
-//! and registers no QML type -- it is pure data/logic, consumed by
-//! `crates/qml6` which owns the actual FFI boundary into Qt.
+//! Color palettes: the fixed light/dark presets, and the logic to compose a
+//! preset with a chosen accent color into the full set of roles an app
+//! themes with. Pure data and logic (the role names follow Qt's `QPalette`,
+//! which this was first written against).
 //!
 //! `presets` extends this with a registry of named color schemes
-//! (TokyoNight, Catppuccin, Flexoki, alongside Ayame's own light/dark)
+//! (TokyoNight, Catppuccin, Flexoki, alongside Origami's own light/dark)
 //! layered on top of the same `PalettePreset`/`RgbColor` types.
 
 pub mod presets;
@@ -70,7 +66,7 @@ pub struct PalettePreset {
     pub light: RgbColor,
 }
 
-/// Ayame Iris Light Preset (Clean White & Soft Lavender White base with dark violet text).
+/// Origami Iris Light Preset (Clean White & Soft Lavender White base with dark violet text).
 pub const LIGHT_PRESET: PalettePreset = PalettePreset {
     window: RgbColor::new(0xf0, 0xf1, 0xf8),
     window_text: RgbColor::new(0x1a, 0x1b, 0x2d),
@@ -84,7 +80,7 @@ pub const LIGHT_PRESET: PalettePreset = PalettePreset {
     light: RgbColor::new(0xff, 0xff, 0xff),
 };
 
-/// Ayame Iris Dark Preset (Deep Blue-Violet dark base with crisp white text).
+/// Origami Iris Dark Preset (Deep Blue-Violet dark base with crisp white text).
 pub const DARK_PRESET: PalettePreset = PalettePreset {
     window: RgbColor::new(0x22, 0x22, 0x30),
     window_text: RgbColor::new(0xf1, 0xf3, 0xf9),
@@ -98,12 +94,12 @@ pub const DARK_PRESET: PalettePreset = PalettePreset {
     light: RgbColor::new(0x35, 0x35, 0x4c),
 };
 
-/// Ayame's signature Iris Blue-Violet accent color.
+/// Origami's signature Iris Blue-Violet accent color.
 pub const DEFAULT_ACCENT: RgbColor = RgbColor::new(0x6e, 0x62, 0xe4);
 
 /// Selects a preset by the same flat id `theme_mode`/`ThemeSettings`
 /// persist (e.g. `"dark"`, `"catppuccin-mocha"`) -- see `presets::SCHEMES`
-/// for the full registry. Ayame's own two variants keep the bare ids
+/// for the full registry. Origami's own two variants keep the bare ids
 /// `"light"`/`"dark"` for backward compatibility with already-saved
 /// `settings.yaml` files that predate every other scheme; every other
 /// scheme's ids are `"<scheme>-<variant>"` to avoid colliding with them
@@ -128,7 +124,7 @@ pub fn default_accent_for(id: &str) -> RgbColor {
 }
 
 /// Which scheme a flat variant id belongs to (e.g. `"catppuccin-mocha"` ->
-/// `Some("catppuccin")`, `"dark"` -> `Some("ayame")`), or `None` if `id`
+/// `Some("catppuccin")`, `"dark"` -> `Some("origami")`), or `None` if `id`
 /// doesn't match any known variant (including `"system"`, which isn't a
 /// scheme at all).
 pub fn scheme_of(id: &str) -> Option<&'static str> {
@@ -278,7 +274,7 @@ mod tests {
 
     #[test]
     fn scheme_of_known_and_unknown_ids() {
-        assert_eq!(scheme_of("light"), Some("ayame"));
+        assert_eq!(scheme_of("light"), Some("origami"));
         assert_eq!(scheme_of("catppuccin-latte"), Some("catppuccin"));
         assert_eq!(scheme_of("flexoki-dark"), Some("flexoki"));
         assert_eq!(scheme_of("system"), None);

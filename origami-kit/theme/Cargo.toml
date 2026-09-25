@@ -1,7 +1,7 @@
 [package]
-name = "ayame-slint-build"
+name = "origami-theme"
 version.workspace = true
 edition.workspace = true
+readme = "README.md"
 
 [dependencies]
-slint-build = { workspace = true }

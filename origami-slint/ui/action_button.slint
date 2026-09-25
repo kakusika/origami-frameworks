@@ -8,6 +8,8 @@ export component IconButton inherits Rectangle {
     in property <bool> enabled: true;
     in property <bool> active: false;
     in property <length> icon-size: 16px;
+    // Rotates the glyph (e.g. one chevron reused for all four directions).
+    in property <angle> icon-rotation: 0deg;
     in property <color> icon-color: root.active ? Tokens.accent : (touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
     callback clicked();
 
@@ -26,6 +28,7 @@ export component IconButton inherits Rectangle {
         color: !root.enabled ? Tokens.text-disabled : root.icon-color;
         width: root.icon-size;
         height: root.icon-size;
+        transform-rotation: root.icon-rotation;
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
     }

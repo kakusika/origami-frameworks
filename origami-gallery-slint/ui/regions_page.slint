@@ -1,6 +1,13 @@
 import { Tokens } from "@ayame/tokens.slint";
 import { AppButton } from "@ayame/components.slint";
 import { HeaderMenuBar, HeaderMenuItem } from "@origami/header_menu_bar.slint";
+import { Bar, BarStart, BarCenter, BarEnd } from "@origami/bar.slint";
+import { DragHandle } from "@origami/drag_handle.slint";
+import { IconStack } from "@origami/icon_stack.slint";
+import { HamburgerButton } from "@origami/hamburger_button.slint";
+import { SideTitleBar, SideMenuEntry } from "@origami/side_title_bar.slint";
+import { Icons } from "@ayame/icons.slint";
+import { CollapsiblePanel, BottomPanel } from "@origami/collapsible_panel.slint";
 import { ToolBar, ToolBarSeparator } from "@origami/tool_bar.slint";
 import { StatusBar } from "@origami/status_bar.slint";
 import { FloatingWindow } from "@origami/floating_window.slint";
@@ -93,6 +100,42 @@ export component RegionsPage inherits Rectangle {
             }
         }
 
+        // 2b. Bar (start / center / end slots; center stays centered on the
+        // whole bar however wide start and end are)
+        Rectangle {
+            height: 32px;
+            background: Tokens.surface-raised;
+
+            Bar {
+                BarStart {
+                    HamburgerButton {
+                        items: [
+                            { kind: "item", label: "Hamburger item 1", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Hamburger item 2", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        ];
+                        triggered(i) => { root.status = "Hamburger: item " + i; }
+                    }
+                    DragHandle { }
+                    DragHandle { horizontal: true; }
+                    IconStack { icons: [Icons.file, Icons.folder, Icons.plus]; }
+                    IconStack { icons: [Icons.file, Icons.folder, Icons.plus, Icons.x, Icons.check, Icons.maximize]; }
+                    ActionButton { text: "Start A"; }
+                    ActionButton { text: "Start B"; }
+                }
+                BarCenter {
+                    Text {
+                        text: "Centered on the whole bar";
+                        color: Tokens.text-secondary;
+                        font-size: Tokens.font-size-small;
+                        vertical-alignment: center;
+                    }
+                }
+                BarEnd {
+                    ActionButton { text: "End"; primary: true; }
+                }
+            }
+        }
+
         // 3. Desktop Work Area (Houses FloatingWindows)
         desktop := Rectangle {
             vertical-stretch: 1;
@@ -108,12 +151,47 @@ export component RegionsPage inherits Rectangle {
                 y: 20px;
             }
 
+            // Side title bar (icon-only vertical menu; hover shows all names)
+            SideTitleBar {
+                x: 0px;
+                y: 0px;
+                height: parent.height;
+                menus: [
+                    { text: "File", icon: Icons.file, items: [
+                        { kind: "item", label: "New", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        { kind: "item", label: "Open", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                    ] },
+                    { text: "Folders", icon: Icons.folder, items: [
+                        { kind: "item", label: "Show all", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                    ] },
+                    { text: "Add", icon: Icons.plus, items: [
+                        { kind: "item", label: "Add item", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                    ] },
+                ];
+                triggered(m, i) => { root.status = "SideTitleBar: menu " + m + " item " + i; }
+            }
+
+            // Collapsible side panel (docked right) and bottom panel
+            CollapsiblePanel {
+                x: parent.width - self.width - 12px;
+                y: 12px;
+                Text { text: "Right panel"; color: Tokens.text-primary; }
+                Text { text: "Collapse with the arrow"; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+            }
+
+            BottomPanel {
+                x: 12px;
+                y: parent.height - self.height - 12px;
+                Text { text: "Bottom panel"; color: Tokens.text-primary; }
+                Text { text: "Toggle with the arrow above the body"; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+            }
+
             // Floating Window 1 (Inspector)
             fw1 := FloatingWindow {
                 title: "Property Inspector";
                 host-width: desktop.width;
                 host-height: desktop.height;
-                window-x: 60px;
+                window-x: 80px;
                 window-y: 60px;
                 window-width: 340px;
                 window-height: 260px;

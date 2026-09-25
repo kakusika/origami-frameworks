@@ -1,0 +1,35 @@
+import { Icons } from "@ayame/icons.slint";
+import { IconButton } from "action_button.slint";
+import { ThemedMenu, MenuItemEntry } from "themed_menu.slint";
+
+// Slint port of origami/qml/widgets/buttons/HamburgerButton.qml.
+// Icon button that opens a ThemedMenu directly below it. Unlike the QML
+// original it does not show a pressed state while the menu is open: Slint's
+// PopupWindow has no "closed" notification to reset such a state.
+export component HamburgerButton inherits Rectangle {
+    in property <[MenuItemEntry]> items: [];
+    in property <image> icon: Icons.menu-2;
+    in property <length> icon-size: 16px;
+    // Same signals as ThemedMenu.
+    callback triggered(int);
+    callback submenu-triggered(int, int);
+
+    width: 30px;
+    height: 30px;
+
+    IconButton {
+        width: parent.width;
+        height: parent.height;
+        icon: root.icon;
+        icon-size: root.icon-size;
+        clicked => { menu.show(); }
+    }
+
+    menu := ThemedMenu {
+        x: 0px;
+        y: parent.height;
+        items: root.items;
+        triggered(i) => { root.triggered(i); }
+        submenu-triggered(i, j) => { root.submenu-triggered(i, j); }
+    }
+}

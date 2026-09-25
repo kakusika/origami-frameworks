@@ -1,10 +1,13 @@
 import { Tokens } from "@ayame/tokens.slint";
 import { AppButton } from "@ayame/components.slint";
 import { PaneHost, PaneCell } from "@origami/pane_host.slint";
+import { PaneManager, PaneOutlineRow } from "@origami/pane_manager.slint";
+import { CollapsiblePanel } from "@origami/collapsible_panel.slint";
 
 // Live showcase of Origami Pane Layout System (PaneHost, split panes, tabs, drawer).
 export component PanePage inherits Rectangle {
     in-out property <[PaneCell]> cells: [];
+    in property <[PaneOutlineRow]> outline: [];
     in-out property <int> maximized-leaf-id: -1;
     in-out property <string> status: "Drag dividers or switch tabs to interact with PaneHost.";
 
@@ -22,6 +25,7 @@ export component PanePage inherits Rectangle {
     callback tab-drag-ended(int, int, length, length);
     callback drag-hover(length, length);
     callback set-active-leaf(int);
+    callback manager-action(int, int, string);
 
     VerticalLayout {
         // Top banner hint
@@ -126,6 +130,21 @@ export component PanePage inherits Rectangle {
                 tab-drag-ended(group, child, x, y) => { root.tab-drag-ended(group, child, x, y); }
                 drag-hover(x, y) => { root.drag-hover(x, y); }
                 set-active-leaf(id) => { root.set-active-leaf(id); }
+            }
+
+            // Structure viewer: flat outline of the pane tree
+            CollapsiblePanel {
+                x: parent.width - self.width - 12px;
+                y: 12px;
+                panel-width: 260px;
+                panel-color: Tokens.surface-raised.with-alpha(0.95);
+
+                Text { text: "Pane structure"; font-weight: 700; color: Tokens.text-primary; }
+                PaneManager {
+                    height: 220px;
+                    rows: root.outline;
+                    action(node, leaf, name) => { root.manager-action(node, leaf, name); }
+                }
             }
         }
 

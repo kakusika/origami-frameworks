@@ -1,0 +1,137 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icons } from "@ayame/icons.slint";
+import { IconButton } from "action_button.slint";
+
+// Slint port of origami/qml/regions/panel/CollapsiblePanel.qml and
+// BottomPanel.qml.
+//
+// Blender-style panels that float over a view's own content: they show
+// arbitrary content when expanded and collapse to a single arrow handle
+// when hidden. Children go into the panel body, stacked vertically.
+//
+// A panel does not position itself. Its size changes on collapse, so a
+// caller docking it to the right or bottom edge binds x/y from the panel's
+// own size (e.g. `x: parent.width - self.width`), like the anchors in QML.
+
+// Side panel docked to the left or right edge of its parent.
+export component CollapsiblePanel inherits Rectangle {
+    in-out property <bool> expanded: true;
+    // Which edge the panel is docked to; the arrows point toward it when
+    // collapsing.
+    in property <bool> docked-right: true;
+    in property <length> panel-width: 220px;
+    in property <brush> panel-color: Tokens.background.with-alpha(0.8);
+    in property <brush> handle-color: root.panel-color;
+
+    // chevron-right points right (0deg); flipped when docked to the right.
+    property <angle> collapse-angle: root.docked-right ? 0deg : 180deg;
+
+    width: root.expanded ? root.panel-width : 30px;
+    height: root.expanded ? body.preferred-height : 30px;
+
+    animate width { duration: 120ms; easing: ease-out; }
+
+    // Collapsed: a small chip with one arrow that re-expands the panel.
+    Rectangle {
+        visible: !root.expanded;
+        x: root.docked-right ? parent.width - self.width : 0px;
+        width: 30px;
+        height: 30px;
+        border-radius: Tokens.corner-radius;
+        background: root.handle-color;
+
+        IconButton {
+            icon: Icons.chevron-right;
+            icon-rotation: root.collapse-angle + 180deg;
+            clicked => { root.expanded = true; }
+        }
+    }
+
+    // Expanded: the body, collapse button at the docked edge, content below.
+    Rectangle {
+        visible: root.expanded;
+        background: root.panel-color;
+        border-radius: Tokens.corner-radius;
+
+        body := VerticalLayout {
+            padding: Tokens.spacing-small;
+            spacing: Tokens.spacing-small;
+
+            HorizontalLayout {
+                alignment: root.docked-right ? end : start;
+
+                IconButton {
+                    icon: Icons.chevron-right;
+                    icon-rotation: root.collapse-angle;
+                    clicked => { root.expanded = false; }
+                }
+            }
+
+            @children
+        }
+    }
+}
+
+// Panel docked to the bottom of its parent: the toggle button sits outside
+// the body, above its left corner; collapsed, only a handle remains at the
+// bottom left.
+export component BottomPanel inherits Rectangle {
+    in-out property <bool> expanded: true;
+    in property <length> panel-width: 340px;
+    in property <brush> panel-color: Tokens.background.with-alpha(0.9);
+    in property <brush> handle-color: root.panel-color;
+
+    width: root.expanded ? root.panel-width : 30px;
+    height: root.expanded ? body.preferred-height + 30px + 4px : 30px;
+
+    animate width { duration: 120ms; easing: ease-out; }
+
+    // Collapsed handle, bottom left.
+    Rectangle {
+        visible: !root.expanded;
+        y: parent.height - self.height;
+        width: 30px;
+        height: 30px;
+        border-radius: Tokens.corner-radius;
+        background: root.handle-color;
+
+        IconButton {
+            icon: Icons.chevron-right;
+            icon-rotation: 270deg;
+            clicked => { root.expanded = true; }
+        }
+    }
+
+    // Expanded: toggle chip above the body's left corner.
+    Rectangle {
+        visible: root.expanded;
+        y: 0px;
+        width: 30px;
+        height: 30px;
+        border-radius: Tokens.corner-radius;
+        background: root.handle-color;
+
+        IconButton {
+            icon: Icons.chevron-right;
+            icon-rotation: 90deg;
+            clicked => { root.expanded = false; }
+        }
+    }
+
+    Rectangle {
+        visible: root.expanded;
+        y: 30px + 4px;
+        height: parent.height - self.y;
+        background: root.panel-color;
+        border-radius: Tokens.corner-radius;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+
+        body := VerticalLayout {
+            padding: Tokens.spacing-small;
+            spacing: Tokens.spacing-small;
+
+            @children
+        }
+    }
+}

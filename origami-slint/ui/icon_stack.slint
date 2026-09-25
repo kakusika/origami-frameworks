@@ -1,0 +1,46 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon } from "@ayame/icons.slint";
+
+// Slint port of origami/qml/widgets/controls/IconStack.qml.
+// Composite icon standing in for a whole pane group: member icons laid out
+// full-size in a single line, growing the component rather than shrinking
+// each icon. More than `max-cells` icons collapse the tail into a "+N" cell.
+export component IconStack inherits Rectangle {
+    in property <[image]> icons: [];
+    in property <color> icon-color: Tokens.text-secondary;
+    // false = horizontal line, true = vertical line
+    in property <bool> vertical: false;
+    in property <int> max-cells: 4;
+    in property <length> cell-size: 16px;
+    in property <length> cell-spacing: 1px;
+
+    property <bool> overflowing: root.icons.length > root.max-cells;
+    // When overflowing, the last cell is the "+N" label, so one icon fewer is shown.
+    property <int> shown: root.overflowing ? root.max-cells - 1 : root.icons.length;
+    property <int> cells: root.overflowing ? root.max-cells : root.icons.length;
+    property <length> line-length: root.cells * root.cell-size + max(0, root.cells - 1) * root.cell-spacing;
+
+    width: root.vertical ? root.cell-size : root.line-length;
+    height: root.vertical ? root.line-length : root.cell-size;
+
+    for i in root.shown: Icon {
+        x: root.vertical ? 0px : i * (root.cell-size + root.cell-spacing);
+        y: root.vertical ? i * (root.cell-size + root.cell-spacing) : 0px;
+        width: root.cell-size;
+        height: root.cell-size;
+        source: root.icons[i];
+        color: root.icon-color;
+    }
+
+    if root.overflowing: Text {
+        x: root.vertical ? 0px : root.shown * (root.cell-size + root.cell-spacing);
+        y: root.vertical ? root.shown * (root.cell-size + root.cell-spacing) : 0px;
+        width: root.cell-size;
+        height: root.cell-size;
+        text: "+" + (root.icons.length - root.shown);
+        color: root.icon-color;
+        font-size: root.cell-size * 0.6;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

@@ -1,6 +1,7 @@
 import { Tokens } from "@origami/tokens.slint";
 import { Icon, Icons } from "@origami/icons.slint";
 import { Bar, BarStart, BarEnd } from "bar.slint";
+import { MenuBar, MenuBarMenu, MenuEntry } from "menu_bar.slint";
 
 export struct PaneCell {
     x: length,
@@ -49,9 +50,11 @@ export component PaneHost inherits Rectangle {
     callback drag-hover(length, length);
     callback set-active-leaf(int);
 
-    // (kind, target id, x, y): where to open a picker, in window coordinates --
-    // the left edge and bottom edge of the button that asked for it.
-    callback request-picker(string, int, length, length);
+    // Entries of the menu behind a leaf's view-type button and a tab strip's
+    // "+" button. The app supplies them; choosing one reports
+    // (kind, target id, entry id) with kind "change-type" or "add-tab".
+    in property <[MenuEntry]> picker-items: [];
+    callback picker-picked(string, int, string);
 
     changed width => { root.relayout(root.width, root.height); }
     changed height => { root.relayout(root.width, root.height); }
@@ -72,7 +75,53 @@ export component PaneHost inherits Rectangle {
     property <length> divider-press-x: 0px;
     property <length> divider-press-y: 0px;
 
+    pure function entry(id: string, label: string, selected: bool) -> MenuEntry {
+        return { id: id, label: label, enabled: true, selected: selected, separator: false };
+    }
+
+    pure function menu(id: string, label: string, items: [MenuEntry]) -> MenuBarMenu {
+        return { id: id, label: label, icon: @image-url(""), has-icon: false, chevron: false, bold: false, items: items };
+    }
+
+    // The menus of a pane header, by view type: the view-type button, then
+    // (per type) a mode switch, file and add menus, and a view menu for all.
+    pure function header-menus(view-type: string, title: string, mode: string, maximized: bool) -> [MenuBarMenu] {
+        // texteditor gets a mode switch and a file menu, board a file and an add menu.
+        if view-type == "texteditor" {
+            return [
+                type-menu(view-type, title),
+                { id: "mode", label: mode == "block" ? "ブロック" : "ソース", icon: @image-url(""), has-icon: false, chevron: true, bold: false,
+                  items: [entry("mode-source", "ソース", mode != "block"), entry("mode-block", "ブロック", mode == "block")] },
+                menu("file", "ファイル", [entry("file-open", "開く...", false), entry("file-clear", "クリア", false)]),
+                view-menu(maximized),
+            ];
+        }
+        if view-type == "board" {
+            return [
+                type-menu(view-type, title),
+                menu("file", "ファイル", [entry("file-save", "名前を付けて保存...", false), entry("file-open", "開く...", false)]),
+                menu("add", "追加", [entry("add-text-input", "テキスト入力を追加", false), entry("add-image", "画像を追加", false)]),
+                view-menu(maximized),
+            ];
+        }
+        return [type-menu(view-type, title), view-menu(maximized)];
+    }
+
+    pure function type-menu(view-type: string, title: string) -> MenuBarMenu {
+        return { id: "type", label: title, icon: view-type == "file-grid" ? Icons.folder : Icons.file, has-icon: true, chevron: true, bold: true, items: root.picker-items };
+    }
+
+    pure function view-menu(maximized: bool) -> MenuBarMenu {
+        return menu("view", "表示", [
+            entry("view-maximize", maximized ? "元のレイアウトに戻す" : "ペインを最大化", false),
+            entry("view-detach", "別ウィンドウに移動", false),
+        ]);
+    }
+
     for cell in root.cells: Rectangle {
+        // Headers and tab strips carry popovers that hang below them; raise
+        // them above the other cells so the popovers are not painted over.
+        z: (cell.kind == "header" || cell.kind == "tab-add") ? 1000 : 0;
         x: cell.x;
         y: cell.y;
         width: cell.width;
@@ -193,469 +242,22 @@ export component PaneHost inherits Rectangle {
                         }
                     }
 
-                    // 2. View Type Switcher Button (ViewTypePickerButton)
-                    type-btn := Rectangle {
-                        background: type-touch.has-hover ? Tokens.hover : transparent;
-                        border-radius: 3px;
-
-                        HorizontalLayout {
-                            padding-left: 4px;
-                            padding-right: 4px;
-                            spacing: 4px;
-                            alignment: center;
-
-                            Rectangle {
-                                width: 13px;
-
-                                Icon {
-                                    source: cell.view-type == "file-grid" ? Icons.folder : Icons.file;
-                                    color: Tokens.text-secondary;
-                                    width: 13px;
-                                    height: 13px;
-                                    x: (parent.width - self.width) / 2;
-                                    y: (parent.height - self.height) / 2;
-                                }
-                            }
-
-                            Text {
-                                text: cell.title;
-                                color: Tokens.text-primary;
-                                font-size: Tokens.font-size-small;
-                                font-weight: 600;
-                                vertical-alignment: center;
-                            }
-
-                            Rectangle {
-                                width: 10px;
-
-                                Icon {
-                                    source: Icons.chevron-down;
-                                    color: Tokens.text-secondary;
-                                    width: 10px;
-                                    height: 10px;
-                                    x: (parent.width - self.width) / 2;
-                                    y: (parent.height - self.height) / 2;
-                                }
-                            }
-                        }
-
-                        type-touch := TouchArea {
-                            mouse-cursor: pointer;
-                            clicked => {
-                                root.request-picker("change-type", cell.id, type-btn.absolute-position.x, type-btn.absolute-position.y + type-btn.height);
-                            }
-                        }
-                    }
-
-                    // 3. Mode Switch Dropdown (paneHeaderModeSwitch for TextEditor)
-                    if cell.view-type == "texteditor": mode-btn := Rectangle {
-                        background: mode-touch.has-hover ? Tokens.hover : transparent;
-                        border-radius: 3px;
-
-                        HorizontalLayout {
-                            padding-left: 6px;
-                            padding-right: 6px;
-                            spacing: 4px;
-                            alignment: center;
-
-                            Text {
-                                text: root.editor-mode == "block" ? "ブロック" : "ソース";
-                                color: Tokens.text-secondary;
-                                font-size: Tokens.font-size-small;
-                                vertical-alignment: center;
-                            }
-
-                            Rectangle {
-                                width: 10px;
-
-                                Icon {
-                                    source: Icons.chevron-down;
-                                    color: Tokens.text-secondary;
-                                    width: 10px;
-                                    height: 10px;
-                                    x: (parent.width - self.width) / 2;
-                                    y: (parent.height - self.height) / 2;
-                                }
-                            }
-                        }
-
-                        mode-touch := TouchArea {
-                            mouse-cursor: pointer;
-                            clicked => { mode-popup.show(); }
-                        }
-
-                        mode-popup := PopupWindow {
-                            x: 0px;
-                            y: parent.height + 2px;
-                            width: 120px;
-                            close-policy: PopupClosePolicy.close-on-click-outside;
-
-                            // The popup needs a size of its own: on close, Slint repaints only the
-                            // area the popup covered, and an unsized popup covers nothing, leaving a
-                            // stale image of the menu behind.
-                            height: mode-list.preferred-height;
-
-                            Rectangle {
-                                background: Tokens.surface-raised;
-                                border-width: Tokens.border-width;
-                                border-color: Tokens.border;
-                                border-radius: Tokens.corner-radius;
-
-                                mode-list := VerticalLayout {
-                                    padding: 4px;
-                                    spacing: 2px;
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: (touch-src.has-hover || root.editor-mode == "source") ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "ソース";
-                                                color: root.editor-mode == "source" ? Tokens.accent : Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                font-weight: root.editor-mode == "source" ? 600 : 400;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-src := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("texteditor", "mode-source", cell.id);
-                                                mode-popup.close();
-                                            }
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: (touch-blk.has-hover || root.editor-mode == "block") ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "ブロック";
-                                                color: root.editor-mode == "block" ? Tokens.accent : Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                font-weight: root.editor-mode == "block" ? 600 : 400;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-blk := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("texteditor", "mode-block", cell.id);
-                                                mode-popup.close();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 4. Pane Header Menus (HeaderMenuGroup)
-                    // "ファイル" Menu Button (for TextEditor and Board)
-                    if cell.view-type == "texteditor" || cell.view-type == "board": menu-file-btn := Rectangle {
-                        background: file-touch.has-hover ? Tokens.hover : transparent;
-                        border-radius: 3px;
-
-                        HorizontalLayout {
-                            padding-left: 6px;
-                            padding-right: 6px;
-                            alignment: center;
-                            Text {
-                                text: "ファイル";
-                                color: Tokens.text-secondary;
-                                font-size: Tokens.font-size-small;
-                                vertical-alignment: center;
-                            }
-                        }
-
-                        file-touch := TouchArea {
-                            mouse-cursor: pointer;
-                            clicked => { file-popup.show(); }
-                        }
-
-                        file-popup := PopupWindow {
-                            x: 0px;
-                            y: parent.height + 2px;
-                            width: 140px;
-                            close-policy: PopupClosePolicy.close-on-click-outside;
-
-                            // The popup needs a size of its own: on close, Slint repaints only the
-                            // area the popup covered, and an unsized popup covers nothing, leaving a
-                            // stale image of the menu behind.
-                            height: file-list.preferred-height;
-
-                            Rectangle {
-                                background: Tokens.surface-raised;
-                                border-width: Tokens.border-width;
-                                border-color: Tokens.border;
-                                border-radius: Tokens.corner-radius;
-
-                                file-list := VerticalLayout {
-                                    padding: 4px;
-                                    spacing: 2px;
-
-                                    if cell.view-type == "board": Rectangle {
-                                        height: 24px;
-                                        background: touch-save.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "名前を付けて保存...";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-save := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("board", "file-save", cell.id);
-                                                file-popup.close();
-                                            }
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: touch-open.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "開く...";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-open := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action(cell.view-type, "file-open", cell.id);
-                                                file-popup.close();
-                                            }
-                                        }
-                                    }
-
-                                    if cell.view-type == "texteditor": Rectangle {
-                                        height: 24px;
-                                        background: touch-clear.has-hover ? Tokens.destructive.with-alpha(0.3) : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "クリア";
-                                                color: touch-clear.has-hover ? Tokens.destructive.brighter(0.4) : Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-clear := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("texteditor", "file-clear", cell.id);
-                                                file-popup.close();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // "追加" Menu Button (for Board)
-                    if cell.view-type == "board": menu-add-btn := Rectangle {
-                        background: add-menu-touch.has-hover ? Tokens.hover : transparent;
-                        border-radius: 3px;
-
-                        HorizontalLayout {
-                            padding-left: 6px;
-                            padding-right: 6px;
-                            alignment: center;
-                            Text {
-                                text: "追加";
-                                color: Tokens.text-secondary;
-                                font-size: Tokens.font-size-small;
-                                vertical-alignment: center;
-                            }
-                        }
-
-                        add-menu-touch := TouchArea {
-                            mouse-cursor: pointer;
-                            clicked => { add-menu-popup.show(); }
-                        }
-
-                        add-menu-popup := PopupWindow {
-                            x: 0px;
-                            y: parent.height + 2px;
-                            width: 150px;
-                            close-policy: PopupClosePolicy.close-on-click-outside;
-
-                            // The popup needs a size of its own: on close, Slint repaints only the
-                            // area the popup covered, and an unsized popup covers nothing, leaving a
-                            // stale image of the menu behind.
-                            height: add-menu-list.preferred-height;
-
-                            Rectangle {
-                                background: Tokens.surface-raised;
-                                border-width: Tokens.border-width;
-                                border-color: Tokens.border;
-                                border-radius: Tokens.corner-radius;
-
-                                add-menu-list := VerticalLayout {
-                                    padding: 4px;
-                                    spacing: 2px;
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: touch-add-txt.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "テキスト入力を追加";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-add-txt := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("board", "add-text-input", cell.id);
-                                                add-menu-popup.close();
-                                            }
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: touch-add-img.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "画像を追加";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-add-img := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.header-menu-action("board", "add-image", cell.id);
-                                                add-menu-popup.close();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // "表示" Menu Button (for all views)
-                    menu-view-btn := Rectangle {
-                        background: view-touch.has-hover ? Tokens.hover : transparent;
-                        border-radius: 3px;
-
-                        HorizontalLayout {
-                            padding-left: 6px;
-                            padding-right: 6px;
-                            alignment: center;
-                            Text {
-                                text: "表示";
-                                color: Tokens.text-secondary;
-                                font-size: Tokens.font-size-small;
-                                vertical-alignment: center;
-                            }
-                        }
-
-                        view-touch := TouchArea {
-                            mouse-cursor: pointer;
-                            clicked => { view-popup.show(); }
-                        }
-
-                        view-popup := PopupWindow {
-                            x: 0px;
-                            y: parent.height + 2px;
-                            width: 170px;
-                            close-policy: PopupClosePolicy.close-on-click-outside;
-
-                            // The popup needs a size of its own: on close, Slint repaints only the
-                            // area the popup covered, and an unsized popup covers nothing, leaving a
-                            // stale image of the menu behind.
-                            height: view-list.preferred-height;
-
-                            Rectangle {
-                                background: Tokens.surface-raised;
-                                border-width: Tokens.border-width;
-                                border-color: Tokens.border;
-                                border-radius: Tokens.corner-radius;
-
-                                view-list := VerticalLayout {
-                                    padding: 4px;
-                                    spacing: 2px;
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: touch-max.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id) ? "元のレイアウトに戻す" : "ペインを最大化";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-max := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.toggle-maximize(cell.child-id >= 0 ? cell.child-id : cell.id);
-                                                view-popup.close();
-                                            }
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        height: 24px;
-                                        background: touch-detach.has-hover ? Tokens.hover : transparent;
-                                        border-radius: 3px;
-                                        HorizontalLayout {
-                                            padding-left: 8px;
-                                            padding-right: 8px;
-                                            Text {
-                                                text: "別ウィンドウに移動";
-                                                color: Tokens.text-primary;
-                                                font-size: Tokens.font-size-small;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                        touch-detach := TouchArea {
-                                            mouse-cursor: pointer;
-                                            clicked => {
-                                                root.detach-leaf(cell.id, cell.child-id);
-                                                view-popup.close();
-                                            }
-                                        }
-                                    }
-                                }
+                    // 2. The header's menus: view type, mode/file/add, view. They
+                    // share one open state, so with one open, hovering another
+                    // button opens that one instead.
+                    MenuBar {
+                        owner: "pane-" + cell.id;
+                        container-right: root.absolute-position.x + root.width;
+                        menus: root.header-menus(cell.view-type, cell.title, root.editor-mode, root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id));
+                        triggered(menu-id, item-id) => {
+                            if menu-id == "type" {
+                                root.picker-picked("change-type", cell.id, item-id);
+                            } else if item-id == "view-maximize" {
+                                root.toggle-maximize(cell.child-id >= 0 ? cell.child-id : cell.id);
+                            } else if item-id == "view-detach" {
+                                root.detach-leaf(cell.id, cell.child-id);
+                            } else {
+                                root.header-menu-action(cell.view-type, item-id, cell.id);
                             }
                         }
                     }
@@ -770,17 +372,21 @@ export component PaneHost inherits Rectangle {
             }
         }
 
-        if cell.kind == "tab-add": tab-add-cell := Rectangle {
-            background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
+        if cell.kind == "tab-add": Rectangle {
+            background: Tokens.surface;
 
             // "+" is centered in the whole cell; the small tabs<->drawer
             // control sits over its bottom-right corner rather than
             // stacking under it, which pushed the "+" up off-center.
-            add-touch := TouchArea {
-                clicked => {
-                    root.request-picker("add-tab", cell.id, tab-add-cell.absolute-position.x, tab-add-cell.absolute-position.y + tab-add-cell.height);
-                }
-                Icon { source: Icons.plus; color: Tokens.text-primary; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; }
+            MenuBar {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: parent.height;
+                owner: "tabs-" + cell.id;
+                container-right: root.absolute-position.x + root.width;
+                menus: [{ id: "add-tab", label: "", icon: Icons.plus, has-icon: true, chevron: false, bold: false, items: root.picker-items }];
+                triggered(menu-id, item-id) => { root.picker-picked("add-tab", cell.id, item-id); }
             }
 
             convert-drawer-touch := TouchArea {

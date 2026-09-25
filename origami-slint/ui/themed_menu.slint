@@ -50,6 +50,11 @@ export component ThemedMenu inherits PopupWindow {
     callback submenu-triggered(int, int);
 
     close-policy: PopupClosePolicy.close-on-click-outside;
+    // The popup needs a size of its own: on close, Slint repaints only the
+    // area the popup covered, and an unsized popup covers nothing, leaving a
+    // stale image of the menu behind.
+    width: max(180px, layout.preferred-width + Tokens.spacing-small * 2);
+    height: layout.preferred-height;
 
     Rectangle {
         // Explicit x/y: a PopupWindow has no size of its own, and a child

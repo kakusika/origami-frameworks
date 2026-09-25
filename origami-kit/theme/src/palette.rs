@@ -66,36 +66,38 @@ pub struct PalettePreset {
     pub light: RgbColor,
 }
 
-/// Origami Iris Light Preset (Clean White & Soft Lavender White base with dark violet text).
+/// Origami Orchid Light Preset (pale orchid whites with a deep plum text).
 pub const LIGHT_PRESET: PalettePreset = PalettePreset {
-    window: RgbColor::new(0xf0, 0xf1, 0xf8),
-    window_text: RgbColor::new(0x1a, 0x1b, 0x2d),
-    base: RgbColor::new(0xfa, 0xfa, 0xff),
-    alternate_base: RgbColor::new(0xe6, 0xe8, 0xf4),
-    text: RgbColor::new(0x1a, 0x1b, 0x2d),
-    button: RgbColor::new(0xf0, 0xf1, 0xf8),
-    button_text: RgbColor::new(0x1a, 0x1b, 0x2d),
+    window: RgbColor::new(0xf5, 0xed, 0xf8),
+    window_text: RgbColor::new(0x2b, 0x12, 0x35),
+    base: RgbColor::new(0xfc, 0xf8, 0xff),
+    alternate_base: RgbColor::new(0xeb, 0xde, 0xf2),
+    text: RgbColor::new(0x2b, 0x12, 0x35),
+    button: RgbColor::new(0xf5, 0xed, 0xf8),
+    button_text: RgbColor::new(0x2b, 0x12, 0x35),
     tooltip_base: RgbColor::new(0xff, 0xff, 0xff),
-    tooltip_text: RgbColor::new(0x1a, 0x1b, 0x2d),
+    tooltip_text: RgbColor::new(0x2b, 0x12, 0x35),
     light: RgbColor::new(0xff, 0xff, 0xff),
 };
 
-/// Origami Iris Dark Preset (Deep Blue-Violet dark base with crisp white text).
+/// Origami Aubergine Dark Preset (deep violet-black base, plum raised
+/// surfaces, warm lavender-white text). `light` is the raised-surface
+/// shade, one step up from `button` (the chrome).
 pub const DARK_PRESET: PalettePreset = PalettePreset {
-    window: RgbColor::new(0x22, 0x22, 0x30),
-    window_text: RgbColor::new(0xf1, 0xf3, 0xf9),
-    base: RgbColor::new(0x1a, 0x1a, 0x24),
-    alternate_base: RgbColor::new(0x2a, 0x2a, 0x3c),
-    text: RgbColor::new(0xf1, 0xf3, 0xf9),
-    button: RgbColor::new(0x22, 0x22, 0x30),
-    button_text: RgbColor::new(0xf1, 0xf3, 0xf9),
-    tooltip_base: RgbColor::new(0x22, 0x22, 0x30),
-    tooltip_text: RgbColor::new(0xf1, 0xf3, 0xf9),
-    light: RgbColor::new(0x35, 0x35, 0x4c),
+    window: RgbColor::new(0x1e, 0x12, 0x29),
+    window_text: RgbColor::new(0xf4, 0xea, 0xf8),
+    base: RgbColor::new(0x15, 0x0c, 0x1d),
+    alternate_base: RgbColor::new(0x2c, 0x1a, 0x3b),
+    text: RgbColor::new(0xf4, 0xea, 0xf8),
+    button: RgbColor::new(0x21, 0x14, 0x2d),
+    button_text: RgbColor::new(0xf4, 0xea, 0xf8),
+    tooltip_base: RgbColor::new(0x2c, 0x1a, 0x3b),
+    tooltip_text: RgbColor::new(0xf4, 0xea, 0xf8),
+    light: RgbColor::new(0x34, 0x20, 0x4a),
 };
 
-/// Origami's signature Iris Blue-Violet accent color.
-pub const DEFAULT_ACCENT: RgbColor = RgbColor::new(0x6e, 0x62, 0xe4);
+/// Origami's signature crimson accent, set against the violet surfaces.
+pub const DEFAULT_ACCENT: RgbColor = RgbColor::new(0xd1, 0x2a, 0x55);
 
 /// Selects a preset by the same flat id `theme_mode`/`ThemeSettings`
 /// persist (e.g. `"dark"`, `"catppuccin-mocha"`) -- see `presets::SCHEMES`

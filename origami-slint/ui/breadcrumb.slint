@@ -24,7 +24,7 @@ export component Breadcrumb inherits Rectangle {
         y: 0px;
         width: parent.width;
         height: parent.height;
-        viewport-width: max(parent.width, layout.preferred-width);
+        content-width: max(parent.width, layout.preferred-width);
 
         layout := HorizontalLayout {
             spacing: 2px;

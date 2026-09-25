@@ -1,0 +1,109 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon } from "@ayame/icons.slint";
+import { ThemedMenu, MenuItemEntry } from "themed_menu.slint";
+
+export struct SideMenuEntry {
+    text: string,
+    icon: image,
+    items: [MenuItemEntry],
+}
+
+// Slint port of origami/qml/regions/sidebar/SideTitleBar.qml.
+// Vertical, icon-only bar meant to replace a horizontal menu bar. Hovering
+// anywhere over the bar reveals every icon's name at once, so the whole bar
+// can be scanned without hovering each icon in turn. Clicking an icon opens
+// that entry's items in a ThemedMenu to the right of the icon.
+//
+// A single TouchArea covers the bar and maps the pointer to an entry by
+// position, so hover state is bar-wide rather than per button.
+//
+// Differences from the QML original:
+// - No hover-to-switch between open menus (an open PopupWindow grabs input)
+//   and no highlight while a menu is open (PopupWindow has no "closed"
+//   notification to reset it).
+// - The name labels overflow the bar's right edge, so they draw under any
+//   sibling placed after the bar; give the bar its own layout slot with
+//   room to the right, or place it last.
+export component SideTitleBar inherits Rectangle {
+    in property <[SideMenuEntry]> menus: [];
+    // Fired with (entry index, item index) for a `kind == "item"` row.
+    callback triggered(int, int);
+
+    // Entry whose menu was opened last (drives the menu's item list).
+    property <int> open-index: -1;
+    property <length> pad: Tokens.spacing-small;
+    property <length> button-size: root.width - root.pad * 2;
+    property <length> step: root.button-size + root.pad;
+    // Entry under the pointer, -1 when between buttons / outside.
+    property <int> hover-index: {
+        if !bar-touch.has-hover { -1 }
+        else {
+            let i = floor((bar-touch.mouse-y - root.pad) / root.step);
+            (i >= 0 && i < root.menus.length && bar-touch.mouse-y - root.pad - i * root.step < root.button-size) ? i : -1
+        }
+    }
+
+    width: 38px;
+    background: Tokens.surface;
+
+    // Separator against whatever sits to the right.
+    Rectangle {
+        x: parent.width - self.width;
+        width: Tokens.border-width;
+        background: Tokens.border;
+    }
+
+    for entry[i] in root.menus: Rectangle {
+        x: root.pad;
+        y: root.pad + i * root.step;
+        width: root.button-size;
+        height: root.button-size;
+        border-radius: Tokens.corner-radius;
+        background: root.hover-index == i ? Tokens.hover : transparent;
+
+        Icon {
+            source: entry.icon;
+            color: root.hover-index == i ? Tokens.text-primary : Tokens.text-secondary;
+            width: 20px;
+            height: 20px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+        }
+    }
+
+    bar-touch := TouchArea {
+        mouse-cursor: root.hover-index >= 0 ? pointer : default;
+        clicked => {
+            if root.hover-index >= 0 {
+                root.open-index = root.hover-index;
+                menu.show();
+            }
+        }
+    }
+
+    // Names of all entries, shown together while the bar is hovered.
+    for entry[i] in root.menus: Rectangle {
+        visible: bar-touch.has-hover;
+        x: root.width + Tokens.spacing-small;
+        y: root.pad + i * root.step + (root.button-size - self.height) / 2;
+        width: label.preferred-width + Tokens.spacing-large * 2;
+        height: label.preferred-height + Tokens.spacing-small * 2;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+        border-radius: Tokens.corner-radius;
+
+        label := Text {
+            text: entry.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-small;
+        }
+    }
+
+    menu := ThemedMenu {
+        x: root.width;
+        y: root.pad + max(0, root.open-index) * root.step;
+        items: root.open-index >= 0 ? root.menus[root.open-index].items : [];
+        triggered(i) => { root.triggered(root.open-index, i); }
+    }
+}

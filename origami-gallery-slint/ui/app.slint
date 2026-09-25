@@ -5,9 +5,10 @@ import { RegionsPage } from "regions_page.slint";
 import { PanePage } from "pane_page.slint";
 import { AyamePage } from "ayame_page.slint";
 import { PaneCell } from "@origami/pane_host.slint";
+import { PaneOutlineRow } from "@origami/pane_manager.slint";
 import { EditableListEntry } from "@origami/editable_list_view.slint";
 
-export { Tokens, PaneCell, EditableListEntry }
+export { Tokens, PaneCell, PaneOutlineRow, EditableListEntry }
 
 // Slint Component Gallery showcasing Origami & Ayame widget libraries.
 export component AppWindow inherits Window {
@@ -31,6 +32,7 @@ export component AppWindow inherits Window {
 
     // PanePage property forwardings
     in-out property <[PaneCell]> pane-cells: [];
+    in-out property <[PaneOutlineRow]> pane-outline: [];
     in-out property <int> maximized-leaf-id: -1;
     in-out property <string> pane-status: "Ready";
 
@@ -48,6 +50,7 @@ export component AppWindow inherits Window {
     callback tab-drag-ended(int, int, length, length);
     callback drag-hover(length, length);
     callback set-active-leaf(int);
+    callback manager-action(int, int, string);
 
     VerticalLayout {
         // Top navigation bar
@@ -215,6 +218,7 @@ export component AppWindow inherits Window {
             horizontal-stretch: 1;
             vertical-stretch: 1;
             cells: root.pane-cells;
+            outline: root.pane-outline;
             maximized-leaf-id: root.maximized-leaf-id;
             status: root.pane-status;
             relayout(w, h) => { root.relayout(w, h); }
@@ -231,6 +235,7 @@ export component AppWindow inherits Window {
             tab-drag-ended(g, c, x, y) => { root.tab-drag-ended(g, c, x, y); }
             drag-hover(x, y) => { root.drag-hover(x, y); }
             set-active-leaf(id) => { root.set-active-leaf(id); }
+            manager-action(n, l, a) => { root.manager-action(n, l, a); }
         }
         if root.current-tab == 3: AyamePage { horizontal-stretch: 1; vertical-stretch: 1; }
     }

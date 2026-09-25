@@ -1,0 +1,60 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Slint port of origami/qml/regions/bar/{Bar,BarRow}.qml.
+// Generic bar shell with three content slots: `BarStart` (pinned left),
+// `BarCenter` (centered in the whole bar, independent of how wide start/end
+// are), `BarEnd` (pinned right). Pure layout, no background or border of its
+// own -- callers draw whatever chrome they want behind it (or none).
+//
+// Slint has no named slots, so each slot is its own component and the Bar
+// just hosts them; every slot fills the bar and aligns its own content.
+//
+//   Bar {
+//       BarStart { ActionButton { text: "New"; } }
+//       BarCenter { Text { text: "Title"; } }
+//       BarEnd { IconButton { ... } }
+//   }
+//
+// Slots inset their content 2px top and bottom, so bordered or backgrounded
+// children stretched to the slot's height don't touch the bar's edges.
+//
+// For a multi-row bar, stack Bars in a VerticalLayout (the old
+// MultiRowBar.qml did no more than that).
+export component Bar inherits Rectangle {
+    height: 32px;
+
+    @children
+}
+
+component BarSlot inherits Rectangle {
+    in property <LayoutAlignment> slot-alignment: start;
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-small;
+        padding-right: Tokens.spacing-small;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        spacing: Tokens.spacing-small;
+        alignment: root.slot-alignment;
+
+        @children
+    }
+}
+
+export component BarStart inherits BarSlot {
+    slot-alignment: start;
+
+    @children
+}
+
+export component BarCenter inherits BarSlot {
+    slot-alignment: center;
+
+    @children
+}
+
+export component BarEnd inherits BarSlot {
+    slot-alignment: end;
+
+    @children
+}

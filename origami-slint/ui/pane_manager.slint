@@ -1,0 +1,138 @@
+import { Tokens } from "@ayame/tokens.slint";
+import { Icon, Icons } from "@ayame/icons.slint";
+import { HamburgerButton } from "hamburger_button.slint";
+import { MenuItemEntry } from "themed_menu.slint";
+
+// One row of the pane structure viewer. Mirrors `origami_panes::outline::
+// OutlineRow` (plus `active`, which is view state the app fills in).
+export struct PaneOutlineRow {
+    depth: int,
+    kind: string, // "pane" | "tabs" | "drawer" | "split"
+    node-id: int,
+    leaf-id: int, // target of activate/drop operations, -1 for a split
+    title: string,
+    view-type: string,
+    child-count: int,
+    horizontal: bool,
+    expanded: bool,
+    is-current-tab: bool,
+    active: bool,
+}
+
+// Slint port of origami/qml/pane/manager/PaneManager.qml + PaneManagerRow.qml.
+//
+// The QML original instantiated a row recursively per tree node. Slint has
+// no recursive components, so this draws the flat, depth-tagged list from
+// `origami_panes::outline::outline` instead, indented by `depth`.
+//
+// The viewer only reports what the user asked for; the app applies it to its
+// PaneTree. `action` carries (node-id, leaf-id, name) with `name` one of:
+//   "activate"           make the row's leaf the active one
+//   "close"              close a pane (a tab, or a standalone pane)
+//   "close-all-tabs"     close every tab of a tabs group
+//   "close-group"        remove a tabs/drawer/split node with its content
+//   "convert-to-drawer"  tabs -> drawer
+//   "convert-to-tabs"    drawer -> tabs
+//   "toggle-expanded"    expand/collapse a drawer
+//
+// Not ported: the "panes open in separate windows" list, which needs a
+// window registry this library does not have yet.
+export component PaneManager inherits Rectangle {
+    in property <[PaneOutlineRow]> rows: [];
+    callback action(int, int, string);
+
+    property <length> indent: 16px;
+
+    background: Tokens.background;
+
+    if root.rows.length == 0: Text {
+        text: "No panes.";
+        color: Tokens.text-secondary;
+        font-size: Tokens.font-size-normal;
+        x: Tokens.spacing-large;
+        y: Tokens.spacing-large;
+    }
+
+    Flickable {
+        content-height: list.preferred-height;
+
+        list := VerticalLayout {
+            padding: Tokens.spacing-small;
+            spacing: 1px;
+            alignment: start;
+
+            for row in root.rows: Rectangle {
+                height: 28px;
+                border-radius: Tokens.corner-radius;
+                background: row.active ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent);
+
+                touch := TouchArea {
+                    mouse-cursor: row.leaf-id >= 0 ? pointer : default;
+                    clicked => {
+                        if row.leaf-id >= 0 {
+                            root.action(row.node-id, row.leaf-id, "activate");
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    padding-left: row.depth * root.indent + Tokens.spacing-small;
+                    padding-right: Tokens.spacing-small;
+                    spacing: Tokens.spacing-small;
+
+                    Icon {
+                        source: row.kind == "pane" ? Icons.file : (row.kind == "split" ? Icons.switch-horizontal : Icons.folder);
+                        color: row.active ? Tokens.accent : Tokens.text-secondary;
+                        width: 14px;
+                        height: 14px;
+                        y: (parent.height - self.height) / 2;
+                    }
+
+                    Text {
+                        horizontal-stretch: 1;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        font-size: Tokens.font-size-normal;
+                        font-weight: row.is-current-tab ? 700 : 400;
+                        color: row.active ? Tokens.accent : Tokens.text-primary;
+                        text: row.kind == "pane" ? row.title
+                            : row.kind == "tabs" ? "Tabs (" + row.child-count + ")"
+                            : row.kind == "drawer" ? "Drawer (" + row.child-count + ", " + (row.expanded ? "open" : "closed") + ")"
+                            : "Split (" + (row.horizontal ? "horizontal" : "vertical") + ")";
+                    }
+
+                    HamburgerButton {
+                        width: 24px;
+                        height: 24px;
+                        y: (parent.height - self.height) / 2;
+                        items: row.kind == "pane" ? [
+                            { kind: "item", label: "Activate", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Close", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        ] : row.kind == "tabs" ? [
+                            { kind: "item", label: "Close all tabs", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Convert to drawer", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        ] : row.kind == "drawer" ? [
+                            { kind: "item", label: row.expanded ? "Collapse" : "Expand", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Convert to tabs", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        ] : [
+                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                        ];
+                        triggered(i) => {
+                            if row.kind == "pane" {
+                                root.action(row.node-id, row.leaf-id, i == 0 ? "activate" : "close");
+                            } else if row.kind == "tabs" {
+                                root.action(row.node-id, row.leaf-id, i == 0 ? "close-all-tabs" : (i == 1 ? "convert-to-drawer" : "close-group"));
+                            } else if row.kind == "drawer" {
+                                root.action(row.node-id, row.leaf-id, i == 0 ? "toggle-expanded" : (i == 1 ? "convert-to-tabs" : "close-group"));
+                            } else {
+                                root.action(row.node-id, row.leaf-id, "close-group");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

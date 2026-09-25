@@ -1,0 +1,30 @@
+import { Tokens } from "@ayame/tokens.slint";
+
+// Slint port of origami/qml/widgets/controls/DragHandle.qml.
+// Six-dot "grab here" glyph (2x3 vertical or 3x2 horizontal). Purely
+// presentational: callers own the actual drag mechanics with their own
+// TouchArea. Drawn with plain Rectangles rather than an icon so it renders
+// the same regardless of the icon set.
+export component DragHandle inherits Rectangle {
+    in property <color> dot-color: Tokens.text-secondary;
+    in property <float> dot-opacity: 0.6;
+    in property <length> dot-size: 2.5px;
+    in property <length> dot-spacing: 1.5px;
+    // false = vertical (2 cols x 3 rows), true = horizontal (3 cols x 2 rows)
+    in property <bool> horizontal: false;
+
+    property <int> cols: root.horizontal ? 3 : 2;
+
+    width: root.cols * root.dot-size + (root.cols - 1) * root.dot-spacing;
+    height: (6 / root.cols) * root.dot-size + (6 / root.cols - 1) * root.dot-spacing;
+
+    for i in 6: Rectangle {
+        x: mod(i, root.cols) * (root.dot-size + root.dot-spacing);
+        y: floor(i / root.cols) * (root.dot-size + root.dot-spacing);
+        width: root.dot-size;
+        height: root.dot-size;
+        border-radius: root.dot-size / 2;
+        background: root.dot-color;
+        opacity: root.dot-opacity;
+    }
+}

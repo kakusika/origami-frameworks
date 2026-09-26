@@ -91,8 +91,37 @@ export component NumberInput inherits Rectangle {
                 font-weight: 600;
                 horizontal-alignment: center;
                 vertical-alignment: center;
+                init => {
+                    self.focus();
+                    self.select-all();
+                }
+
+                // Enter or clicking away commits what was typed (clamped,
+                // ignored if it is not a number); Escape cancels.
                 accepted => {
+                    if (self.text.is-float()) {
+                        root.value = max(root.minimum, min(root.maximum, self.text.to-float()));
+                        root.value-changed(root.value);
+                    }
                     root.editing = false;
+                }
+
+                key-pressed(event) => {
+                    if (event.text == Key.Escape) {
+                        root.editing = false;
+                        return accept;
+                    }
+                    return reject;
+                }
+
+                changed has-focus => {
+                    if (!self.has-focus && root.editing) {
+                        if (self.text.is-float()) {
+                            root.value = max(root.minimum, min(root.maximum, self.text.to-float()));
+                            root.value-changed(root.value);
+                        }
+                        root.editing = false;
+                    }
                 }
             }
 

@@ -24,14 +24,19 @@ export struct FileGridCell {
 export component FileTile inherits Rectangle {
     in property <FileGridCell> cell;
     in property <bool> highlighted: false;
+    // A drag is over this tile and it would accept the drop.
+    in property <bool> drop-hover: false;
+    // A left press (before the click completes): a caller that owns selection selects here, so a drag that
+    // starts on an unselected tile carries that tile.
+    callback pressed();
     callback clicked(KeyboardModifiers);
     callback double-clicked();
     callback context-menu-requested(length, length);
 
     border-radius: Tokens.corner-radius + 2px;
     background: root.highlighted ? Tokens.selected-surface : (area.has-hover ? Tokens.hover : Tokens.surface);
-    border-width: root.highlighted ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
-    border-color: root.highlighted ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
+    border-width: (root.highlighted || root.drop-hover) ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
+    border-color: (root.highlighted || root.drop-hover) ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
     clip: true;
 
     animate background { duration: 80ms; }
@@ -104,6 +109,9 @@ export component FileTile inherits Rectangle {
         pointer-event(event) => {
             if (event.kind == PointerEventKind.down) {
                 root.press-modifiers = event.modifiers;
+                if (event.button == PointerEventButton.left) {
+                    root.pressed();
+                }
                 if (event.button == PointerEventButton.right) {
                     root.context-menu-requested(self.mouse-x, self.mouse-y);
                 }
@@ -140,6 +148,11 @@ export component FileGrid inherits Rectangle {
     callback marquee-finished();
     // A plain click on empty space.
     callback background-clicked(KeyboardModifiers);
+    // Drag and drop between tiles (with `external-selection`): what a drag carries (the caller sets it from its
+    // selection), and a drop on a directory tile with the action the modifiers chose ("move" | "copy" | "link").
+    in property <data-transfer> drag-data;
+    callback tile-pressed(int);
+    callback tile-dropped(int, string);
 
     in property <brush> custom-background: Tokens.background;
     background: root.custom-background;
@@ -179,28 +192,49 @@ export component FileGrid inherits Rectangle {
             for col in root.columns: Rectangle {
                 property <int> index: row * root.columns + col;
 
-                if self.index < root.cells.length: FileTile {
+                if self.index < root.cells.length: target := DropArea {
                     x: col * root.cell-w + root.gap;
                     y: root.gap;
                     width: root.cell-w - root.gap * 2;
                     height: root.cell-h - root.gap * 2;
-                    cell: root.cells[row * root.columns + col];
-                    highlighted: root.cells[row * root.columns + col].selected || (!root.external-selection && row * root.columns + col == root.selected-index);
-
-                    double-clicked => { root.tile-double-clicked(row * root.columns + col); }
-                    clicked(modifiers) => {
-                        root.tile-clicked(row * root.columns + col, modifiers);
-                        if (root.external-selection) {
-                            // The caller owns the selection.
-                        } else if (root.selected-index == row * root.columns + col) {
-                            root.activated(row * root.columns + col);
-                        } else {
-                            root.selected-index = row * root.columns + col;
-                        }
+                    enabled: root.external-selection && root.cells[row * root.columns + col].is-dir;
+                    can-drop(event) => { return event.proposed-action; }
+                    dropped(event) => {
+                        root.tile-dropped(row * root.columns + col, event.proposed-action == DragAction.copy ? "copy" : (event.proposed-action == DragAction.link ? "link" : "move"));
+                        return event.proposed-action;
                     }
-                    // In the grid's own coordinates, so a caller can place a popup at the pointer.
-                    context-menu-requested(x, y) => {
-                        root.tile-context-menu-requested(row * root.columns + col, col * root.cell-w + root.gap + x, row * root.cell-h + root.gap + y + root.viewport-y);
+
+                    DragArea {
+                        enabled: root.external-selection;
+                        data: root.drag-data;
+                        allow-copy: true;
+                        allow-move: true;
+                        allow-link: true;
+
+                        FileTile {
+                            width: parent.width;
+                            height: parent.height;
+                            cell: root.cells[row * root.columns + col];
+                            highlighted: root.cells[row * root.columns + col].selected || (!root.external-selection && row * root.columns + col == root.selected-index);
+                            drop-hover: target.has-drag;
+
+                            pressed => { root.tile-pressed(row * root.columns + col); }
+                            double-clicked => { root.tile-double-clicked(row * root.columns + col); }
+                            clicked(modifiers) => {
+                                root.tile-clicked(row * root.columns + col, modifiers);
+                                if (root.external-selection) {
+                                    // The caller owns the selection.
+                                } else if (root.selected-index == row * root.columns + col) {
+                                    root.activated(row * root.columns + col);
+                                } else {
+                                    root.selected-index = row * root.columns + col;
+                                }
+                            }
+                            // In the grid's own coordinates, so a caller can place a popup at the pointer.
+                            context-menu-requested(x, y) => {
+                                root.tile-context-menu-requested(row * root.columns + col, col * root.cell-w + root.gap + x, row * root.cell-h + root.gap + y + root.viewport-y);
+                            }
+                        }
                     }
                 }
             }

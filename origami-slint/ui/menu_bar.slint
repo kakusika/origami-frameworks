@@ -11,6 +11,13 @@ export struct MenuEntry {
     selected: bool,
     // A dividing line; the other fields are ignored.
     separator: bool,
+    // Cascading submenus. Entries stay a flat list: `nested-in` is 0 for a top-level entry, or
+    // 1 + the index (in the same `items`) of the entry it is nested under, and `has-submenu`
+    // marks an entry that opens a column of the entries nested under it. Up to three levels
+    // of nesting below the top level are shown; deeper entries are not (flatten them).
+    // Both default to "top level, no submenu", so existing menus are unchanged.
+    nested-in: int,
+    has-submenu: bool,
 }
 
 export struct MenuBarMenu {
@@ -23,6 +30,101 @@ export struct MenuBarMenu {
     chevron: bool,
     bold: bool,
     items: [MenuEntry],
+}
+
+// One column of a menu popover: the entries nested under `parent` (0 = the top level, else 1 + the
+// index of the parent entry). Scrolls when taller than `column-max-height`. Not recursive: the popover
+// stacks up to four of these side by side.
+component MenuColumn inherits Rectangle {
+    in property <[MenuEntry]> items;
+    in property <int> parent: 0;
+    // The entry of this column whose submenu is open (drawn as pressed), or -1.
+    in property <int> open-child: -1;
+    in property <length> column-max-height: 420px;
+    // What the entries need, for sizing the popover.
+    out property <length> content-width: list.preferred-width + 8px;
+    // (entry index, has-submenu): the pointer is over an entry.
+    callback hovered(int, bool);
+    // (entry index): a leaf entry was clicked.
+    callback chosen(int);
+
+    height: min(list.preferred-height + 8px, root.column-max-height);
+    background: Tokens.surface-raised;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border;
+    border-radius: Tokens.corner-radius;
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        content-height: list.preferred-height + 8px;
+
+        list := VerticalLayout {
+            padding: 4px;
+            spacing: 0px;
+            alignment: start;
+
+            // Slint has no `for ... : if ...`, so entries of other columns stay in the list with no
+            // height (and no input, being invisible).
+            for entry[j] in root.items: Rectangle {
+                visible: entry.nested-in == root.parent;
+                height: entry.nested-in != root.parent ? 0px : (entry.separator ? 9px : 26px);
+                background: ((entry-touch.has-hover || root.open-child == j) && entry.enabled && !entry.separator) ? Tokens.hover : transparent;
+                border-radius: 3px;
+
+                if entry.separator: Rectangle {
+                    y: (parent.height - self.height) / 2;
+                    height: 1px;
+                    background: Tokens.divider;
+                }
+
+                // A layout directly in the entry, so the entry reports its
+                // text width and the popover can size to the widest one.
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    spacing: 6px;
+
+                    Text {
+                        text: entry.separator ? "" : entry.label;
+                        color: !entry.enabled ? Tokens.text-disabled : (entry.selected ? Tokens.accent : Tokens.text-primary);
+                        font-size: Tokens.font-size-small;
+                        font-weight: entry.selected ? 600 : 400;
+                        vertical-alignment: center;
+                    }
+
+                    if entry.has-submenu: Rectangle {
+                        width: 10px;
+                        Icon {
+                            source: Icons.chevron-right;
+                            color: Tokens.text-secondary;
+                            width: 10px;
+                            height: 10px;
+                            x: (parent.width - self.width) / 2;
+                            y: (parent.height - self.height) / 2;
+                        }
+                    }
+                }
+
+                entry-touch := TouchArea {
+                    enabled: entry.enabled && !entry.separator;
+                    mouse-cursor: (entry.enabled && !entry.separator) ? pointer : default;
+                    changed has-hover => {
+                        if self.has-hover {
+                            root.hovered(j, entry.has-submenu);
+                        }
+                    }
+                    clicked => {
+                        if !entry.has-submenu {
+                            root.chosen(j);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // A row of menu buttons whose popovers work like a desktop menu bar: while
@@ -58,7 +160,7 @@ export component MenuBar inherits Rectangle {
         height: 100000px;
         pointer-event(event) => {
             if event.kind == PointerEventKind.down {
-                MenuState.index = -1;
+                MenuState.close();
             }
         }
     }
@@ -119,67 +221,88 @@ export component MenuBar inherits Rectangle {
                 mouse-cursor: pointer;
                 clicked => {
                     if btn.open {
-                        MenuState.index = -1;
+                        MenuState.close();
                     } else {
-                        MenuState.owner = root.owner;
-                        MenuState.index = i;
+                        MenuState.open(root.owner, i);
                     }
                 }
                 changed has-hover => {
                     if self.has-hover && root.any-open && MenuState.index != i {
-                        MenuState.index = i;
+                        MenuState.open(root.owner, i);
                     }
                 }
             }
 
             if btn.open: popover := Rectangle {
-                x: min(0px, root.container-right - (btn.absolute-position.x + self.width));
+                // Column widths: the top level sizes to its entries, nested ones are fixed.
+                property <length> nested-width: 220px;
+                property <length> col0-width: max(160px, col0.content-width);
+                property <int> depth: MenuState.sub0 < 0 ? 1 : (MenuState.sub1 < 0 ? 2 : (MenuState.sub2 < 0 ? 3 : 4));
+                property <length> total-width: self.col0-width + (self.depth - 1) * self.nested-width;
+
+                x: min(0px, root.container-right - (btn.absolute-position.x + self.total-width));
                 y: parent.height + 2px;
-                width: max(160px, list.preferred-width);
-                height: list.preferred-height;
-                background: Tokens.surface-raised;
-                border-width: Tokens.border-width;
-                border-color: Tokens.border;
-                border-radius: Tokens.corner-radius;
+                width: self.total-width;
+                height: col0.height;
 
-                list := VerticalLayout {
-                    padding: 4px;
-                    spacing: 2px;
+                col0 := MenuColumn {
+                    x: 0px;
+                    y: 0px;
+                    width: popover.col0-width;
+                    items: menu.items;
+                    parent: 0;
+                    open-child: MenuState.sub0;
+                    hovered(j, sub) => {
+                        MenuState.sub0 = sub ? j : -1;
+                        MenuState.sub1 = -1;
+                        MenuState.sub2 = -1;
+                    }
+                    chosen(j) => {
+                        MenuState.close();
+                        root.triggered(menu.id, menu.items[j].id);
+                    }
+                }
 
-                    for entry[j] in menu.items: Rectangle {
-                        height: entry.separator ? 9px : 24px;
-                        background: (entry-touch.has-hover && entry.enabled && !entry.separator) ? Tokens.hover : transparent;
-                        border-radius: 3px;
+                if MenuState.sub0 >= 0: col1 := MenuColumn {
+                    x: popover.col0-width;
+                    y: 0px;
+                    width: popover.nested-width;
+                    items: menu.items;
+                    parent: MenuState.sub0 + 1;
+                    open-child: MenuState.sub1;
+                    hovered(j, sub) => {
+                        MenuState.sub1 = sub ? j : -1;
+                        MenuState.sub2 = -1;
+                    }
+                    chosen(j) => {
+                        MenuState.close();
+                        root.triggered(menu.id, menu.items[j].id);
+                    }
+                }
 
-                        if entry.separator: Rectangle {
-                            y: (parent.height - self.height) / 2;
-                            height: 1px;
-                            background: Tokens.divider;
-                        }
+                if MenuState.sub0 >= 0 && MenuState.sub1 >= 0: col2 := MenuColumn {
+                    x: popover.col0-width + popover.nested-width;
+                    y: 0px;
+                    width: popover.nested-width;
+                    items: menu.items;
+                    parent: MenuState.sub1 + 1;
+                    open-child: MenuState.sub2;
+                    hovered(j, sub) => { MenuState.sub2 = sub ? j : -1; }
+                    chosen(j) => {
+                        MenuState.close();
+                        root.triggered(menu.id, menu.items[j].id);
+                    }
+                }
 
-                        // A layout directly in the entry, so the entry reports its
-                        // text width and the popover can size to the widest one.
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-
-                            Text {
-                                text: entry.separator ? "" : entry.label;
-                                color: !entry.enabled ? Tokens.text-disabled : (entry.selected ? Tokens.accent : Tokens.text-primary);
-                                font-size: Tokens.font-size-small;
-                                font-weight: entry.selected ? 600 : 400;
-                                vertical-alignment: center;
-                            }
-                        }
-
-                        entry-touch := TouchArea {
-                            enabled: entry.enabled && !entry.separator;
-                            mouse-cursor: (entry.enabled && !entry.separator) ? pointer : default;
-                            clicked => {
-                                MenuState.index = -1;
-                                root.triggered(menu.id, entry.id);
-                            }
-                        }
+                if MenuState.sub0 >= 0 && MenuState.sub1 >= 0 && MenuState.sub2 >= 0: col3 := MenuColumn {
+                    x: popover.col0-width + popover.nested-width * 2;
+                    y: 0px;
+                    width: popover.nested-width;
+                    items: menu.items;
+                    parent: MenuState.sub2 + 1;
+                    chosen(j) => {
+                        MenuState.close();
+                        root.triggered(menu.id, menu.items[j].id);
                     }
                 }
             }

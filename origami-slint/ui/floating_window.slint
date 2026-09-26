@@ -14,8 +14,27 @@ export component FloatingWindow inherits Rectangle {
     in-out property <bool> is-maximized: false;
     in-out property <bool> is-open: true;
 
+    // Whether this is the frontmost-focused window (`FloatingWindows::active`
+    // in `origami-panes`): drawn with the accent border, like QML's `_active`.
+    in property <bool> active: false;
+
     callback closed();
     callback focused();
+    // Fires as the user drags or resizes (x, y, width, height, in the host's
+    // coordinates), so a registry can follow. Assigning `window-x` etc. from a
+    // binding in the consumer is replaced by the first drag (Slint drops a
+    // binding on assignment), so treat these properties as initial values and
+    // this callback as the source of truth afterwards.
+    callback geometry-changed(length, length, length, length);
+    // Fires when minimize/maximize toggles.
+    callback state-changed(bool, bool);
+
+    changed window-x => { root.geometry-changed(root.window-x, root.window-y, root.window-width, root.window-height); }
+    changed window-y => { root.geometry-changed(root.window-x, root.window-y, root.window-width, root.window-height); }
+    changed window-width => { root.geometry-changed(root.window-x, root.window-y, root.window-width, root.window-height); }
+    changed window-height => { root.geometry-changed(root.window-x, root.window-y, root.window-width, root.window-height); }
+    changed is-minimized => { root.state-changed(root.is-minimized, root.is-maximized); }
+    changed is-maximized => { root.state-changed(root.is-minimized, root.is-maximized); }
 
     // Internal drag & resize state
     property <length> drag-start-x: 0px;
@@ -46,8 +65,8 @@ export component FloatingWindow inherits Rectangle {
 
     background: Tokens.surface-raised;
     border-radius: root.is-maximized ? 0px : Tokens.corner-radius + 2px;
-    border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-width: root.active ? 2px : Tokens.border-width;
+    border-color: root.active ? Tokens.accent : Tokens.border;
     clip: true;
 
     VerticalLayout {

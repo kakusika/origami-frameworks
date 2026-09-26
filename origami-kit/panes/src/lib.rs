@@ -16,6 +16,7 @@
 
 pub mod drop;
 pub mod edit;
+pub mod floating;
 pub mod layout;
 pub mod outline;
 pub mod pane_tree;

@@ -12,6 +12,7 @@ import { EditableListView, EditableListEntry } from "@origami/editable_list_view
 import { ActionButton, IconButton, RoundButton, ToggleButton, DetailToggleButton } from "@origami/action_button.slint";
 import { ToggleGroup, ToggleItem } from "@origami/toggle_group.slint";
 import { NumberInput } from "@origami/number_input.slint";
+import { ValueSlider } from "@origami/value_slider.slint";
 import { ViewTypePicker, PickerRow } from "@origami/view_type_picker.slint";
 import { FileGrid, FileGridCell } from "@origami/file_grid.slint";
 import { CollapsibleSection } from "@origami/collapsible_section.slint";
@@ -221,6 +222,35 @@ export component OrigamiPage inherits Rectangle {
                 VerticalLayout {
                     spacing: Tokens.spacing-large;
                     padding-top: Tokens.spacing-small;
+
+                    // ValueSlider (Blender Style)
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text { text: "ValueSlider (Blender Style: Drag to scrub / Click to type)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+
+                        HorizontalLayout {
+                            spacing: Tokens.spacing-large;
+                            alignment: start;
+
+                            ValueSlider {
+                                label: "Strength";
+                                width: 200px;
+                                value: 0.5;
+                                value-changed(v) => { root.status = "ValueSlider: strength = " + v; }
+                            }
+
+                            ValueSlider {
+                                label: "Size";
+                                width: 200px;
+                                value: 24;
+                                minimum: 1;
+                                maximum: 100;
+                                step: 1;
+                                decimals: 0;
+                                value-changed(v) => { root.status = "ValueSlider: size = " + v; }
+                            }
+                        }
+                    }
 
                     // NumberInput (Blender Style)
                     VerticalLayout {

@@ -2,7 +2,29 @@
 // that only one popover is ever open, and so opening one closes another
 // bar's. `owner` is the open MenuBar's `owner` id, `index` the menu within
 // it; -1 means none.
+//
+// `sub0`..`sub2` are the open cascading-submenu entries (an index into the
+// open menu's `items`, or -1) at the first three nesting levels. Use `open`
+// and `close` rather than writing the fields, so they reset together.
 export global MenuState {
     in-out property <string> owner: "";
     in-out property <int> index: -1;
+    in-out property <int> sub0: -1;
+    in-out property <int> sub1: -1;
+    in-out property <int> sub2: -1;
+
+    public function open(owner: string, index: int) {
+        root.owner = owner;
+        root.index = index;
+        root.sub0 = -1;
+        root.sub1 = -1;
+        root.sub2 = -1;
+    }
+
+    public function close() {
+        root.index = -1;
+        root.sub0 = -1;
+        root.sub1 = -1;
+        root.sub2 = -1;
+    }
 }

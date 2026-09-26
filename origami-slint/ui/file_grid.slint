@@ -142,7 +142,7 @@ export component FileGrid inherits Rectangle {
 
     // Scroll offset (<= 0), in the same coordinates as the rows. A caller that
     // maps pointer positions to content (e.g. `RubberBandArea.content-y`) needs it.
-    in-out property <length> viewport-y <=> list.viewport-y;
+    in-out property <length> viewport-y <=> list.content-y;
 
     list := ListView {
         width: parent.width;

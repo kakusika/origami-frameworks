@@ -26,7 +26,7 @@ import { Icon, Icons } from "@origami/icons.slint";
 // to its own content.
 export component ToastNotification inherits Rectangle {
     in property <string> message: "";
-    in property <string> toast-type: "info"; // "info" | "success" | "negative"
+    in property <string> toast-type: "info"; // "info" | "success" | "warning" | "negative"
     in property <int> duration-ms: 3000;
     in-out property <bool> showing: false;
 
@@ -49,7 +49,7 @@ export component ToastNotification inherits Rectangle {
         border-radius: Tokens.corner-radius;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: root.toast-type == "success" ? #4caf50 : root.toast-type == "negative" ? Tokens.destructive : Tokens.accent;
+        border-color: root.toast-type == "success" ? #4caf50 : root.toast-type == "warning" ? #ffb300 : root.toast-type == "negative" ? Tokens.destructive : Tokens.accent;
 
         opacity: root.showing ? 0.98 : 0.0;
         animate opacity { duration: Tokens.anim-short * 1ms; easing: ease-out; }

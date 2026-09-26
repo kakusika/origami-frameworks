@@ -1,5 +1,5 @@
 import { Tokens } from "tokens.slint";
-import { Icon } from "icons.slint";
+import { Icon, Icons } from "icons.slint";
 
 // Text with a "primary"/"secondary" role, matching Origami.Label's
 // type: "secondary" convention from the QML settings screen.
@@ -315,7 +315,7 @@ export component OptionSlider inherits Rectangle {
 export component CollapsibleSection inherits Rectangle {
     in property <string> title;
     in property <bool> show-toggle: false;
-    in-out property <bool> toggle-checked: false;
+    in-out property <bool> toggle-checked: true;
     callback toggle-requested(bool);
     in-out property <bool> expanded: true;
 
@@ -339,14 +339,14 @@ export component CollapsibleSection inherits Rectangle {
                 padding-right: Tokens.spacing-medium;
                 spacing: Tokens.spacing-small;
 
-                // Chevron container
+                // Chevron icon container
                 Rectangle {
                     width: 16px;
                     height: 100%;
 
                     Icon {
                         y: (parent.height - self.height) / 2;
-                        source: root.expanded ? @image-url("icons/chevron-down.svg") : @image-url("icons/chevron-right.svg");
+                        source: root.expanded ? Icons.chevron-down : Icons.chevron-right;
                         color: Tokens.text-primary;
                         width: 14px;
                         height: 14px;

@@ -1,99 +1,177 @@
-import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami/icons.slint";
+import { ListView } from "std-widgets.slint";
+import { Tokens } from "tokens.slint";
+import { Icon, Icons } from "icons.slint";
 
-// Slint port of origami/qml/views/FileTile.qml and catalogs grid view.
-// A responsive grid layout for file/folder tiles with thumbnail preview,
-// icon fallback, single-click selection, and double-click/activation.
+// Slint port of origami/qml/views/FileTile.qml and the catalogs grid view.
+//
+// One entry: a thumbnail (or a folder/file icon) above its name. Knows nothing
+// about a model -- `FileGrid` binds it, and the caller decides what a click
+// means (open a directory vs. select a file), same split as the QML original.
 export struct FileGridCell {
     name: string,
     path: string,
     is-dir: bool,
     thumbnail: image,
     has-thumbnail: bool,
+    is-symlink: bool,
+    is-broken-symlink: bool,
+    // Owned by the caller's selection model (Ctrl/Shift multi-select is the
+    // caller's job); `FileGrid.selected-index` is a separate, single highlight.
+    selected: bool,
 }
 
+export component FileTile inherits Rectangle {
+    in property <FileGridCell> cell;
+    in property <bool> highlighted: false;
+    callback clicked(KeyboardModifiers);
+    callback double-clicked();
+    callback context-menu-requested(length, length);
+
+    border-radius: Tokens.corner-radius + 2px;
+    background: root.highlighted ? Tokens.selected-surface : (area.has-hover ? Tokens.hover : Tokens.surface);
+    border-width: root.highlighted ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
+    border-color: root.highlighted ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
+    clip: true;
+
+    animate background { duration: 80ms; }
+    animate border-color { duration: 80ms; }
+
+    VerticalLayout {
+        padding: Tokens.spacing-small;
+        spacing: Tokens.spacing-small;
+
+        thumb := Rectangle {
+            border-radius: Tokens.corner-radius;
+            clip: true;
+            background: Tokens.surface-raised;
+
+            if root.cell.has-thumbnail: Image {
+                source: root.cell.thumbnail;
+                width: parent.width;
+                height: parent.height;
+                image-fit: cover;
+            }
+
+            if !root.cell.has-thumbnail: Icon {
+                source: root.cell.is-dir ? Icons.folder : Icons.file;
+                color: root.highlighted ? Tokens.accent : Tokens.text-secondary;
+                width: min(48px, max(24px, parent.width * 0.38));
+                height: min(48px, max(24px, parent.height * 0.38));
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+            }
+
+            // Symlink emblem, bottom-right: a broken link is drawn in the
+            // destructive colour, as the QML original's emblem does.
+            if root.cell.is-symlink || root.cell.is-broken-symlink: Rectangle {
+                width: 14px;
+                height: 14px;
+                x: parent.width - self.width - 3px;
+                y: parent.height - self.height - 3px;
+                border-radius: 7px;
+                background: root.cell.is-broken-symlink ? Tokens.destructive : Tokens.accent;
+
+                Icon {
+                    source: Icons.external-link;
+                    color: white;
+                    width: 9px;
+                    height: 9px;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+            }
+        }
+
+        Text {
+            text: root.cell.name;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-small;
+            font-weight: root.highlighted ? 600 : 400;
+            horizontal-alignment: center;
+            overflow: elide;
+            height: 18px;
+        }
+    }
+
+    // `clicked` carries no modifiers, so the press event's are kept for it.
+    property <KeyboardModifiers> press-modifiers;
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(root.press-modifiers); }
+        double-clicked => { root.double-clicked(); }
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.press-modifiers = event.modifiers;
+                if (event.button == PointerEventButton.right) {
+                    root.context-menu-requested(self.mouse-x, self.mouse-y);
+                }
+            }
+        }
+    }
+}
+
+// A responsive grid of `FileTile`s that stays cheap at 100k entries.
+//
+// Slint only virtualizes a `for` that is a direct child of a `ListView`, and a
+// `ListView` needs uniform rows. So the model is a list of ROWS (an integer
+// count -- `ceil(cells / columns)`), and each row lays out its own tiles by
+// indexing the flat `cells`. Only the rows in view are instantiated, and the
+// column count follows the width with no re-chunking of the model.
 export component FileGrid inherits Rectangle {
     in property <[FileGridCell]> cells: [];
     in property <length> desired-cell-width: 120px;
+    // Single-highlight selection, kept for callers that do not model selection
+    // themselves; a click on the highlighted tile activates it (as before).
     in-out property <int> selected-index: -1;
     callback activated(int);
+    // For callers that own selection: every click, with its modifiers.
+    callback tile-clicked(int, KeyboardModifiers);
+    callback tile-context-menu-requested(int, length, length);
 
     in property <brush> custom-background: Tokens.background;
     background: root.custom-background;
 
-    property <int> columns: max(1, floor(self.width / root.desired-cell-width));
-    property <length> cell-w: self.width / root.columns;
+    // The scroll bar takes room off the right edge.
+    property <length> scroll-bar-room: 12px;
+    property <int> columns: max(1, floor((self.width - root.scroll-bar-room) / root.desired-cell-width));
+    property <length> cell-w: (self.width - root.scroll-bar-room) / root.columns;
     property <length> cell-h: root.cell-w * 1.15;
     property <length> gap: 6px;
+    property <int> row-count: ceil(root.cells.length / root.columns);
 
-    Flickable {
-        x: 0px;
-        y: 0px;
+    // Scroll offset (<= 0), in the same coordinates as the rows. A caller that
+    // maps pointer positions to content (e.g. `RubberBandArea.content-y`) needs it.
+    in-out property <length> viewport-y <=> list.viewport-y;
+
+    list := ListView {
         width: parent.width;
         height: parent.height;
-        content-width: parent.width;
-        content-height: max(parent.height, ceil(root.cells.length / root.columns) * root.cell-h + root.gap * 2);
 
-        for cell[i] in root.cells: Rectangle {
-            property <int> grid-col: mod(i, root.columns);
-            property <int> grid-row: floor(i / root.columns);
+        for row in root.row-count: Rectangle {
+            height: root.cell-h;
 
-            x: self.grid-col * root.cell-w + root.gap;
-            y: self.grid-row * root.cell-h + root.gap;
-            width: root.cell-w - root.gap * 2;
-            height: root.cell-h - root.gap * 2;
-            border-radius: Tokens.corner-radius + 2px;
-            background: i == root.selected-index ? Tokens.selected-surface : (area.has-hover ? Tokens.hover : Tokens.surface);
-            border-width: i == root.selected-index ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
-            border-color: i == root.selected-index ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
+            for col in root.columns: Rectangle {
+                property <int> index: row * root.columns + col;
 
-            animate background { duration: 80ms; }
-            animate border-color { duration: 80ms; }
+                if self.index < root.cells.length: FileTile {
+                    x: col * root.cell-w + root.gap;
+                    y: root.gap;
+                    width: root.cell-w - root.gap * 2;
+                    height: root.cell-h - root.gap * 2;
+                    cell: root.cells[row * root.columns + col];
+                    highlighted: root.cells[row * root.columns + col].selected || row * root.columns + col == root.selected-index;
 
-            VerticalLayout {
-                padding: Tokens.spacing-small;
-                spacing: Tokens.spacing-small;
-
-                thumb := Rectangle {
-                    border-radius: Tokens.corner-radius;
-                    clip: true;
-                    background: Tokens.surface-raised;
-
-                    if cell.has-thumbnail: Image {
-                        source: cell.thumbnail;
-                        width: parent.width;
-                        height: parent.height;
-                        image-fit: cover;
+                    clicked(modifiers) => {
+                        root.tile-clicked(row * root.columns + col, modifiers);
+                        if (root.selected-index == row * root.columns + col) {
+                            root.activated(row * root.columns + col);
+                        } else {
+                            root.selected-index = row * root.columns + col;
+                        }
                     }
-
-                    if !cell.has-thumbnail: Icon {
-                        source: cell.is-dir ? Icons.folder : Icons.file;
-                        color: i == root.selected-index ? Tokens.accent : Tokens.text-secondary;
-                        width: min(48px, max(24px, parent.width * 0.38));
-                        height: min(48px, max(24px, parent.height * 0.38));
-                        x: (parent.width - self.width) / 2;
-                        y: (parent.height - self.height) / 2;
-                    }
-                }
-
-                Text {
-                    text: cell.name;
-                    color: Tokens.text-primary;
-                    font-size: Tokens.font-size-small;
-                    font-weight: i == root.selected-index ? 600 : 400;
-                    horizontal-alignment: center;
-                    overflow: elide;
-                    height: 18px;
-                }
-            }
-
-            area := TouchArea {
-                mouse-cursor: pointer;
-                clicked => {
-                    if (root.selected-index == i) {
-                        root.activated(i);
-                    } else {
-                        root.selected-index = i;
+                    context-menu-requested(x, y) => {
+                        root.tile-context-menu-requested(row * root.columns + col, x, y);
                     }
                 }
             }

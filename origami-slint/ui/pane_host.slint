@@ -17,6 +17,10 @@ export struct PaneCell {
     view-type: string,
     title: string,
     active: bool,
+    // The view's own header menus (up to 3), shown between the view-type button
+    // and the view menu; empty keeps the built-in menus for `texteditor`/`board`.
+    // Choosing an entry reports `header-menu-action(view-type, entry id, pane id)`.
+    menus: [MenuBarMenu],
 }
 
 export component PaneHost inherits Rectangle {
@@ -85,7 +89,18 @@ export component PaneHost inherits Rectangle {
 
     // The menus of a pane header, by view type: the view-type button, then
     // (per type) a mode switch, file and add menus, and a view menu for all.
-    pure function header-menus(view-type: string, title: string, mode: string, maximized: bool) -> [MenuBarMenu] {
+    pure function header-menus(view-type: string, title: string, mode: string, maximized: bool, extra: [MenuBarMenu]) -> [MenuBarMenu] {
+        // App-supplied menus win. Slint cannot concatenate arrays, hence one
+        // branch per count (1..3).
+        if extra.length == 1 {
+            return [type-menu(view-type, title), extra[0], view-menu(maximized)];
+        }
+        if extra.length == 2 {
+            return [type-menu(view-type, title), extra[0], extra[1], view-menu(maximized)];
+        }
+        if extra.length >= 3 {
+            return [type-menu(view-type, title), extra[0], extra[1], extra[2], view-menu(maximized)];
+        }
         // texteditor gets a mode switch and a file menu, board a file and an add menu.
         if view-type == "texteditor" {
             return [
@@ -248,7 +263,7 @@ export component PaneHost inherits Rectangle {
                     MenuBar {
                         owner: "pane-" + cell.id;
                         container-right: root.absolute-position.x + root.width;
-                        menus: root.header-menus(cell.view-type, cell.title, root.editor-mode, root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id));
+                        menus: root.header-menus(cell.view-type, cell.title, root.editor-mode, root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id), cell.menus);
                         triggered(menu-id, item-id) => {
                             if menu-id == "type" {
                                 root.picker-picked("change-type", cell.id, item-id);

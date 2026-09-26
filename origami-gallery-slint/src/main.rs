@@ -99,6 +99,7 @@ fn to_cell(r: &PaneRect) -> PaneCell {
         view_type: SharedString::from(r.view_type.as_str()),
         title: SharedString::from(r.title.as_str()),
         active: r.active,
+        menus: slint::ModelRc::default(),
     }
 }
 

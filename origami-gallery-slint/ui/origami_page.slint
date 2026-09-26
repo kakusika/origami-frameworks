@@ -13,6 +13,7 @@ import { ActionButton, IconButton, RoundButton, ToggleButton, DetailToggleButton
 import { ToggleGroup, ToggleItem } from "@origami/toggle_group.slint";
 import { NumberInput } from "@origami/number_input.slint";
 import { ValueSlider } from "@origami/value_slider.slint";
+import { RubberBandArea } from "@origami/rubber_band_area.slint";
 import { ViewTypePicker, PickerRow } from "@origami/view_type_picker.slint";
 import { FileGrid, FileGridCell } from "@origami/file_grid.slint";
 import { CollapsibleSection } from "@origami/collapsible_section.slint";
@@ -248,6 +249,48 @@ export component OrigamiPage inherits Rectangle {
                                 step: 1;
                                 decimals: 0;
                                 value-changed(v) => { root.status = "ValueSlider: size = " + v; }
+                            }
+                        }
+                    }
+
+                    // RubberBandArea
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text { text: "RubberBandArea (hold Shift and drag over the grid)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+
+                        Rectangle {
+                            height: 3 * 44px + 8px;
+                            width: 6 * 44px + 8px;
+                            background: Tokens.surface;
+                            border-radius: Tokens.corner-radius;
+
+                            property <length> sel-x: 0px;
+                            property <length> sel-y: 0px;
+                            property <length> sel-w: 0px;
+                            property <length> sel-h: 0px;
+
+                            // Behind the cells, as the component requires.
+                            band := RubberBandArea {
+                                marquee-started => { root.status = "RubberBandArea: marquee started"; }
+                                selection-rect-changed(x, y, w, h) => {
+                                    parent.sel-x = x;
+                                    parent.sel-y = y;
+                                    parent.sel-w = w;
+                                    parent.sel-h = h;
+                                }
+                                click-fallback(x, y) => { root.status = "RubberBandArea: click fallback at " + x / 1px + ", " + y / 1px; }
+                                selection-finished => { root.status = "RubberBandArea: finished"; }
+                            }
+
+                            for i in 18: Rectangle {
+                                x: 4px + mod(i, 6) * 44px;
+                                y: 4px + floor(i / 6) * 44px;
+                                width: 40px;
+                                height: 40px;
+                                border-radius: Tokens.corner-radius;
+                                property <bool> hit: band.dragging && self.x < parent.sel-x + parent.sel-w && self.x + self.width > parent.sel-x && self.y < parent.sel-y + parent.sel-h && self.y + self.height > parent.sel-y;
+                                background: self.hit ? Tokens.accent : Tokens.surface-raised;
+                                animate background { duration: Tokens.anim-very-short * 1ms; }
                             }
                         }
                     }

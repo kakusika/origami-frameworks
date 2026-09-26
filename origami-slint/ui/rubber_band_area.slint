@@ -1,0 +1,96 @@
+import { Tokens } from "tokens.slint";
+
+// Rubber-band (marquee) selection gesture and box -- ported from cettila's
+// features/catalogs/core/qml/RubberBandArea.qml.
+//
+// Press (with Shift, unless `require-shift` is off) and drag: after the pointer
+// has moved `drag-threshold`, `marquee-started` fires once, then
+// `selection-rect-changed` on every move with the box in CONTENT coordinates
+// (pointer position + `content-x`/`content-y`, the scroll offset of whatever is
+// being selected), so the selection stays correct while the view scrolls.
+// Release after a drag fires `selection-finished`; release without one fires
+// `click-fallback` at the press point (the caller does a range select there).
+//
+// A `TouchArea` cannot pass a press on to siblings beneath it (QML's
+// `mouse.accepted = false`), so place this BEHIND the items it selects among:
+// it then receives the presses that land on empty space. A press that starts on
+// an item belongs to that item. The box is drawn solid: `Rectangle` has no dashed
+// border.
+export component RubberBandArea inherits Rectangle {
+    in property <length> content-x: 0px;
+    in property <length> content-y: 0px;
+    in property <bool> enabled: true;
+    in property <bool> require-shift: true;
+    in property <length> drag-threshold: 4px;
+    in property <brush> fill-color: Tokens.accent.with-alpha(0.16);
+    in property <brush> stroke-color: Tokens.accent;
+    out property <bool> dragging: false;
+
+    callback marquee-started();
+    callback selection-rect-changed(length, length, length, length, KeyboardModifiers);
+    callback click-fallback(length, length, KeyboardModifiers);
+    callback selection-finished();
+
+    property <bool> held: false;
+    property <length> anchor-x: 0px;
+    property <length> anchor-y: 0px;
+    property <length> current-x: 0px;
+    property <length> current-y: 0px;
+
+    function reset() {
+        root.held = false;
+        root.dragging = false;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left && (event.modifiers.shift || !root.require-shift)) {
+                root.held = true;
+                root.dragging = false;
+                root.anchor-x = self.mouse-x + root.content-x;
+                root.anchor-y = self.mouse-y + root.content-y;
+                root.current-x = root.anchor-x;
+                root.current-y = root.anchor-y;
+            } else if (event.kind == PointerEventKind.up && root.held) {
+                if (root.dragging) {
+                    root.selection-finished();
+                } else {
+                    root.click-fallback(root.anchor-x, root.anchor-y, event.modifiers);
+                }
+                root.reset();
+            } else if (event.kind == PointerEventKind.move && root.held) {
+                root.current-x = self.mouse-x + root.content-x;
+                root.current-y = self.mouse-y + root.content-y;
+                if (!root.dragging) {
+                    let dx = (root.current-x - root.anchor-x) / 1px;
+                    let dy = (root.current-y - root.anchor-y) / 1px;
+                    if (sqrt(dx * dx + dy * dy) < root.drag-threshold / 1px) {
+                        return;
+                    }
+                    root.dragging = true;
+                    root.marquee-started();
+                }
+                root.selection-rect-changed(
+                    min(root.anchor-x, root.current-x),
+                    min(root.anchor-y, root.current-y),
+                    abs(root.current-x - root.anchor-x),
+                    abs(root.current-y - root.anchor-y),
+                    event.modifiers);
+            } else if (event.kind == PointerEventKind.cancel) {
+                root.reset();
+            }
+        }
+    }
+
+    if root.dragging: Rectangle {
+        x: min(root.anchor-x, root.current-x) - root.content-x;
+        y: min(root.anchor-y, root.current-y) - root.content-y;
+        width: abs(root.current-x - root.anchor-x);
+        height: abs(root.current-y - root.anchor-y);
+        background: root.fill-color;
+        border-width: 1.5px;
+        border-color: root.stroke-color;
+    }
+}

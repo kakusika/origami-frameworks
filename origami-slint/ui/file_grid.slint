@@ -198,8 +198,9 @@ export component FileGrid inherits Rectangle {
                             root.selected-index = row * root.columns + col;
                         }
                     }
+                    // In the grid's own coordinates, so a caller can place a popup at the pointer.
                     context-menu-requested(x, y) => {
-                        root.tile-context-menu-requested(row * root.columns + col, x, y);
+                        root.tile-context-menu-requested(row * root.columns + col, col * root.cell-w + root.gap + x, row * root.cell-h + root.gap + y + root.viewport-y);
                     }
                 }
             }

@@ -4,7 +4,7 @@ import { ThemedMenu, MenuItemEntry } from "@origami/themed_menu.slint";
 import { ModalDialog } from "@origami/modal_dialog.slint";
 import { ConfirmDialog } from "@origami/confirm_dialog.slint";
 import { IoErrorBanner } from "@origami/io_error_banner.slint";
-import { ToastNotification } from "@origami/toast_notification.slint";
+import { Notifications, ToastHost } from "@origami/notifications.slint";
 import { ColorPickerPopup } from "@origami/color_picker_popup.slint";
 import { Breadcrumb, BreadcrumbSegment } from "@origami/breadcrumb.slint";
 import { CollapsibleTextField } from "@origami/collapsible_text_field.slint";
@@ -473,26 +473,21 @@ export component OrigamiPage inherits Rectangle {
                         spacing: Tokens.spacing-small;
                         Text { text: "ToastNotification"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
 
+                        // Driven through the app-wide `Notifications` global
+                        // (ErrorBus/ToastBus equivalent), not the widget directly.
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
-                            AppButton {
-                                text: "Show info toast";
-                                clicked => {
-                                    toast.message = "Saved successfully";
-                                    toast.toast-type = "success";
-                                    toast.showing = true;
-                                }
-                            }
-                            AppButton {
-                                text: "Show error toast";
-                                clicked => {
-                                    toast.message = "Something went wrong";
-                                    toast.toast-type = "negative";
-                                    toast.showing = true;
-                                }
-                            }
+                            AppButton { text: "Info"; clicked => { Notifications.info("Something happened"); } }
+                            AppButton { text: "Success"; clicked => { Notifications.success("Saved successfully"); } }
+                            AppButton { text: "Warning"; clicked => { Notifications.warning("Disk almost full"); } }
+                            AppButton { text: "Failure"; clicked => { Notifications.failure("Something went wrong"); } }
+                            AppButton { text: "Report error"; clicked => { Notifications.report-error("Could not read the vault"); } }
                         }
-                        toast := ToastNotification { }
+                        IoErrorBanner {
+                            message: Notifications.error-message;
+                            dismissed => { Notifications.error-message = ""; }
+                        }
+                        ToastHost { }
                     }
                 }
             }

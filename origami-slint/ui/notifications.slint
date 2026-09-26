@@ -1,0 +1,82 @@
+import { Tokens } from "tokens.slint";
+import { ToastNotification } from "toast_notification.slint";
+
+// App-wide entry point for transient toasts and error reports -- the Slint
+// counterpart of origami/qml/widgets/impl/{ToastBus,ErrorBus}.qml.
+//
+// Any Slint code can call `Notifications.info("...")` and Rust can call
+// `Notifications::get(&ui).invoke_info(...)`; nothing needs a reference to
+// the widget that eventually shows the message.
+//
+// Each post bumps a serial. A consumer that must react to "a new message
+// just arrived" (restart an auto-hide timer, re-show a banner) watches the
+// serial, not the text: posting the same text twice in a row must still
+// count, and a property only notifies on change.
+export global Notifications {
+    // Latest toast. `ToastHost` shows it; a custom presenter can bind these.
+    out property <string> toast-message;
+    out property <string> toast-type: "info"; // "info" | "success" | "warning" | "negative"
+    out property <int> toast-duration-ms: 3000;
+    out property <int> toast-serial: 0;
+
+    // Latest reported error. `error-reported` fires for every report so a
+    // status bar can hook it from Rust; `error-message`/`error-serial` are
+    // for presenters written in Slint.
+    // `in-out` so a presenter can clear the message when the user dismisses it.
+    in-out property <string> error-message;
+    out property <int> error-serial: 0;
+    callback error-reported(string);
+
+    public function toast(message: string, type: string, duration-ms: int) {
+        root.toast-message = message;
+        root.toast-type = type;
+        root.toast-duration-ms = duration-ms;
+        root.toast-serial += 1;
+    }
+
+    public function info(message: string) { root.toast(message, "info", 3000); }
+    public function success(message: string) { root.toast(message, "success", 3000); }
+    public function warning(message: string) { root.toast(message, "warning", 4000); }
+    // Named `failure` rather than `error`: `error-reported` and
+    // `report-error` below already own the "error" vocabulary.
+    public function failure(message: string) { root.toast(message, "negative", 5000); }
+
+    public function report-error(message: string) {
+        root.error-message = message;
+        root.error-serial += 1;
+        root.error-reported(message);
+    }
+}
+
+// Shows `Notifications`' latest toast. Place it once near the window root and
+// position it (bottom-centre is the QML convention); it sizes itself to its
+// message.
+export component ToastHost inherits Rectangle {
+    width: toast.width;
+    height: toast.height;
+
+    // A repeat of the same text re-arms `ToastNotification`'s auto-hide timer
+    // only if `showing` actually toggles, hence the explicit off/on.
+    property <int> serial: Notifications.toast-serial;
+    changed serial => {
+        toast.showing = false;
+        arm.running = true;
+    }
+
+    // `changed` handlers coalesce writes made in the same evaluation, so the
+    // "off" above and the "on" below must land in different event-loop turns.
+    arm := Timer {
+        interval: 1ms;
+        running: false;
+        triggered => {
+            self.running = false;
+            toast.showing = true;
+        }
+    }
+
+    toast := ToastNotification {
+        message: Notifications.toast-message;
+        toast-type: Notifications.toast-type;
+        duration-ms: Notifications.toast-duration-ms;
+    }
+}

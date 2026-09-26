@@ -1,6 +1,7 @@
 import { ListView } from "std-widgets.slint";
 import { Tokens } from "tokens.slint";
 import { Icon, Icons } from "icons.slint";
+import { RubberBandArea } from "rubber_band_area.slint";
 
 // Slint port of origami/qml/views/FileTile.qml and the catalogs grid view.
 //
@@ -127,22 +128,46 @@ export component FileGrid inherits Rectangle {
     callback activated(int);
     // For callers that own selection: every click, with its modifiers.
     callback tile-clicked(int, KeyboardModifiers);
+    callback tile-double-clicked(int);
     callback tile-context-menu-requested(int, length, length);
+
+    // For callers that own the whole selection (Ctrl/Shift/rubber band): the grid then only reports clicks, keeps
+    // no highlight of its own, never emits `activated`, and lets a left-drag on empty space draw a marquee.
+    in property <bool> external-selection: false;
+    // The marquee, in content coordinates (they stay correct while the grid is scrolled).
+    callback marquee-started();
+    callback marquee-changed(length, length, length, length, KeyboardModifiers);
+    callback marquee-finished();
+    // A plain click on empty space.
+    callback background-clicked(KeyboardModifiers);
 
     in property <brush> custom-background: Tokens.background;
     background: root.custom-background;
 
     // The scroll bar takes room off the right edge.
     property <length> scroll-bar-room: 12px;
-    property <int> columns: max(1, floor((self.width - root.scroll-bar-room) / root.desired-cell-width));
-    property <length> cell-w: (self.width - root.scroll-bar-room) / root.columns;
-    property <length> cell-h: root.cell-w * 1.15;
+    // The layout, for callers that turn a marquee into the cells it covers (`select_grid_in_rect`).
+    out property <int> columns: max(1, floor((self.width - root.scroll-bar-room) / root.desired-cell-width));
+    out property <length> cell-w: (self.width - root.scroll-bar-room) / root.columns;
+    out property <length> cell-h: root.cell-w * 1.15;
     property <length> gap: 6px;
     property <int> row-count: ceil(root.cells.length / root.columns);
 
     // Scroll offset (<= 0), in the same coordinates as the rows. A caller that
     // maps pointer positions to content (e.g. `RubberBandArea.content-y`) needs it.
     in-out property <length> viewport-y <=> list.content-y;
+
+    // Behind the list: it gets the presses that land on empty space between the tiles.
+    if root.external-selection: RubberBandArea {
+        width: parent.width;
+        height: parent.height;
+        require-shift: false;
+        content-y: -root.viewport-y;
+        marquee-started => { root.marquee-started(); }
+        selection-rect-changed(x, y, w, h, m) => { root.marquee-changed(x, y, w, h, m); }
+        selection-finished => { root.marquee-finished(); }
+        click-fallback(x, y, m) => { root.background-clicked(m); }
+    }
 
     list := ListView {
         width: parent.width;
@@ -160,11 +185,14 @@ export component FileGrid inherits Rectangle {
                     width: root.cell-w - root.gap * 2;
                     height: root.cell-h - root.gap * 2;
                     cell: root.cells[row * root.columns + col];
-                    highlighted: root.cells[row * root.columns + col].selected || row * root.columns + col == root.selected-index;
+                    highlighted: root.cells[row * root.columns + col].selected || (!root.external-selection && row * root.columns + col == root.selected-index);
 
+                    double-clicked => { root.tile-double-clicked(row * root.columns + col); }
                     clicked(modifiers) => {
                         root.tile-clicked(row * root.columns + col, modifiers);
-                        if (root.selected-index == row * root.columns + col) {
+                        if (root.external-selection) {
+                            // The caller owns the selection.
+                        } else if (root.selected-index == row * root.columns + col) {
                             root.activated(row * root.columns + col);
                         } else {
                             root.selected-index = row * root.columns + col;

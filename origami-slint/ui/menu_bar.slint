@@ -1,6 +1,7 @@
 import { Tokens } from "@origami/tokens.slint";
 import { Icon, Icons } from "@origami/icons.slint";
 import { MenuState } from "@origami/menu_state.slint";
+import { Separator } from "@origami/separator.slint";
 
 export struct MenuEntry {
     // Reported to `triggered` when chosen.
@@ -74,10 +75,8 @@ component MenuColumn inherits Rectangle {
                 background: ((entry-touch.has-hover || root.open-child == j) && entry.enabled && !entry.separator) ? Tokens.hover-on-raised : transparent;
                 border-radius: 3px;
 
-                if entry.separator: Rectangle {
+                if entry.separator: Separator {
                     y: (parent.height - self.height) / 2;
-                    height: 1px;
-                    background: Tokens.divider;
                 }
 
                 // A layout directly in the entry, so the entry reports its

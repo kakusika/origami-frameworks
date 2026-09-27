@@ -1,5 +1,6 @@
 import { Tokens } from "@origami/tokens.slint";
 import { Icon, Icons } from "@origami/icons.slint";
+import { Separator } from "separator.slint";
 
 // Theme-styled context menu -- ported from origami/qml/widgets/menus/
 // ThemedMenu.qml + ThemedSubMenu.qml (merged into this one component,
@@ -74,11 +75,8 @@ export component ThemedMenu inherits PopupWindow {
             for row[i] in root.items: Rectangle {
                 height: row.kind == "separator" ? 9px : 26px;
 
-                if row.kind == "separator": Rectangle {
+                if row.kind == "separator": Separator {
                     y: (parent.height - self.height) / 2;
-                    width: parent.width;
-                    height: 1px;
-                    background: Tokens.divider;
                 }
 
                 // `row-touch`/`submenu-popup` below are declared

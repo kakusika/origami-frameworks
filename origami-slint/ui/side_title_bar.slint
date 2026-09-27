@@ -1,6 +1,7 @@
 import { Tokens } from "@origami/tokens.slint";
 import { Icon } from "@origami/icons.slint";
 import { ThemedMenu, MenuItemEntry } from "themed_menu.slint";
+import { VerticalSeparator } from "separator.slint";
 
 export struct SideMenuEntry {
     text: string,
@@ -47,10 +48,8 @@ export component SideTitleBar inherits Rectangle {
     background: Tokens.surface;
 
     // Separator against whatever sits to the right.
-    Rectangle {
+    VerticalSeparator {
         x: parent.width - self.width;
-        width: Tokens.border-width;
-        background: Tokens.border;
     }
 
     for entry[i] in root.menus: Rectangle {

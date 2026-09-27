@@ -205,6 +205,10 @@ export component PaneHost inherits Rectangle {
 
         // QML-Faithful PaneHeader Row
         if cell.kind == "header": Rectangle {
+            // The header sits inside its group's frame, so its top corners follow the frame's inner curve (the
+            // frame's radius less its border); square ones would poke out over the frame's rounded corners.
+            border-top-left-radius: max(0px, Tokens.corner-radius - Tokens.border-width);
+            border-top-right-radius: max(0px, Tokens.corner-radius - Tokens.border-width);
             background: root.background-image-path != "" ? Tokens.surface.with-alpha(root.background-pane-opacity) : Tokens.surface;
 
             // Bottom 1px divider
@@ -333,6 +337,13 @@ export component PaneHost inherits Rectangle {
         }
 
         if cell.kind == "tab-label": Rectangle {
+            // Rounded on top like the frame below it, and set 1px in from its neighbours so the curves do not run
+            // into each other; a long title is elided instead of running over the next tab.
+            x: 1px;
+            width: parent.width - 2px;
+            border-top-left-radius: Tokens.corner-radius;
+            border-top-right-radius: Tokens.corner-radius;
+            clip: true;
             background: cell.active ? Tokens.hover-on-surface : Tokens.surface;
 
             label-touch := TouchArea {
@@ -360,8 +371,11 @@ export component PaneHost inherits Rectangle {
             }
 
             Text {
+                x: 6px;
+                width: parent.width - 6px - 22px;
                 text: cell.title;
                 color: Tokens.text-primary;
+                overflow: elide;
                 horizontal-alignment: center;
                 vertical-alignment: center;
             }
@@ -388,6 +402,8 @@ export component PaneHost inherits Rectangle {
         }
 
         if cell.kind == "tab-add": Rectangle {
+            border-top-left-radius: Tokens.corner-radius;
+            border-top-right-radius: Tokens.corner-radius;
             background: Tokens.surface;
 
             // "+" is centered in the whole cell; the small tabs<->drawer

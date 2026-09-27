@@ -337,12 +337,13 @@ export component PaneHost inherits Rectangle {
         }
 
         if cell.kind == "tab-label": Rectangle {
-            // Rounded on top like the frame below it, and set 1px in from its neighbours so the curves do not run
-            // into each other; a long title is elided instead of running over the next tab.
+            // Rounded all round, and set 1px in from its neighbours and from the frame below so the curves do not
+            // run into them; a long title is elided instead of running over the next tab.
             x: 1px;
+            y: 1px;
             width: parent.width - 2px;
-            border-top-left-radius: Tokens.corner-radius;
-            border-top-right-radius: Tokens.corner-radius;
+            height: parent.height - 2px;
+            border-radius: Tokens.corner-radius;
             clip: true;
             background: cell.active ? Tokens.hover-on-surface : Tokens.surface;
 
@@ -402,8 +403,9 @@ export component PaneHost inherits Rectangle {
         }
 
         if cell.kind == "tab-add": Rectangle {
-            border-top-left-radius: Tokens.corner-radius;
-            border-top-right-radius: Tokens.corner-radius;
+            y: 1px;
+            height: parent.height - 2px;
+            border-radius: Tokens.corner-radius;
             background: Tokens.surface;
 
             // "+" is centered in the whole cell; the small tabs<->drawer

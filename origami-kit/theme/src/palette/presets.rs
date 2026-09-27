@@ -76,7 +76,7 @@ const TOKYONIGHT_STORM: PalettePreset = PalettePreset {
     button_text: RgbColor::new(0xc0, 0xca, 0xf5),    // fg
     tooltip_base: RgbColor::new(0x1f, 0x23, 0x35),   // bg_dark
     tooltip_text: RgbColor::new(0xc0, 0xca, 0xf5),   // fg
-    light: RgbColor::new(0xa9, 0xb1, 0xd6),          // fg_dark
+    light: RgbColor::new(0x3b, 0x42, 0x61),          // fg_gutter (one step above bg_highlight; fg_dark is a text color)
 };
 
 const TOKYONIGHT_NIGHT: PalettePreset = PalettePreset {
@@ -151,7 +151,7 @@ const CATPPUCCIN_FRAPPE: PalettePreset = PalettePreset {
     button_text: RgbColor::new(0xc6, 0xd0, 0xf5),
     tooltip_base: RgbColor::new(0x29, 0x2c, 0x3c),
     tooltip_text: RgbColor::new(0xc6, 0xd0, 0xf5),
-    light: RgbColor::new(0x62, 0x68, 0x80), // surface2
+    light: RgbColor::new(0x51, 0x57, 0x6d), // surface1
 };
 
 const CATPPUCCIN_MACCHIATO: PalettePreset = PalettePreset {
@@ -164,7 +164,7 @@ const CATPPUCCIN_MACCHIATO: PalettePreset = PalettePreset {
     button_text: RgbColor::new(0xca, 0xd3, 0xf5),
     tooltip_base: RgbColor::new(0x1e, 0x20, 0x30),
     tooltip_text: RgbColor::new(0xca, 0xd3, 0xf5),
-    light: RgbColor::new(0x5b, 0x60, 0x78), // surface2
+    light: RgbColor::new(0x49, 0x4d, 0x64), // surface1
 };
 
 const CATPPUCCIN_MOCHA: PalettePreset = PalettePreset {
@@ -177,7 +177,7 @@ const CATPPUCCIN_MOCHA: PalettePreset = PalettePreset {
     button_text: RgbColor::new(0xcd, 0xd6, 0xf4),
     tooltip_base: RgbColor::new(0x18, 0x18, 0x25),
     tooltip_text: RgbColor::new(0xcd, 0xd6, 0xf4),
-    light: RgbColor::new(0x58, 0x5b, 0x70), // surface2
+    light: RgbColor::new(0x45, 0x47, 0x5a), // surface1
 };
 
 const CATPPUCCIN_VARIANTS: &[VariantInfo] = &[
@@ -207,9 +207,9 @@ const CATPPUCCIN_VARIANTS: &[VariantInfo] = &[
     },
 ];
 
-// Source: stephango.com/flexoki (official site). Only one background shade
-// is published per mode (`paper`/`bg`), so `window`/`alternate_base` reuse
-// `base` rather than guessing a second one. Default accent is Blue (the
+// Source: stephango.com/flexoki (official site): `paper`/`bg` for the content,
+// `bg-2` for the chrome, `ui` for the raised shade; `window`/`alternate_base`
+// reuse `base`. Default accent is Blue (the
 // "600" light-mode / "400" dark-mode value from Flexoki's accent table).
 const FLEXOKI_LIGHT: PalettePreset = PalettePreset {
     window: RgbColor::new(0xff, 0xfc, 0xf0),         // paper
@@ -217,9 +217,9 @@ const FLEXOKI_LIGHT: PalettePreset = PalettePreset {
     base: RgbColor::new(0xff, 0xfc, 0xf0),           // paper
     alternate_base: RgbColor::new(0xff, 0xfc, 0xf0), // paper
     text: RgbColor::new(0x10, 0x0f, 0x0f),
-    button: RgbColor::new(0xff, 0xfc, 0xf0),
+    button: RgbColor::new(0xf2, 0xf0, 0xe5),         // bg-2
     button_text: RgbColor::new(0x10, 0x0f, 0x0f),
-    tooltip_base: RgbColor::new(0xff, 0xfc, 0xf0),
+    tooltip_base: RgbColor::new(0xf2, 0xf0, 0xe5),   // bg-2
     tooltip_text: RgbColor::new(0x10, 0x0f, 0x0f),
     light: RgbColor::new(0xff, 0xff, 0xff),
 };
@@ -230,11 +230,11 @@ const FLEXOKI_DARK: PalettePreset = PalettePreset {
     base: RgbColor::new(0x10, 0x0f, 0x0f),           // bg
     alternate_base: RgbColor::new(0x10, 0x0f, 0x0f), // bg
     text: RgbColor::new(0xf2, 0xf0, 0xe5),
-    button: RgbColor::new(0x10, 0x0f, 0x0f),
+    button: RgbColor::new(0x1c, 0x1b, 0x1a),         // bg-2
     button_text: RgbColor::new(0xf2, 0xf0, 0xe5),
-    tooltip_base: RgbColor::new(0x10, 0x0f, 0x0f),
+    tooltip_base: RgbColor::new(0x1c, 0x1b, 0x1a),   // bg-2
     tooltip_text: RgbColor::new(0xf2, 0xf0, 0xe5),
-    light: RgbColor::new(0xb7, 0xb5, 0xac), // tx-2
+    light: RgbColor::new(0x28, 0x27, 0x26), // ui (tx-2 is a text color)
 };
 
 const FLEXOKI_VARIANTS: &[VariantInfo] = &[

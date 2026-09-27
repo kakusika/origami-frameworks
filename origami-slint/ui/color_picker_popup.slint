@@ -120,7 +120,7 @@ export component ColorPickerPopup inherits PopupWindow {
         width: 220px;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
         border-radius: Tokens.corner-radius;
 
         VerticalLayout {
@@ -148,7 +148,7 @@ export component ColorPickerPopup inherits PopupWindow {
                 picked(i) => { root.selected-color = root.preset-colors[i]; }
             }
 
-            Rectangle { height: 1px; background: Tokens.divider; }
+            Rectangle { height: 1px; background: Tokens.divider-on-raised; }
 
             OptionSlider {
                 label: "H";
@@ -193,7 +193,7 @@ export component ColorPickerPopup inherits PopupWindow {
 
                 Text {
                     text: "Hex";
-                    color: Tokens.text-secondary;
+                    color: Tokens.text-secondary-on-raised;
                     font-size: Tokens.font-size-small;
                     font-weight: 600;
                     vertical-alignment: center;

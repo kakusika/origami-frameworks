@@ -251,7 +251,7 @@ export component PaneHost inherits Rectangle {
 
                         Icon {
                             source: Icons.grip-vertical;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
                         }
@@ -288,7 +288,7 @@ export component PaneHost inherits Rectangle {
 
                         Icon {
                             source: root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id) ? Icons.minimize : Icons.maximize;
-                            color: maximize-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                            color: maximize-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
                         }
@@ -302,7 +302,7 @@ export component PaneHost inherits Rectangle {
 
                         Icon {
                             source: Icons.external-link;
-                            color: detach-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                            color: detach-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
                         }
@@ -316,7 +316,7 @@ export component PaneHost inherits Rectangle {
 
                         Icon {
                             source: Icons.x;
-                            color: close-leaf-touch.has-hover ? Tokens.destructive : Tokens.text-secondary;
+                            color: close-leaf-touch.has-hover ? Tokens.destructive : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
                         }
@@ -333,7 +333,7 @@ export component PaneHost inherits Rectangle {
         }
 
         if cell.kind == "tab-label": Rectangle {
-            background: cell.active ? Tokens.hover : Tokens.surface;
+            background: cell.active ? Tokens.hover-on-surface : Tokens.surface;
 
             label-touch := TouchArea {
                 pointer-event(event) => {
@@ -361,7 +361,7 @@ export component PaneHost inherits Rectangle {
 
             Text {
                 text: cell.title;
-                color: white;
+                color: Tokens.text-primary;
                 horizontal-alignment: center;
                 vertical-alignment: center;
             }
@@ -375,7 +375,7 @@ export component PaneHost inherits Rectangle {
                 border-radius: 3px;
                 Icon {
                     source: Icons.x;
-                    color: white;
+                    color: close-touch.has-hover ? Tokens.text-on-accent : Tokens.text-secondary-on-surface;
                     width: 10px;
                     height: 10px;
                     x: (parent.width - self.width) / 2;
@@ -412,7 +412,7 @@ export component PaneHost inherits Rectangle {
                 clicked => { root.convert-group(cell.id); }
                 Icon {
                     source: Icons.switch-horizontal;
-                    color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                     width: 8px;
                     height: 8px;
                     x: (parent.width - self.width) / 2;
@@ -425,7 +425,7 @@ export component PaneHost inherits Rectangle {
             background: rail-touch.has-hover ? Tokens.surface-raised : Tokens.background;
             Text {
                 text: cell.title;
-                color: Tokens.text-secondary;
+                color: Tokens.text-secondary-on-raised;
                 horizontal-alignment: center;
                 vertical-alignment: center;
                 wrap: word-wrap;
@@ -472,7 +472,7 @@ export component PaneHost inherits Rectangle {
                 clicked => { root.convert-group(cell.id); }
                 Icon {
                     source: Icons.switch-horizontal;
-                    color: convert-tabs-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    color: convert-tabs-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised;
                     width: 8px;
                     height: 8px;
                     x: (parent.width - self.width) / 2;
@@ -488,8 +488,9 @@ export component PaneHost inherits Rectangle {
         width: root.drop-hl-w;
         height: root.drop-hl-h;
         z: 998;
-        background: root.drop-zone == "center" ? Tokens.selected-surface : Tokens.accent;
-        opacity: root.drop-zone == "center" ? 0.55 : 0.9;
+        background: transparent;
+        border-width: 3px;
+        border-color: root.drop-zone == "center" ? Tokens.accent-hover : Tokens.accent;
     }
 
     if root.dragging: Rectangle {
@@ -499,7 +500,7 @@ export component PaneHost inherits Rectangle {
         height: 24px;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: white;
-        Text { text: root.drag-label; color: white; horizontal-alignment: center; vertical-alignment: center; }
+        border-color: Tokens.accent;
+        Text { text: root.drag-label; color: Tokens.text-primary; horizontal-alignment: center; vertical-alignment: center; }
     }
 }

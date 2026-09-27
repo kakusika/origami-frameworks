@@ -3,11 +3,13 @@
 //! `Tokens` global in `origami-slint` 1:1 -- keep both in sync by hand if
 //! either changes.
 
-use crate::palette::{self, RgbColor};
+use crate::palette::{self, RgbColor, contrast_ratio};
 use crate::settings::{AnimationSpeed, BorderWidth, CornerRadius, ThemeSettings};
 
-/// 8-bit RGBA. `a: 255` unless a token is deliberately translucent (`hover`/
-/// `pressed`, matching `Theme.qml`'s own `paletteFor()`).
+/// 8-bit RGBA. Every token this crate resolves is opaque (`a: 255`): a
+/// translucent color changes with whatever is drawn under it, so each
+/// ground gets its own pre-blended set instead (see [`GroundTokens`]). The
+/// alpha channel only exists because Slint's `Color` has one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rgba {
     pub r: u8,
@@ -20,17 +22,10 @@ impl Rgba {
     pub const fn opaque(rgb: RgbColor) -> Self {
         Self { r: rgb.r, g: rgb.g, b: rgb.b, a: 255 }
     }
-
-    pub fn translucent(rgb: RgbColor, alpha: f32) -> Self {
-        Self { r: rgb.r, g: rgb.g, b: rgb.b, a: (alpha.clamp(0.0, 1.0) * 255.0).round() as u8 }
-    }
 }
 
 /// Pre-composites `fg` over `bg` at `alpha`, returning an opaque result --
-/// ported from `Theme.qml`'s `opaqueBlend()`. Used for border colors: a
-/// translucent border double-blends wherever it overlaps another
-/// translucent layer, so callers that render on a known, solid background
-/// use this instead of a raw alpha color.
+/// ported from `Theme.qml`'s `opaqueBlend()`.
 fn opaque_blend(fg: RgbColor, bg: RgbColor, alpha: f32) -> RgbColor {
     let mix = |f: u8, b: u8| -> u8 {
         (f as f32 * alpha + b as f32 * (1.0 - alpha)).round() as u8
@@ -38,66 +33,182 @@ fn opaque_blend(fg: RgbColor, bg: RgbColor, alpha: f32) -> RgbColor {
     RgbColor::new(mix(fg.r, bg.r), mix(fg.g, bg.g), mix(fg.b, bg.b))
 }
 
+/// `fg` blended over `ground`, starting at `alpha` and raised until it
+/// reaches `min_ratio` against every one of `backings` (or is `fg` itself).
+/// So a quiet text color stays as quiet as the palette allows, but never
+/// below the floor on any of the colors it is drawn over.
+fn blend_with_contrast(fg: RgbColor, ground: RgbColor, backings: &[RgbColor], alpha: f32, min_ratio: f32) -> RgbColor {
+    let mut a = alpha;
+    loop {
+        let c = opaque_blend(fg, ground, a);
+        if a >= 1.0 || backings.iter().all(|&bg| contrast_ratio(c, bg) >= min_ratio) {
+            return c;
+        }
+        a = (a + 0.02).min(1.0);
+    }
+}
+
+/// Contrast floors for the quiet text colors: WCAG AA for body text, and
+/// the 3:1 that AA asks of disabled/incidental UI.
+pub const TEXT_SECONDARY_MIN_CONTRAST: f32 = 4.5;
+pub const TEXT_DISABLED_MIN_CONTRAST: f32 = 3.0;
+
 /// Mirrors `ui/tokens.slint`'s `Tokens` global 1:1.
 #[derive(Debug, Clone, Copy)]
 pub struct ColorTokens {
     pub background: Rgba,
     pub surface: Rgba,
     pub surface_raised: Rgba,
+    pub accent: Rgba,
+    /// Text drawn on a solid `accent` / `destructive` fill.
+    pub text_on_accent: Rgba,
+    pub text_on_destructive: Rgba,
+    pub text_primary: Rgba,
+    pub destructive: Rgba,
+    /// A solid `accent` fill under the pointer / pressed.
+    pub accent_hover: Rgba,
+    pub accent_pressed: Rgba,
+    pub destructive_hover: Rgba,
+    pub destructive_pressed: Rgba,
+    /// Positive state (a connected radio, a "done" badge).
+    pub success: Rgba,
+    /// What to draw on `background` (the content area).
+    pub on_background: GroundTokens,
+    /// What to draw on `surface` (the chrome).
+    pub on_surface: GroundTokens,
+    /// What to draw on `surface_raised`.
+    pub on_raised: GroundTokens,
+}
+
+/// The colors that are drawn on top of one solid ground, each already
+/// blended against that ground. A view picks the set for the ground it
+/// sits on instead of tinting a color at the point of use.
+#[derive(Debug, Clone, Copy)]
+pub struct GroundTokens {
     pub border: Rgba,
     pub divider: Rgba,
     pub hover: Rgba,
     pub pressed: Rgba,
-    pub accent: Rgba,
-    pub text_primary: Rgba,
+    /// A selected row/tile.
+    pub selected: Rgba,
     pub text_secondary: Rgba,
     pub text_disabled: Rgba,
-    pub destructive: Rgba,
-    pub selected_surface: Rgba,
+    /// A light wash of the accent (a selected day, a text selection).
+    pub accent_soft: Rgba,
+    /// A heavier wash of the accent (a marker, a highlighted range).
+    pub accent_strong: Rgba,
+    /// A border under the pointer (stronger than `border`).
+    pub border_hover: Rgba,
+    /// Washes of the destructive / success colors (an error banner, a badge).
+    pub destructive_soft: Rgba,
+    pub destructive_border: Rgba,
+    pub success_soft: Rgba,
+    pub success_border: Rgba,
+}
+
+impl ColorTokens {
+    /// Every color under the name of its `Tokens` property in
+    /// `ui/tokens.slint` (`text-secondary`, `hover-on-surface`, ...).
+    pub fn slint_properties(&self) -> Vec<(String, Rgba)> {
+        let mut out: Vec<(String, Rgba)> = vec![
+            ("background".into(), self.background),
+            ("surface".into(), self.surface),
+            ("surface-raised".into(), self.surface_raised),
+            ("accent".into(), self.accent),
+            ("text-on-accent".into(), self.text_on_accent),
+            ("text-on-destructive".into(), self.text_on_destructive),
+            ("text-primary".into(), self.text_primary),
+            ("destructive".into(), self.destructive),
+            ("accent-hover".into(), self.accent_hover),
+            ("accent-pressed".into(), self.accent_pressed),
+            ("destructive-hover".into(), self.destructive_hover),
+            ("destructive-pressed".into(), self.destructive_pressed),
+            ("success".into(), self.success),
+        ];
+        for (suffix, g) in [("", &self.on_background), ("-on-surface", &self.on_surface), ("-on-raised", &self.on_raised)] {
+            for (name, color) in [
+                ("border", g.border),
+                ("border-hover", g.border_hover),
+                ("divider", g.divider),
+                ("hover", g.hover),
+                ("pressed", g.pressed),
+                ("selected", g.selected),
+                ("text-secondary", g.text_secondary),
+                ("text-disabled", g.text_disabled),
+                ("accent-soft", g.accent_soft),
+                ("accent-strong", g.accent_strong),
+                ("destructive-soft", g.destructive_soft),
+                ("destructive-border", g.destructive_border),
+                ("success-soft", g.success_soft),
+                ("success-border", g.success_border),
+            ] {
+                out.push((format!("{name}{suffix}"), color));
+            }
+        }
+        out
+    }
 }
 
 /// A fixed semantic constant (`Theme.qml`'s `negativeTextColor`)
 /// -- not persisted/customizable, matches upstream: it's a hardcoded
 /// constant there too, independent of the active scheme/accent.
 const DESTRUCTIVE: RgbColor = RgbColor::new(0xda, 0x44, 0x53);
+/// Likewise fixed: the "positive" green (`#10b981`, emerald-500).
+const SUCCESS: RgbColor = RgbColor::new(0x10, 0xb9, 0x81);
 
-/// Derives every flat `ColorTokens` field from one composed palette. This
-/// mapping (which upstream `Theme.qml` "color set" each flat token name
-/// corresponds to) is a judgment call made porting this into a flat token
-/// list instead of QML's per-subtree `paletteFor(set)` calls -- not
-/// upstream gospel, easy to retune here if it looks wrong once actually
-/// running:
+const WHITE: RgbColor = RgbColor::new(0xff, 0xff, 0xff);
+const BLACK: RgbColor = RgbColor::new(0x00, 0x00, 0x00);
+
+fn ground_tokens(ground: RgbColor, text: RgbColor, accent: RgbColor) -> GroundTokens {
+    let o = Rgba::opaque;
+    // Quiet text is drawn over the ground and over what it turns into under
+    // the pointer / when selected.
+    let hover = opaque_blend(accent, ground, 0.15);
+    let selected = opaque_blend(accent, ground, 0.25);
+    let backings = [ground, hover, selected];
+    GroundTokens {
+        border: o(opaque_blend(text, ground, 0.4)),
+        divider: o(opaque_blend(text, ground, 0.5)),
+        hover: o(hover),
+        pressed: o(opaque_blend(accent, ground, 0.5)),
+        selected: o(selected),
+        text_secondary: o(blend_with_contrast(text, ground, &backings, 0.65, TEXT_SECONDARY_MIN_CONTRAST)),
+        text_disabled: o(blend_with_contrast(text, ground, &backings, 0.45, TEXT_DISABLED_MIN_CONTRAST)),
+        accent_soft: o(opaque_blend(accent, ground, 0.35)),
+        accent_strong: o(opaque_blend(accent, ground, 0.6)),
+        border_hover: o(opaque_blend(text, ground, 0.6)),
+        destructive_soft: o(opaque_blend(DESTRUCTIVE, ground, 0.2)),
+        destructive_border: o(opaque_blend(DESTRUCTIVE, ground, 0.5)),
+        success_soft: o(opaque_blend(SUCCESS, ground, 0.2)),
+        success_border: o(opaque_blend(SUCCESS, ground, 0.5)),
+    }
+}
+
+/// Derives every `ColorTokens` field from one composed palette:
 /// - `background` = the view/content color set's background (`base`).
 /// - `surface`/`surface-raised` = the header/chrome color set's background
 ///   (`button`) / the `light` role (a bevel-highlight shade).
-/// - `border`/`divider` = `opaque_blend(text, base, 0.3 / 0.4)` -- both
-///   derived from the view set's own text/background, `divider` at a
-///   stronger blend so it stays visually distinct (a drag handle) from the
-///   softer `border`.
-/// - `hover`/`pressed` = the accent at alpha 0.15/0.5 (translucent,
-///   `Theme.qml`'s own hoverColor/pressedColor -- these don't vary by
-///   color set upstream either).
-/// - `text-primary`/`text-secondary`/`text-disabled` = the view set's text
-///   at alpha 1.0/0.3/0.25.
-/// - `selected-surface` = `opaque_blend(accent, base, 0.25)`, this
-///   library's own concept (no upstream equivalent -- Theme.qml has no
-///   "list selection" role).
+/// - Everything drawn over a ground is blended against that ground, once
+///   per ground (`on_background`, `on_surface`, `on_raised`), all opaque.
 fn resolve_colors(preset: palette::PalettePreset, accent: RgbColor) -> ColorTokens {
     let composed = palette::compose_palette(preset, accent);
     ColorTokens {
         background: Rgba::opaque(composed.base),
         surface: Rgba::opaque(composed.button),
         surface_raised: Rgba::opaque(composed.light),
-        border: Rgba::opaque(opaque_blend(composed.text, composed.base, 0.3)),
-        divider: Rgba::opaque(opaque_blend(composed.text, composed.base, 0.4)),
-        hover: Rgba::translucent(composed.highlight, 0.15),
-        pressed: Rgba::translucent(composed.highlight, 0.5),
         accent: Rgba::opaque(composed.highlight),
+        text_on_accent: Rgba::opaque(composed.highlighted_text),
+        text_on_destructive: Rgba::opaque(palette::contrasting_text_color(DESTRUCTIVE)),
         text_primary: Rgba::opaque(composed.text),
-        text_secondary: Rgba::translucent(composed.text, 0.3),
-        text_disabled: Rgba::translucent(composed.text, 0.25),
         destructive: Rgba::opaque(DESTRUCTIVE),
-        selected_surface: Rgba::opaque(opaque_blend(composed.highlight, composed.base, 0.25)),
+        accent_hover: Rgba::opaque(opaque_blend(WHITE, composed.highlight, 0.12)),
+        accent_pressed: Rgba::opaque(opaque_blend(BLACK, composed.highlight, 0.2)),
+        destructive_hover: Rgba::opaque(opaque_blend(WHITE, DESTRUCTIVE, 0.12)),
+        destructive_pressed: Rgba::opaque(opaque_blend(BLACK, DESTRUCTIVE, 0.2)),
+        success: Rgba::opaque(SUCCESS),
+        on_background: ground_tokens(composed.base, composed.text, composed.highlight),
+        on_surface: ground_tokens(composed.button, composed.text, composed.highlight),
+        on_raised: ground_tokens(composed.light, composed.text, composed.highlight),
     }
 }
 
@@ -290,5 +401,66 @@ mod tests {
             ..ThemeSettings::default()
         });
         assert_eq!(theme.colors.accent, Rgba::opaque(palette::default_accent_for("catppuccin-mocha")));
+    }
+
+    #[test]
+    fn every_token_is_opaque() {
+        for scheme in palette::presets::SCHEMES {
+            for v in scheme.variants {
+                let c = resolve(&ThemeSettings { variant: v.id.to_string(), ..ThemeSettings::default() }).colors;
+                for g in [c.on_background, c.on_surface, c.on_raised] {
+                    for t in [g.border, g.divider, g.hover, g.pressed, g.selected, g.text_secondary, g.text_disabled, g.accent_soft, g.accent_strong, g.border_hover, g.destructive_soft, g.destructive_border, g.success_soft, g.success_border] {
+                        assert_eq!(t.a, 255, "{}", v.id);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn quiet_text_stays_readable_on_every_ground_of_every_variant() {
+        let rgb = |t: Rgba| RgbColor::new(t.r, t.g, t.b);
+        for scheme in palette::presets::SCHEMES {
+            for v in scheme.variants {
+                let c = resolve(&ThemeSettings { variant: v.id.to_string(), ..ThemeSettings::default() }).colors;
+                for (name, ground, g) in [
+                    ("background", c.background, c.on_background),
+                    ("surface", c.surface, c.on_surface),
+                    ("raised", c.surface_raised, c.on_raised),
+                ] {
+                    // On the ground itself the floors are absolute; under the
+                    // pointer or when selected they are as high as the body
+                    // text itself reaches there (the accent wash can leave
+                    // even that short of them).
+                    for (over, backing, strict) in [("", rgb(ground), true), (" hovered", rgb(g.hover), false), (" selected", rgb(g.selected), false)] {
+                        let cap = contrast_ratio(rgb(c.text_primary), backing);
+                        let floor = |min: f32| if strict { min } else { min.min(cap) - 0.05 };
+                        let s = contrast_ratio(rgb(g.text_secondary), backing);
+                        let d = contrast_ratio(rgb(g.text_disabled), backing);
+                        assert!(s >= floor(TEXT_SECONDARY_MIN_CONTRAST), "{} secondary on{over} {name}: {s}", v.id);
+                        assert!(d >= floor(TEXT_DISABLED_MIN_CONTRAST), "{} disabled on{over} {name}: {d}", v.id);
+                    }
+                }
+            }
+        }
+    }
+
+    /// `ui/tokens.slint`'s literal defaults are the default theme resolved;
+    /// this fails (and prints the lines to paste) when they drift apart.
+    #[test]
+    fn tokens_slint_defaults_match_the_resolved_default_theme() {
+        let slint = include_str!("../../../origami-slint/ui/tokens.slint");
+        let declared = |name: &str| -> Option<String> {
+            let prefix = format!("in-out property <color> {name}: ");
+            slint.lines().find_map(|l| l.trim().strip_prefix(&prefix).map(|v| v.trim_end_matches(';').to_string()))
+        };
+        let mut wrong = Vec::new();
+        for (name, c) in resolve(&ThemeSettings::default()).colors.slint_properties() {
+            let want = format!("#{:02x}{:02x}{:02x}", c.r, c.g, c.b);
+            if declared(&name).as_deref() != Some(want.as_str()) {
+                wrong.push(format!("    in-out property <color> {name}: {want};"));
+            }
+        }
+        assert!(wrong.is_empty(), "tokens.slint is out of date:\n{}", wrong.join("\n"));
     }
 }

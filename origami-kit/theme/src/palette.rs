@@ -133,6 +133,29 @@ pub fn scheme_of(id: &str) -> Option<&'static str> {
     presets::scheme_of(id)
 }
 
+/// WCAG relative luminance.
+pub fn relative_luminance(c: RgbColor) -> f32 {
+    let lin = |v: u8| {
+        let v = v as f32 / 255.0;
+        if v <= 0.03928 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) }
+    };
+    0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+}
+
+/// WCAG contrast ratio, 1.0..=21.0.
+pub fn contrast_ratio(a: RgbColor, b: RgbColor) -> f32 {
+    let (la, lb) = (relative_luminance(a), relative_luminance(b));
+    let (hi, lo) = if la > lb { (la, lb) } else { (lb, la) };
+    (hi + 0.05) / (lo + 0.05)
+}
+
+/// Whether a variant is a dark one: its content background is closer to
+/// black than to white. Unknown ids count as light, like `preset_by_id`.
+pub fn is_dark_variant(id: &str) -> bool {
+    let base = preset_by_id(id).base;
+    contrast_ratio(base, RgbColor::new(0, 0, 0)) < contrast_ratio(base, RgbColor::new(255, 255, 255))
+}
+
 /// All twelve `QPalette` roles `theme_palette.cpp` applies, after composing
 /// a preset with a chosen accent color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -163,7 +186,7 @@ const NEAR_WHITE: RgbColor = RgbColor::new(0xf1, 0xf3, 0xf9);
 /// matching both former presets' `HighlightedText`).
 const CONTRAST_LUMINANCE_THRESHOLD: f32 = 150.0;
 
-fn contrasting_text_color(accent: RgbColor) -> RgbColor {
+pub fn contrasting_text_color(accent: RgbColor) -> RgbColor {
     let luminance = 0.299 * accent.r as f32 + 0.587 * accent.g as f32 + 0.114 * accent.b as f32;
     if luminance > CONTRAST_LUMINANCE_THRESHOLD {
         NEAR_BLACK
@@ -197,6 +220,16 @@ pub fn compose_palette(preset: PalettePreset, accent: RgbColor) -> ComposedPalet
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dark_variants_are_told_from_light_ones() {
+        for id in ["dark", "tokyonight-storm", "tokyonight-night", "catppuccin-frappe", "catppuccin-macchiato", "catppuccin-mocha", "flexoki-dark"] {
+            assert!(is_dark_variant(id), "{id}");
+        }
+        for id in ["light", "tokyonight-day", "catppuccin-latte", "flexoki-light", "nonsense"] {
+            assert!(!is_dark_variant(id), "{id}");
+        }
+    }
 
     #[test]
     fn hex_round_trips() {

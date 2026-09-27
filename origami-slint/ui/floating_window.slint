@@ -66,16 +66,16 @@ export component FloatingWindow inherits Rectangle {
     background: Tokens.surface-raised;
     border-radius: root.is-maximized ? 0px : Tokens.corner-radius + 2px;
     border-width: root.active ? 2px : Tokens.border-width;
-    border-color: root.active ? Tokens.accent : Tokens.border;
+    border-color: root.active ? Tokens.accent : Tokens.border-on-raised;
     clip: true;
 
     VerticalLayout {
         // Title bar header
         header := Rectangle {
             height: 36px;
-            background: header-touch.has-hover ? Tokens.hover : Tokens.surface;
+            background: header-touch.has-hover ? Tokens.hover-on-surface : Tokens.surface;
             border-width: Tokens.border-width;
-            border-color: Tokens.border;
+            border-color: Tokens.border-on-surface;
 
             HorizontalLayout {
                 padding-left: Tokens.spacing-medium;
@@ -92,7 +92,7 @@ export component FloatingWindow inherits Rectangle {
 
                     Text {
                         text: "W";
-                        color: white;
+                        color: Tokens.text-on-accent;
                         font-size: 9px;
                         font-weight: 800;
                         horizontal-alignment: center;
@@ -120,12 +120,12 @@ export component FloatingWindow inherits Rectangle {
                         width: 24px;
                         height: 24px;
                         border-radius: 4px;
-                        background: min-touch.has-hover ? Tokens.hover : transparent;
+                        background: min-touch.has-hover ? Tokens.hover-on-surface : transparent;
 
                         Text {
                             text: root.is-minimized ? "□" : "—";
                             font-size: 11px;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-surface;
                             horizontal-alignment: center;
                             vertical-alignment: center;
                         }
@@ -142,12 +142,12 @@ export component FloatingWindow inherits Rectangle {
                         width: 24px;
                         height: 24px;
                         border-radius: 4px;
-                        background: max-touch.has-hover ? Tokens.hover : transparent;
+                        background: max-touch.has-hover ? Tokens.hover-on-surface : transparent;
 
                         Text {
                             text: root.is-maximized ? "❐" : "▢";
                             font-size: 11px;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-surface;
                             horizontal-alignment: center;
                             vertical-alignment: center;
                         }
@@ -181,7 +181,7 @@ export component FloatingWindow inherits Rectangle {
                         Text {
                             text: "✕";
                             font-size: 11px;
-                            color: close-touch.has-hover ? white : Tokens.text-secondary;
+                            color: close-touch.has-hover ? Tokens.text-on-destructive : Tokens.text-secondary-on-surface;
                             horizontal-alignment: center;
                             vertical-alignment: center;
                         }

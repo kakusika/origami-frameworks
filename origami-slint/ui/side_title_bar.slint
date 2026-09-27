@@ -59,11 +59,11 @@ export component SideTitleBar inherits Rectangle {
         width: root.button-size;
         height: root.button-size;
         border-radius: Tokens.corner-radius;
-        background: root.hover-index == i ? Tokens.hover : transparent;
+        background: root.hover-index == i ? Tokens.hover-on-surface : transparent;
 
         Icon {
             source: entry.icon;
-            color: root.hover-index == i ? Tokens.text-primary : Tokens.text-secondary;
+            color: root.hover-index == i ? Tokens.text-primary : Tokens.text-secondary-on-surface;
             width: 20px;
             height: 20px;
             x: (parent.width - self.width) / 2;
@@ -90,7 +90,7 @@ export component SideTitleBar inherits Rectangle {
         height: label.preferred-height + Tokens.spacing-small * 2;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
         border-radius: Tokens.corner-radius;
 
         label := Text {

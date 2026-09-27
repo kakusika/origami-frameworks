@@ -56,14 +56,14 @@ export component EditableListView inherits Rectangle {
 
                     for entry[i] in root.items: Rectangle {
                         height: 28px;
-                        background: i == root.current-index ? Tokens.selected-surface : (row-touch.has-hover ? Tokens.hover : transparent);
+                        background: i == root.current-index ? Tokens.selected : (row-touch.has-hover ? Tokens.hover : transparent);
                         border-radius: Tokens.corner-radius;
 
                         animate background { duration: 80ms; }
 
                         Text {
                             text: entry.label;
-                            color: i == root.current-index ? white : Tokens.text-primary;
+                            color: Tokens.text-primary;
                             font-size: Tokens.font-size-normal;
                             font-weight: i == root.current-index ? 600 : 400;
                             vertical-alignment: center;
@@ -92,9 +92,9 @@ export component EditableListView inherits Rectangle {
                 Rectangle {
                     width: parent.width;
                     height: parent.height;
-                    background: add-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    background: add-touch.has-hover ? Tokens.hover-on-surface : Tokens.surface;
                     border-width: Tokens.border-width;
-                    border-color: Tokens.border;
+                    border-color: Tokens.border-on-surface;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
@@ -120,16 +120,16 @@ export component EditableListView inherits Rectangle {
                 Rectangle {
                     width: parent.width;
                     height: parent.height;
-                    background: !remove-touch.enabled ? Tokens.surface.with-alpha(0.5) : remove-touch.has-hover ? Tokens.destructive.with-alpha(0.2) : Tokens.surface;
+                    background: !remove-touch.enabled ? Tokens.background : remove-touch.has-hover ? Tokens.destructive-soft-on-surface : Tokens.surface;
                     border-width: Tokens.border-width;
-                    border-color: Tokens.border;
+                    border-color: Tokens.border-on-surface;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
 
                     Icon {
                         source: Icons.x;
-                        color: remove-touch.enabled ? (remove-touch.has-hover ? Tokens.destructive : Tokens.text-primary) : Tokens.text-disabled;
+                        color: remove-touch.enabled ? (remove-touch.has-hover ? Tokens.destructive : Tokens.text-primary) : Tokens.text-disabled-on-surface;
                         width: 14px;
                         height: 14px;
                         x: (parent.width - self.width) / 2;
@@ -150,9 +150,9 @@ export component EditableListView inherits Rectangle {
                 Rectangle {
                     width: parent.width;
                     height: parent.height;
-                    background: !up-touch.enabled ? Tokens.surface.with-alpha(0.5) : up-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    background: !up-touch.enabled ? Tokens.background : up-touch.has-hover ? Tokens.hover-on-surface : Tokens.surface;
                     border-width: Tokens.border-width;
-                    border-color: Tokens.border;
+                    border-color: Tokens.border-on-surface;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
@@ -160,7 +160,7 @@ export component EditableListView inherits Rectangle {
                     Icon {
                         source: Icons.chevron-down;
                         transform-rotation: 180deg;
-                        color: up-touch.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                        color: up-touch.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                         width: 14px;
                         height: 14px;
                         x: (parent.width - self.width) / 2;
@@ -179,16 +179,16 @@ export component EditableListView inherits Rectangle {
                 Rectangle {
                     width: parent.width;
                     height: parent.height;
-                    background: !down-touch.enabled ? Tokens.surface.with-alpha(0.5) : down-touch.has-hover ? Tokens.hover : Tokens.surface;
+                    background: !down-touch.enabled ? Tokens.background : down-touch.has-hover ? Tokens.hover-on-surface : Tokens.surface;
                     border-width: Tokens.border-width;
-                    border-color: Tokens.border;
+                    border-color: Tokens.border-on-surface;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
 
                     Icon {
                         source: Icons.chevron-down;
-                        color: down-touch.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                        color: down-touch.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                         width: 14px;
                         height: 14px;
                         x: (parent.width - self.width) / 2;

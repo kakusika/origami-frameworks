@@ -64,7 +64,7 @@ export component PaneManager inherits Rectangle {
             for row in root.rows: Rectangle {
                 height: 28px;
                 border-radius: Tokens.corner-radius;
-                background: row.active ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent);
+                background: row.active ? Tokens.selected : (touch.has-hover ? Tokens.hover : transparent);
 
                 touch := TouchArea {
                     mouse-cursor: row.leaf-id >= 0 ? pointer : default;

@@ -16,10 +16,10 @@ export component IoErrorBanner inherits Rectangle {
 
     visible: root.message != "";
     height: root.message == "" ? 0px : max(36px, layout.preferred-height + Tokens.spacing-medium * 2);
-    background: Tokens.destructive.with-alpha(0.15);
+    background: Tokens.destructive-soft;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: Tokens.destructive.with-alpha(0.4);
+    border-color: Tokens.destructive-border;
     clip: true;
 
     // Left accent indicator line
@@ -49,7 +49,7 @@ export component IoErrorBanner inherits Rectangle {
 
             Text {
                 text: "!";
-                color: white;
+                color: Tokens.text-on-destructive;
                 font-size: 11px;
                 font-weight: 700;
                 horizontal-alignment: center;
@@ -59,7 +59,7 @@ export component IoErrorBanner inherits Rectangle {
 
         label := Text {
             text: root.message;
-            color: Tokens.destructive.brighter(0.3);
+            color: Tokens.destructive-hover;
             font-size: Tokens.font-size-normal;
             vertical-alignment: center;
             horizontal-stretch: 1;
@@ -75,14 +75,14 @@ export component IoErrorBanner inherits Rectangle {
             Rectangle {
                 width: parent.width;
                 height: parent.height;
-                background: close-touch.has-hover ? Tokens.destructive.with-alpha(0.25) : transparent;
+                background: close-touch.has-hover ? Tokens.destructive-soft : transparent;
                 border-radius: Tokens.corner-radius;
 
                 animate background { duration: 100ms; }
 
                 Text {
                     text: "✕";
-                    color: close-touch.has-hover ? white : Tokens.destructive;
+                    color: close-touch.has-hover ? Tokens.text-on-destructive : Tokens.destructive;
                     font-size: 12px;
                     horizontal-alignment: center;
                     vertical-alignment: center;

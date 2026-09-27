@@ -25,7 +25,7 @@ export component ViewTypePicker inherits PopupWindow {
     Rectangle {
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
         border-radius: Tokens.corner-radius;
         clip: true;
 
@@ -76,7 +76,7 @@ export component ViewTypePicker inherits PopupWindow {
 
                         if row.is-header: Text {
                             text: row.label;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-raised;
                             font-size: Tokens.font-size-small;
                             font-weight: 700;
                             vertical-alignment: center;
@@ -84,7 +84,7 @@ export component ViewTypePicker inherits PopupWindow {
                         }
 
                         if !row.is-header: Rectangle {
-                            background: item-area.has-hover ? Tokens.hover : transparent;
+                            background: item-area.has-hover ? Tokens.hover-on-raised : transparent;
                             border-radius: Tokens.corner-radius;
 
                             animate background { duration: 80ms; }

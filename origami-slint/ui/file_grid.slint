@@ -34,9 +34,9 @@ export component FileTile inherits Rectangle {
     callback context-menu-requested(length, length);
 
     border-radius: Tokens.corner-radius + 2px;
-    background: root.highlighted ? Tokens.selected-surface : (area.has-hover ? Tokens.hover : Tokens.surface);
+    background: root.highlighted ? Tokens.selected-on-surface : (area.has-hover ? Tokens.hover-on-surface : Tokens.surface);
     border-width: (root.highlighted || root.drop-hover) ? 2px : (area.has-hover ? 1.5px : Tokens.border-width);
-    border-color: (root.highlighted || root.drop-hover) ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border);
+    border-color: (root.highlighted || root.drop-hover) ? Tokens.accent : (area.has-hover ? Tokens.accent : Tokens.border-on-surface);
     clip: true;
 
     animate background { duration: 80ms; }
@@ -60,7 +60,7 @@ export component FileTile inherits Rectangle {
 
             if !root.cell.has-thumbnail: Icon {
                 source: root.cell.is-dir ? Icons.folder : Icons.file;
-                color: root.highlighted ? Tokens.accent : Tokens.text-secondary;
+                color: root.highlighted ? Tokens.accent : Tokens.text-secondary-on-raised;
                 width: min(48px, max(24px, parent.width * 0.38));
                 height: min(48px, max(24px, parent.height * 0.38));
                 x: (parent.width - self.width) / 2;
@@ -79,7 +79,7 @@ export component FileTile inherits Rectangle {
 
                 Icon {
                     source: Icons.external-link;
-                    color: white;
+                    color: Tokens.text-on-accent;
                     width: 9px;
                     height: 9px;
                     x: (parent.width - self.width) / 2;

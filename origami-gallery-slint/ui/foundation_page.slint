@@ -34,7 +34,7 @@ export component FoundationPage inherits Rectangle {
                 background: Tokens.surface;
                 border-radius: Tokens.corner-radius + 2px;
                 border-width: Tokens.border-width;
-                border-color: Tokens.border;
+                border-color: Tokens.border-on-surface;
 
                 VerticalLayout {
                     padding: Tokens.spacing-large;
@@ -48,7 +48,7 @@ export component FoundationPage inherits Rectangle {
                     }
                     Text {
                         text: "Design-system tokens, basic buttons, selection controls, text fields, badges, and progress bars.";
-                        color: Tokens.text-secondary;
+                        color: Tokens.text-secondary-on-surface;
                         font-size: Tokens.font-size-normal;
                         wrap: word-wrap;
                     }
@@ -331,7 +331,7 @@ export component FoundationPage inherits Rectangle {
         height: 34px;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
 
         HorizontalLayout {
             padding-left: Tokens.spacing-large;

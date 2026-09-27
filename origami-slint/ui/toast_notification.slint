@@ -51,7 +51,7 @@ export component ToastNotification inherits Rectangle {
         border-width: Tokens.border-width;
         border-color: root.toast-type == "success" ? #4caf50 : root.toast-type == "warning" ? #ffb300 : root.toast-type == "negative" ? Tokens.destructive : Tokens.accent;
 
-        opacity: root.showing ? 0.98 : 0.0;
+        opacity: root.showing ? 1.0 : 0.0;
         animate opacity { duration: Tokens.anim-short * 1ms; easing: ease-out; }
 
         layout := HorizontalLayout {
@@ -74,7 +74,7 @@ export component ToastNotification inherits Rectangle {
                 clicked => { root.showing = false; }
                 Icon {
                     source: Icons.x;
-                    color: close-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary;
+                    color: close-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised;
                     width: 12px;
                     height: 12px;
                     x: (parent.width - self.width) / 2;

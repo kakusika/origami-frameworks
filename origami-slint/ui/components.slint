@@ -21,9 +21,8 @@ export component AppButton inherits Rectangle {
     width: max(64px, label.preferred-width + Tokens.spacing-large * 1.5);
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border : root.destructive ? (area.has-hover ? Tokens.destructive.darker(0.2) : Tokens.destructive) : root.primary ? (area.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) : area.has-hover ? Tokens.accent : Tokens.border;
-    background: !root.enabled ? Tokens.surface : root.destructive ? (area.pressed ? Tokens.destructive.darker(0.3) : area.has-hover ? Tokens.destructive.darker(0.1) : Tokens.destructive) : root.primary ? (area.pressed ? Tokens.accent.darker(0.2) : area.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : area.pressed ? Tokens.pressed : area.has-hover ? Tokens.hover : Tokens.surface;
-    opacity: root.enabled ? 1.0 : 0.45;
+    border-color: !root.enabled ? Tokens.border-on-surface : root.destructive ? (area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.has-hover ? Tokens.accent : Tokens.border-on-surface;
+    background: !root.enabled ? Tokens.surface : root.destructive ? (area.pressed ? Tokens.destructive-pressed : area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.pressed ? Tokens.accent-pressed : area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.pressed ? Tokens.pressed-on-surface : area.has-hover ? Tokens.hover-on-surface : Tokens.surface;
 
     animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -32,7 +31,7 @@ export component AppButton inherits Rectangle {
         width: 100%;
         height: 100%;
         text: root.text;
-        color: (root.primary || root.destructive) ? white : Tokens.text-primary;
+        color: !root.enabled ? Tokens.text-disabled-on-surface : root.destructive ? Tokens.text-on-destructive : root.primary ? Tokens.text-on-accent : Tokens.text-primary;
         font-size: Tokens.font-size-normal;
         font-weight: (root.primary || root.destructive) ? 600 : 400;
         horizontal-alignment: center;
@@ -69,9 +68,9 @@ export component ToggleSwitch inherits Rectangle {
             width: 38px;
             height: 22px;
             border-radius: self.height / 2;
-            background: root.checked ? (switch-touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : (switch-touch.has-hover ? Tokens.hover : Tokens.surface-raised);
+            background: root.checked ? (switch-touch.has-hover ? Tokens.accent-hover : Tokens.accent) : (switch-touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised);
             border-width: Tokens.border-width;
-            border-color: root.checked ? Tokens.accent : (switch-touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+            border-color: root.checked ? Tokens.accent : (switch-touch.has-hover ? Tokens.border-hover-on-raised : Tokens.border-on-raised);
 
             animate background { duration: Tokens.anim-short * 1ms; }
             animate border-color { duration: Tokens.anim-short * 1ms; }
@@ -107,8 +106,8 @@ export component DropdownButton inherits Rectangle {
     width: 200px;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: area.has-hover ? Tokens.accent : Tokens.border;
-    background: area.pressed ? Tokens.pressed : area.has-hover ? Tokens.hover : Tokens.surface;
+    border-color: area.has-hover ? Tokens.accent : Tokens.border-on-surface;
+    background: area.pressed ? Tokens.pressed-on-surface : area.has-hover ? Tokens.hover-on-surface : Tokens.surface;
 
     animate background { duration: 100ms; }
     animate border-color { duration: 100ms; }
@@ -134,7 +133,7 @@ export component DropdownButton inherits Rectangle {
             Icon {
                 y: (parent.height - self.height) / 2;
                 source: @image-url("icons/chevron-down.svg");
-                color: Tokens.text-secondary;
+                color: Tokens.text-secondary-on-surface;
                 width: 14px;
                 height: 14px;
             }
@@ -154,7 +153,7 @@ export component DropdownButton inherits Rectangle {
         Rectangle {
             background: Tokens.surface-raised;
             border-width: Tokens.border-width;
-            border-color: Tokens.border;
+            border-color: Tokens.border-on-raised;
             border-radius: Tokens.corner-radius;
 
             VerticalLayout {
@@ -163,7 +162,7 @@ export component DropdownButton inherits Rectangle {
 
                 for opt[i] in root.options: Rectangle {
                     height: 28px;
-                    background: itemArea.has-hover ? Tokens.hover : transparent;
+                    background: itemArea.has-hover ? Tokens.hover-on-raised : transparent;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
@@ -208,7 +207,7 @@ export component ColorSwatchRow inherits Rectangle {
             border-radius: self.height / 2;
             background: c;
             border-width: i == root.selected-index ? 2.5px : (swatch-touch.has-hover ? 2px : Tokens.border-width);
-            border-color: i == root.selected-index ? white : (swatch-touch.has-hover ? white.with-alpha(0.8) : Tokens.border);
+            border-color: i == root.selected-index ? Tokens.text-primary : (swatch-touch.has-hover ? Tokens.text-secondary : Tokens.border);
 
             animate border-width { duration: 100ms; }
             animate border-color { duration: 100ms; }
@@ -261,7 +260,7 @@ export component OptionSlider inherits Rectangle {
                 border-radius: 3px;
                 background: Tokens.surface-raised;
                 border-width: Tokens.border-width;
-                border-color: Tokens.border;
+                border-color: Tokens.border-on-raised;
             }
 
             // Filled active track from left edge to handle center
@@ -279,7 +278,7 @@ export component OptionSlider inherits Rectangle {
                 width: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
                 height: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
                 border-radius: self.height / 2;
-                background: slider-touch.pressed ? Tokens.accent.brighter(0.2) : white;
+                background: slider-touch.pressed ? Tokens.accent-hover : white;
                 border-width: slider-touch.pressed ? 3px : (slider-touch.has-hover ? 2px : 1px);
                 border-color: slider-touch.pressed ? Tokens.accent : Tokens.border;
                 y: (parent.height - self.height) / 2;
@@ -322,7 +321,7 @@ export component CollapsibleSection inherits Rectangle {
     background: Tokens.surface;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-surface;
     height: header.height + (root.expanded ? body.preferred-height + Tokens.spacing-medium : 0px);
     clip: true;
 
@@ -331,7 +330,7 @@ export component CollapsibleSection inherits Rectangle {
     VerticalLayout {
         header := Rectangle {
             height: 36px;
-            background: header-touch.has-hover ? Tokens.hover.with-alpha(0.5) : transparent;
+            background: header-touch.has-hover ? Tokens.hover-on-surface : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             HorizontalLayout {
@@ -409,7 +408,7 @@ export component SidebarCategoryList inherits Rectangle {
     width: 160px;
     background: Tokens.surface;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-surface;
     border-radius: Tokens.corner-radius;
 
     // Single continuous sliding indicator
@@ -429,13 +428,13 @@ export component SidebarCategoryList inherits Rectangle {
 
         for cat[i] in root.categories: Rectangle {
             height: 32px;
-            background: (i != root.current-index && itemArea.has-hover) ? Tokens.hover : transparent;
+            background: (i != root.current-index && itemArea.has-hover) ? Tokens.hover-on-surface : transparent;
             border-radius: Tokens.corner-radius;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             Text {
                 text: cat;
-                color: i == root.current-index ? white : (itemArea.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                color: i == root.current-index ? Tokens.text-on-accent : (itemArea.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface);
                 font-size: Tokens.font-size-normal;
                 font-weight: i == root.current-index ? 600 : 400;
                 vertical-alignment: center;
@@ -465,7 +464,6 @@ export component CheckBox inherits Rectangle {
 
     height: max(22px, layout.preferred-height);
     width: layout.preferred-width;
-    opacity: root.enabled ? 1.0 : 0.45;
 
     layout := HorizontalLayout {
         spacing: Tokens.spacing-medium;
@@ -477,15 +475,15 @@ export component CheckBox inherits Rectangle {
             y: (parent.height - self.height) / 2;
             border-radius: Tokens.corner-radius;
             border-width: Tokens.border-width;
-            border-color: root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border);
-            background: root.checked ? (touch.pressed ? Tokens.accent.darker(0.2) : touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) : (touch.has-hover ? Tokens.hover : Tokens.surface-raised);
+            border-color: !root.enabled ? Tokens.border-on-raised : root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border-on-raised);
+            background: !root.enabled ? (root.checked ? Tokens.border-on-raised : Tokens.surface-raised) : root.checked ? (touch.pressed ? Tokens.accent-pressed : touch.has-hover ? Tokens.accent-hover : Tokens.accent) : (touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised);
 
             animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
             animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
 
             if root.checked: Icon {
                 source: @image-url("icons/check.svg");
-                color: white;
+                color: root.enabled ? Tokens.text-on-accent : Tokens.text-primary;
                 width: touch.pressed ? 10px : 13px;
                 height: touch.pressed ? 10px : 13px;
                 x: (parent.width - self.width) / 2;
@@ -521,7 +519,6 @@ export component RadioButton inherits Rectangle {
 
     height: max(22px, layout.preferred-height);
     width: layout.preferred-width;
-    opacity: root.enabled ? 1.0 : 0.45;
 
     layout := HorizontalLayout {
         spacing: Tokens.spacing-medium;
@@ -533,8 +530,8 @@ export component RadioButton inherits Rectangle {
             y: (parent.height - self.height) / 2;
             border-radius: self.height / 2;
             border-width: Tokens.border-width;
-            border-color: root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border);
-            background: touch.has-hover ? Tokens.hover : Tokens.surface-raised;
+            border-color: !root.enabled ? Tokens.border-on-raised : root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border-on-raised);
+            background: root.enabled && touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised;
 
             animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
 
@@ -544,7 +541,7 @@ export component RadioButton inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 border-radius: self.height / 2;
-                background: Tokens.accent;
+                background: root.enabled ? Tokens.accent : Tokens.text-disabled;
                 animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
                 animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
             }
@@ -580,9 +577,8 @@ export component AppTextField inherits Rectangle {
     height: 32px;
     border-radius: Tokens.corner-radius;
     border-width: input.has-focus ? 1.5px : Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
-    background: !root.enabled ? Tokens.surface.darker(0.1) : Tokens.surface;
-    opacity: root.enabled ? 1.0 : 0.5;
+    border-color: !root.enabled ? Tokens.border-on-surface : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
+    background: !root.enabled ? Tokens.background : Tokens.surface;
 
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -596,7 +592,7 @@ export component AppTextField inherits Rectangle {
             enabled: root.enabled;
             read-only: root.read-only;
             input-type: root.input-type;
-            color: Tokens.text-primary;
+            color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
             font-size: Tokens.font-size-normal;
             vertical-alignment: center;
             horizontal-alignment: left;
@@ -608,7 +604,7 @@ export component AppTextField inherits Rectangle {
     if root.text == "" && root.placeholder-text != "" && !input.has-focus: Text {
         x: Tokens.spacing-medium;
         text: root.placeholder-text;
-        color: Tokens.text-disabled;
+        color: Tokens.text-disabled-on-surface;
         font-size: Tokens.font-size-normal;
         vertical-alignment: center;
     }
@@ -632,9 +628,8 @@ export component AppTextArea inherits Rectangle {
     min-height: 72px;
     border-radius: Tokens.corner-radius;
     border-width: input.has-focus ? 1.5px : Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
-    background: !root.enabled ? Tokens.surface.darker(0.1) : Tokens.surface;
-    opacity: root.enabled ? 1.0 : 0.5;
+    border-color: !root.enabled ? Tokens.border-on-surface : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
+    background: !root.enabled ? Tokens.background : Tokens.surface;
 
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -647,7 +642,7 @@ export component AppTextArea inherits Rectangle {
             enabled: root.enabled;
             read-only: root.read-only;
             wrap: root.wrap;
-            color: Tokens.text-primary;
+            color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
             font-size: Tokens.font-size-normal;
             single-line: false;
             edited => { root.edited(self.text); }
@@ -658,7 +653,7 @@ export component AppTextArea inherits Rectangle {
         x: Tokens.spacing-medium;
         y: Tokens.spacing-medium;
         text: root.placeholder-text;
-        color: Tokens.text-disabled;
+        color: Tokens.text-disabled-on-surface;
         font-size: Tokens.font-size-normal;
     }
 
@@ -677,7 +672,7 @@ export component ProgressBar inherits Rectangle {
     border-radius: self.height / 2;
     background: Tokens.surface-raised;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
     clip: true;
 
     fill := Rectangle {
@@ -698,22 +693,22 @@ export component Badge inherits Rectangle {
     height: 20px;
     width: label.preferred-width + Tokens.spacing-medium * 1.5;
     border-radius: self.height / 2;
-    background: root.variant == "destructive" ? Tokens.destructive.with-alpha(0.2) :
+    background: root.variant == "destructive" ? Tokens.destructive-soft-on-raised :
                 root.variant == "neutral" ? Tokens.surface-raised :
-                root.variant == "success" ? #10b981.with-alpha(0.2) :
-                Tokens.accent.with-alpha(0.2);
+                root.variant == "success" ? Tokens.success-soft-on-raised :
+                Tokens.accent-soft-on-raised;
     border-width: 1px;
-    border-color: root.variant == "destructive" ? Tokens.destructive.with-alpha(0.5) :
-                  root.variant == "neutral" ? Tokens.border :
-                  root.variant == "success" ? #10b981.with-alpha(0.5) :
-                  Tokens.accent.with-alpha(0.5);
+    border-color: root.variant == "destructive" ? Tokens.destructive-border-on-raised :
+                  root.variant == "neutral" ? Tokens.border-on-raised :
+                  root.variant == "success" ? Tokens.success-border-on-raised :
+                  Tokens.accent-strong-on-raised;
 
     label := Text {
         text: root.text;
         font-size: Tokens.font-size-small;
         font-weight: 600;
         color: root.variant == "destructive" ? Tokens.destructive :
-               root.variant == "neutral" ? Tokens.text-secondary :
+               root.variant == "neutral" ? Tokens.text-secondary-on-raised :
                root.variant == "success" ? #10b981 :
                Tokens.accent;
         horizontal-alignment: center;
@@ -739,7 +734,7 @@ export component Card inherits Rectangle {
     background: root.raised ? Tokens.surface-raised : Tokens.surface;
     border-radius: Tokens.corner-radius + 2px;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
 
     VerticalLayout {
         padding: Tokens.spacing-large;
@@ -766,7 +761,7 @@ export component TabBar inherits Rectangle {
     background: root.pill-style ? Tokens.surface-raised : transparent;
     border-radius: root.pill-style ? Tokens.corner-radius + 2px : 0px;
     border-width: root.pill-style ? Tokens.border-width : 0px;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
 
     property <length> item-width: root.tabs.length > 0 ? (self.width - (root.pill-style ? 6px : 0px)) / root.tabs.length : 0px;
 
@@ -791,7 +786,7 @@ export component TabBar inherits Rectangle {
             width: root.item-width;
             height: parent.height;
             border-radius: Tokens.corner-radius;
-            background: (i != root.current-index && tab-touch.has-hover) ? Tokens.hover : transparent;
+            background: (i != root.current-index && tab-touch.has-hover) ? Tokens.hover-on-raised : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             HorizontalLayout {
@@ -807,7 +802,7 @@ export component TabBar inherits Rectangle {
                     Icon {
                         y: (parent.height - self.height) / 2;
                         source: tab.icon;
-                        color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : Tokens.text-secondary;
+                        color: i == root.current-index ? (root.pill-style ? Tokens.text-on-accent : Tokens.accent) : Tokens.text-secondary-on-raised;
                         width: 16px;
                         height: 16px;
                     }
@@ -816,7 +811,7 @@ export component TabBar inherits Rectangle {
                 Text {
                     height: 100%;
                     text: tab.title;
-                    color: i == root.current-index ? (root.pill-style ? white : Tokens.accent) : (tab-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    color: i == root.current-index ? (root.pill-style ? Tokens.text-on-accent : Tokens.accent) : (tab-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
                     font-size: Tokens.font-size-normal;
                     font-weight: i == root.current-index ? 600 : 400;
                     vertical-alignment: center;
@@ -826,7 +821,7 @@ export component TabBar inherits Rectangle {
 
                 if tab.badge != "": Rectangle {
                     y: (parent.height - self.height) / 2;
-                    background: i == root.current-index ? (root.pill-style ? white.with-alpha(0.25) : Tokens.accent) : Tokens.surface-raised;
+                    background: i == root.current-index ? (root.pill-style ? Tokens.accent-pressed : Tokens.accent) : Tokens.surface-raised;
                     border-radius: 6px;
                     height: 16px;
                     width: max(16px, badge-text.preferred-width + 6px);
@@ -835,7 +830,7 @@ export component TabBar inherits Rectangle {
                         width: 100%;
                         height: 100%;
                         text: tab.badge;
-                        color: i == root.current-index ? white : Tokens.text-secondary;
+                        color: i == root.current-index ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
                         font-size: 10px;
                         font-weight: 700;
                         horizontal-alignment: center;
@@ -874,8 +869,7 @@ export component ButtonGroup inherits Rectangle {
     background: Tokens.surface-raised;
     border-radius: Tokens.corner-radius + 1px;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
-    opacity: root.enabled ? 1.0 : 0.5;
+    border-color: Tokens.border-on-raised;
 
     // Single continuous sliding indicator
     if root.selected-index >= 0 && root.selected-index < root.items.length: pill := Rectangle {
@@ -884,7 +878,7 @@ export component ButtonGroup inherits Rectangle {
         width: root.btn-width;
         height: parent.height - 6px;
         border-radius: Tokens.corner-radius;
-        background: Tokens.accent;
+        background: root.enabled ? Tokens.accent : Tokens.border-hover;
 
         animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
         animate width { duration: Tokens.anim-very-short * 1ms; }
@@ -898,14 +892,14 @@ export component ButtonGroup inherits Rectangle {
             width: root.btn-width;
             height: parent.height;
             border-radius: Tokens.corner-radius;
-            background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover : transparent;
+            background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover-on-raised : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             if !item.has-icon: Text {
                 width: 100%;
                 height: 100%;
                 text: item.text;
-                color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
                 font-size: Tokens.font-size-normal;
                 font-weight: i == root.selected-index ? 600 : 400;
                 vertical-alignment: center;
@@ -926,7 +920,7 @@ export component ButtonGroup inherits Rectangle {
                     Icon {
                         y: (parent.height - self.height) / 2;
                         source: item.icon;
-                        color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                        color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
                         width: 14px;
                         height: 14px;
                     }
@@ -935,7 +929,7 @@ export component ButtonGroup inherits Rectangle {
                 if item.text != "": Text {
                     height: 100%;
                     text: item.text;
-                    color: i == root.selected-index ? white : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                    color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
                     font-size: Tokens.font-size-normal;
                     font-weight: i == root.selected-index ? 600 : 400;
                     vertical-alignment: center;
@@ -964,7 +958,7 @@ export component ToolTip inherits Rectangle {
     background: Tokens.surface-raised;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
     height: label.preferred-height + Tokens.spacing-small * 2;
     width: label.preferred-width + Tokens.spacing-medium * 2;
     opacity: root.showing ? 1.0 : 0.0;

@@ -15,19 +15,7 @@ fn color(rgba: Rgba) -> Color {
 fn apply(app: &AppWindow, theme: &ResolvedTheme) {
     let tokens = app.global::<Tokens>();
 
-    tokens.set_background(color(theme.colors.background));
-    tokens.set_surface(color(theme.colors.surface));
-    tokens.set_surface_raised(color(theme.colors.surface_raised));
-    tokens.set_border(color(theme.colors.border));
-    tokens.set_divider(color(theme.colors.divider));
-    tokens.set_hover(color(theme.colors.hover));
-    tokens.set_pressed(color(theme.colors.pressed));
-    tokens.set_accent(color(theme.colors.accent));
-    tokens.set_text_primary(color(theme.colors.text_primary));
-    tokens.set_text_secondary(color(theme.colors.text_secondary));
-    tokens.set_text_disabled(color(theme.colors.text_disabled));
-    tokens.set_destructive(color(theme.colors.destructive));
-    tokens.set_selected_surface(color(theme.colors.selected_surface));
+    origami_slint::push_color_tokens!(&tokens, theme.colors, color);
 
     tokens.set_corner_radius(theme.shape.corner_radius_px);
     tokens.set_border_width(theme.shape.border_width_px);

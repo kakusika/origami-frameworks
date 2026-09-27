@@ -16,7 +16,7 @@ export component HeaderMenuBar inherits Rectangle {
     height: 30px;
     background: Tokens.surface;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-surface;
 
     HorizontalLayout {
         padding-left: Tokens.spacing-small;
@@ -28,13 +28,13 @@ export component HeaderMenuBar inherits Rectangle {
             height: parent.height - 4px;
             width: item-label.preferred-width + Tokens.spacing-medium * 2;
             border-radius: Tokens.corner-radius;
-            background: root.active-index == i ? Tokens.selected-surface : (item-touch.has-hover ? Tokens.hover : transparent);
+            background: root.active-index == i ? Tokens.selected-on-surface : (item-touch.has-hover ? Tokens.hover-on-surface : transparent);
 
             animate background { duration: 80ms; }
 
             item-label := Text {
                 text: item.label;
-                color: !item.enabled ? Tokens.text-disabled : (root.active-index == i ? Tokens.accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary));
+                color: !item.enabled ? Tokens.text-disabled-on-surface : (root.active-index == i ? Tokens.accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface));
                 font-size: Tokens.font-size-normal;
                 font-weight: 500;
                 horizontal-alignment: center;

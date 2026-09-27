@@ -22,11 +22,10 @@ export component NumberInput inherits Rectangle {
 
     height: 30px;
     width: 140px;
-    background: Tokens.surface;
+    background: root.enabled ? Tokens.surface : Tokens.background;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: root.editing ? Tokens.accent : (drag-touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
-    opacity: root.enabled ? 1.0 : 0.45;
+    border-color: root.editing ? Tokens.accent : (drag-touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
     clip: true;
 
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -39,12 +38,12 @@ export component NumberInput inherits Rectangle {
         step-down-rect := Rectangle {
             width: 22px;
             height: parent.height;
-            background: step-down-touch.has-hover ? Tokens.hover : transparent;
+            background: step-down-touch.has-hover ? Tokens.hover-on-surface : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             Text {
                 text: "‹";
-                color: root.value <= root.minimum ? Tokens.text-disabled : (step-down-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                color: root.value <= root.minimum ? Tokens.text-disabled-on-surface : (step-down-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface);
                 font-size: 14px;
                 font-weight: 700;
                 horizontal-alignment: center;
@@ -74,7 +73,7 @@ export component NumberInput inherits Rectangle {
                       (root.prefix != "" ? root.prefix + " " : "") +
                       (root.decimals > 0 ? (Math.round(root.value * Math.pow(10, root.decimals)) / Math.pow(10, root.decimals)) : Math.round(root.value)) +
                       (root.suffix != "" ? " " + root.suffix : "");
-                color: Tokens.text-primary;
+                color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                 font-size: Tokens.font-size-small;
                 font-weight: 500;
                 horizontal-alignment: center;
@@ -86,7 +85,7 @@ export component NumberInput inherits Rectangle {
                 width: 100%;
                 height: 100%;
                 text: root.value;
-                color: Tokens.text-primary;
+                color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                 font-size: Tokens.font-size-small;
                 font-weight: 600;
                 horizontal-alignment: center;
@@ -161,12 +160,12 @@ export component NumberInput inherits Rectangle {
         step-up-rect := Rectangle {
             width: 22px;
             height: parent.height;
-            background: step-up-touch.has-hover ? Tokens.hover : transparent;
+            background: step-up-touch.has-hover ? Tokens.hover-on-surface : transparent;
             animate background { duration: Tokens.anim-very-short * 1ms; }
 
             Text {
                 text: "›";
-                color: root.value >= root.maximum ? Tokens.text-disabled : (step-up-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary);
+                color: root.value >= root.maximum ? Tokens.text-disabled-on-surface : (step-up-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface);
                 font-size: 14px;
                 font-weight: 700;
                 horizontal-alignment: center;

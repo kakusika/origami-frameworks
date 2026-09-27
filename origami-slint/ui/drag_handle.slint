@@ -7,7 +7,6 @@ import { Tokens } from "@origami/tokens.slint";
 // the same regardless of the icon set.
 export component DragHandle inherits Rectangle {
     in property <color> dot-color: Tokens.text-secondary;
-    in property <float> dot-opacity: 0.6;
     in property <length> dot-size: 2.5px;
     in property <length> dot-spacing: 1.5px;
     // false = vertical (2 cols x 3 rows), true = horizontal (3 cols x 2 rows)
@@ -25,6 +24,5 @@ export component DragHandle inherits Rectangle {
         height: root.dot-size;
         border-radius: root.dot-size / 2;
         background: root.dot-color;
-        opacity: root.dot-opacity;
     }
 }

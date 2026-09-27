@@ -33,7 +33,7 @@ export component PanePage inherits Rectangle {
             height: 36px;
             background: Tokens.surface-raised;
             border-width: Tokens.border-width;
-            border-color: Tokens.border;
+            border-color: Tokens.border-on-raised;
 
             HorizontalLayout {
                 padding-left: Tokens.spacing-large;
@@ -51,7 +51,7 @@ export component PanePage inherits Rectangle {
 
                 Text {
                     text: "— Real-time tile splitting, tab docking, divider resizing & drawer rails.";
-                    color: Tokens.text-secondary;
+                    color: Tokens.text-secondary-on-raised;
                     font-size: Tokens.font-size-small;
                     vertical-alignment: center;
                 }
@@ -94,7 +94,7 @@ export component PanePage inherits Rectangle {
 
                         Text {
                             text: cell.title != "" ? cell.title : "Pane Content (" + cell.view-type + ")";
-                            color: white;
+                            color: Tokens.text-primary;
                             font-weight: 700;
                             font-size: Tokens.font-size-large;
                             horizontal-alignment: center;
@@ -102,7 +102,7 @@ export component PanePage inherits Rectangle {
 
                         Text {
                             text: "Type: " + cell.kind + " | ID: " + cell.id;
-                            color: white.transparentize(40%);
+                            color: Tokens.text-secondary;
                             font-size: Tokens.font-size-small;
                             horizontal-alignment: center;
                         }
@@ -137,7 +137,7 @@ export component PanePage inherits Rectangle {
                 x: parent.width - self.width - 12px;
                 y: 12px;
                 panel-width: 260px;
-                panel-color: Tokens.surface-raised.with-alpha(0.95);
+                panel-color: Tokens.surface-raised;
 
                 Text { text: "Pane structure"; font-weight: 700; color: Tokens.text-primary; }
                 PaneManager {
@@ -153,7 +153,7 @@ export component PanePage inherits Rectangle {
             height: 28px;
             background: Tokens.surface-raised;
             border-width: Tokens.border-width;
-            border-color: Tokens.border;
+            border-color: Tokens.border-on-raised;
 
             HorizontalLayout {
                 padding-left: Tokens.spacing-large;

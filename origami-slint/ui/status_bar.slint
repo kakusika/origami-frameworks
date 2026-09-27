@@ -12,7 +12,7 @@ export component StatusBar inherits Rectangle {
     height: 28px;
     background: Tokens.surface-raised;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
 
     HorizontalLayout {
         padding-left: Tokens.spacing-medium;
@@ -49,7 +49,7 @@ export component StatusBar inherits Rectangle {
 
             if root.center-text != "": Text {
                 text: root.center-text;
-                color: Tokens.text-secondary;
+                color: Tokens.text-secondary-on-raised;
                 font-size: Tokens.font-size-small;
                 horizontal-alignment: center;
                 vertical-alignment: center;
@@ -59,7 +59,7 @@ export component StatusBar inherits Rectangle {
         // Right info text
         if root.right-info-text != "": Text {
             text: root.right-info-text;
-            color: Tokens.text-secondary;
+            color: Tokens.text-secondary-on-raised;
             font-size: Tokens.font-size-small;
             vertical-alignment: center;
         }

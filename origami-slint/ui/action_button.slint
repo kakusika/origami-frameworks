@@ -16,7 +16,7 @@ export component IconButton inherits Rectangle {
     width: 30px;
     height: 30px;
     border-radius: Tokens.corner-radius;
-    background: !root.enabled ? transparent : (root.active ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent));
+    background: !root.enabled ? transparent : (root.active ? Tokens.selected : (touch.has-hover ? Tokens.hover : transparent));
     border-width: root.active ? Tokens.border-width : 0px;
     border-color: root.active ? Tokens.accent : transparent;
 
@@ -58,17 +58,17 @@ export component ActionButton inherits Rectangle {
     width: layout.preferred-width + Tokens.spacing-medium * 2;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border :
-                  root.destructive ? (touch.has-hover ? Tokens.destructive.darker(0.2) : Tokens.destructive) :
-                  root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) :
+    border-color: !root.enabled ? Tokens.border-on-surface :
+                  root.destructive ? (touch.has-hover ? Tokens.destructive-hover : Tokens.destructive) :
+                  root.primary ? (touch.has-hover ? Tokens.accent-hover : Tokens.accent) :
                   root.active ? Tokens.accent :
-                  (touch.has-hover ? Tokens.accent : Tokens.border);
+                  (touch.has-hover ? Tokens.accent : Tokens.border-on-surface);
 
     background: !root.enabled ? Tokens.surface :
-                root.destructive ? (touch.has-hover ? Tokens.destructive.darker(0.1) : Tokens.destructive) :
-                root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) :
-                root.active ? Tokens.selected-surface :
-                (touch.has-hover ? Tokens.hover : Tokens.surface);
+                root.destructive ? (touch.has-hover ? Tokens.destructive-hover : Tokens.destructive) :
+                root.primary ? (touch.has-hover ? Tokens.accent-hover : Tokens.accent) :
+                root.active ? Tokens.selected-on-surface :
+                (touch.has-hover ? Tokens.hover-on-surface : Tokens.surface);
 
     animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -81,7 +81,7 @@ export component ActionButton inherits Rectangle {
 
         if root.has-icon: Icon {
             source: root.icon;
-            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.destructive ? Tokens.text-on-destructive : root.primary ? Tokens.text-on-accent : (root.active ? Tokens.accent : Tokens.text-primary));
             width: 16px;
             height: 16px;
             vertical-alignment: center;
@@ -89,7 +89,7 @@ export component ActionButton inherits Rectangle {
 
         if root.text != "": Text {
             text: root.text;
-            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.destructive ? Tokens.text-on-destructive : root.primary ? Tokens.text-on-accent : (root.active ? Tokens.accent : Tokens.text-primary));
             font-size: Tokens.font-size-normal;
             font-weight: (root.primary || root.active) ? 600 : 400;
             vertical-alignment: center;
@@ -97,7 +97,7 @@ export component ActionButton inherits Rectangle {
 
         if root.shortcut-text != "": Text {
             text: root.shortcut-text;
-            color: !root.enabled ? Tokens.text-disabled : (root.primary || root.destructive ? white.transparentize(30%) : Tokens.text-secondary);
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.primary || root.destructive ? Tokens.text-on-accent : Tokens.text-secondary-on-surface);
             font-size: Tokens.font-size-small;
             vertical-alignment: center;
         }
@@ -110,7 +110,7 @@ export component ActionButton inherits Rectangle {
 
             badge-label := Text {
                 text: root.badge-text;
-                color: white;
+                color: Tokens.text-on-accent;
                 font-size: 10px;
                 font-weight: 700;
                 horizontal-alignment: center;
@@ -141,21 +141,21 @@ export component RoundButton inherits Rectangle {
     height: root.size;
     border-radius: self.height / 2;
     border-width: Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border :
-                  root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.2) : Tokens.accent) :
+    border-color: !root.enabled ? Tokens.border-on-surface :
+                  root.primary ? (touch.has-hover ? Tokens.accent-hover : Tokens.accent) :
                   root.active ? Tokens.accent :
-                  (touch.has-hover ? Tokens.accent : Tokens.border);
+                  (touch.has-hover ? Tokens.accent : Tokens.border-on-surface);
     background: !root.enabled ? Tokens.surface :
-                root.primary ? (touch.has-hover ? Tokens.accent.brighter(0.1) : Tokens.accent) :
-                root.active ? Tokens.selected-surface :
-                (touch.has-hover ? Tokens.hover : Tokens.surface);
+                root.primary ? (touch.has-hover ? Tokens.accent-hover : Tokens.accent) :
+                root.active ? Tokens.selected-on-surface :
+                (touch.has-hover ? Tokens.hover-on-surface : Tokens.surface);
 
     animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
 
     if root.has-icon: Icon {
         source: root.icon;
-        color: !root.enabled ? Tokens.text-disabled : (root.primary ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+        color: !root.enabled ? Tokens.text-disabled-on-surface : (root.primary ? Tokens.text-on-accent : (root.active ? Tokens.accent : Tokens.text-primary));
         width: root.size * 0.45;
         height: root.size * 0.45;
         x: (parent.width - self.width) / 2;
@@ -164,7 +164,7 @@ export component RoundButton inherits Rectangle {
 
     if !root.has-icon && root.text != "": Text {
         text: root.text;
-        color: !root.enabled ? Tokens.text-disabled : (root.primary ? white : (root.active ? Tokens.accent : Tokens.text-primary));
+        color: !root.enabled ? Tokens.text-disabled-on-surface : (root.primary ? Tokens.text-on-accent : (root.active ? Tokens.accent : Tokens.text-primary));
         font-size: Tokens.font-size-normal;
         font-weight: (root.primary || root.active) ? 600 : 400;
         horizontal-alignment: center;
@@ -191,12 +191,12 @@ export component ToggleButton inherits Rectangle {
     width: layout.preferred-width + Tokens.spacing-medium * 2;
     border-radius: Tokens.corner-radius;
     border-width: Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border :
+    border-color: !root.enabled ? Tokens.border-on-surface :
                   root.checked ? Tokens.accent :
-                  (touch.has-hover ? Tokens.border.brighter(0.3) : Tokens.border);
+                  (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
     background: !root.enabled ? Tokens.surface :
-                root.checked ? Tokens.selected-surface :
-                (touch.has-hover ? Tokens.hover : Tokens.surface);
+                root.checked ? Tokens.selected-on-surface :
+                (touch.has-hover ? Tokens.hover-on-surface : Tokens.surface);
 
     animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -209,7 +209,7 @@ export component ToggleButton inherits Rectangle {
 
         if root.has-icon: Icon {
             source: root.icon;
-            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-primary);
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.checked ? Tokens.accent : Tokens.text-primary);
             width: 16px;
             height: 16px;
             vertical-alignment: center;
@@ -217,7 +217,7 @@ export component ToggleButton inherits Rectangle {
 
         if root.text != "": Text {
             text: root.text;
-            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-primary);
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.checked ? Tokens.accent : Tokens.text-primary);
             font-size: Tokens.font-size-normal;
             font-weight: root.checked ? 600 : 400;
             vertical-alignment: center;
@@ -248,12 +248,12 @@ export component DetailToggleButton inherits Rectangle {
     min-width: 180px;
     border-radius: Tokens.corner-radius + 2px;
     border-width: root.checked ? 2px : Tokens.border-width;
-    border-color: !root.enabled ? Tokens.border :
+    border-color: !root.enabled ? Tokens.border-on-surface :
                   root.checked ? Tokens.accent :
-                  (touch.has-hover ? Tokens.accent.with-alpha(0.5) : Tokens.border);
+                  (touch.has-hover ? Tokens.accent-strong-on-surface : Tokens.border-on-surface);
     background: !root.enabled ? Tokens.surface :
-                root.checked ? Tokens.selected-surface :
-                (touch.has-hover ? Tokens.hover : Tokens.surface);
+                root.checked ? Tokens.selected-on-surface :
+                (touch.has-hover ? Tokens.hover-on-surface : Tokens.surface);
 
     animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
     animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
@@ -265,7 +265,7 @@ export component DetailToggleButton inherits Rectangle {
 
         if root.has-icon: Icon {
             source: root.icon;
-            color: !root.enabled ? Tokens.text-disabled : (root.checked ? Tokens.accent : Tokens.text-secondary);
+            color: !root.enabled ? Tokens.text-disabled-on-surface : (root.checked ? Tokens.accent : Tokens.text-secondary-on-surface);
             width: 22px;
             height: 22px;
             vertical-alignment: center;
@@ -278,7 +278,7 @@ export component DetailToggleButton inherits Rectangle {
 
             Text {
                 text: root.title;
-                color: !root.enabled ? Tokens.text-disabled : Tokens.text-primary;
+                color: !root.enabled ? Tokens.text-disabled-on-surface : Tokens.text-primary;
                 font-size: Tokens.font-size-normal;
                 font-weight: root.checked ? 600 : 500;
                 overflow: elide;
@@ -286,7 +286,7 @@ export component DetailToggleButton inherits Rectangle {
 
             if root.detail != "": Text {
                 text: root.detail;
-                color: Tokens.text-secondary;
+                color: Tokens.text-secondary-on-surface;
                 font-size: Tokens.font-size-small;
                 overflow: elide;
             }
@@ -297,12 +297,12 @@ export component DetailToggleButton inherits Rectangle {
             height: 16px;
             border-radius: 8px;
             border-width: 1.5px;
-            border-color: root.checked ? Tokens.accent : Tokens.border;
+            border-color: root.checked ? Tokens.accent : Tokens.border-on-surface;
             background: root.checked ? Tokens.accent : transparent;
 
             if root.checked: Icon {
                 source: Icons.check;
-                color: white;
+                color: Tokens.text-on-accent;
                 width: 10px;
                 height: 10px;
                 x: (parent.width - self.width) / 2;

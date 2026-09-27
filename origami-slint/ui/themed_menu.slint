@@ -65,7 +65,7 @@ export component ThemedMenu inherits PopupWindow {
         width: max(180px, layout.preferred-width + Tokens.spacing-small * 2);
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
         border-radius: Tokens.corner-radius;
 
         layout := VerticalLayout {
@@ -95,7 +95,7 @@ export component ThemedMenu inherits PopupWindow {
                 // nothing but a little overhead.
                 if row.kind != "separator": Rectangle {
                     height: 28px;
-                    background: (row-touch.has-hover || row.selected) ? Tokens.hover : transparent;
+                    background: (row-touch.has-hover || row.selected) ? Tokens.hover-on-raised : transparent;
                     border-radius: Tokens.corner-radius;
 
                     animate background { duration: 80ms; }
@@ -108,14 +108,14 @@ export component ThemedMenu inherits PopupWindow {
 
                         if row.has-icon: Icon {
                             source: row.icon;
-                            color: row.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                            color: row.enabled ? Tokens.text-primary : Tokens.text-disabled-on-raised;
                             width: 14px;
                             height: 14px;
                         }
 
                         Text {
                             text: row.label;
-                            color: !row.enabled ? Tokens.text-disabled : row.selected ? Tokens.accent : Tokens.text-primary;
+                            color: !row.enabled ? Tokens.text-disabled-on-raised : row.selected ? Tokens.accent : Tokens.text-primary;
                             font-size: Tokens.font-size-normal;
                             vertical-alignment: center;
                             horizontal-stretch: 1;
@@ -123,7 +123,7 @@ export component ThemedMenu inherits PopupWindow {
 
                         if row.kind == "submenu": Icon {
                             source: Icons.chevron-right;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-raised;
                             width: 12px;
                             height: 12px;
                         }
@@ -152,7 +152,7 @@ export component ThemedMenu inherits PopupWindow {
                             width: max(160px, sub-layout.preferred-width + Tokens.spacing-small * 2);
                             background: Tokens.surface-raised;
                             border-width: Tokens.border-width;
-                            border-color: Tokens.border;
+                            border-color: Tokens.border-on-raised;
                             border-radius: Tokens.corner-radius;
 
                             sub-layout := VerticalLayout {
@@ -161,7 +161,7 @@ export component ThemedMenu inherits PopupWindow {
 
                                 for sub[j] in row.submenu: Rectangle {
                                     height: 28px;
-                                    background: (sub-touch.has-hover || sub.selected) ? Tokens.hover : transparent;
+                                    background: (sub-touch.has-hover || sub.selected) ? Tokens.hover-on-raised : transparent;
                                     border-radius: Tokens.corner-radius;
 
                                     animate background { duration: 80ms; }
@@ -174,14 +174,14 @@ export component ThemedMenu inherits PopupWindow {
 
                                         if sub.has-icon: Icon {
                                             source: sub.icon;
-                                            color: sub.enabled ? Tokens.text-primary : Tokens.text-disabled;
+                                            color: sub.enabled ? Tokens.text-primary : Tokens.text-disabled-on-raised;
                                             width: 14px;
                                             height: 14px;
                                         }
 
                                         Text {
                                             text: sub.label;
-                                            color: !sub.enabled ? Tokens.text-disabled : sub.selected ? Tokens.accent : Tokens.text-primary;
+                                            color: !sub.enabled ? Tokens.text-disabled-on-raised : sub.selected ? Tokens.accent : Tokens.text-primary;
                                             font-size: Tokens.font-size-normal;
                                             vertical-alignment: center;
                                             horizontal-stretch: 1;

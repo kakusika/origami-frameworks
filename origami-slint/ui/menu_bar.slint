@@ -51,7 +51,7 @@ component MenuColumn inherits Rectangle {
     height: min(list.preferred-height + 8px, root.column-max-height);
     background: Tokens.surface-raised;
     border-width: Tokens.border-width;
-    border-color: Tokens.border;
+    border-color: Tokens.border-on-raised;
     border-radius: Tokens.corner-radius;
 
     Flickable {
@@ -71,7 +71,7 @@ component MenuColumn inherits Rectangle {
             for entry[j] in root.items: Rectangle {
                 visible: entry.nested-in == root.parent;
                 height: entry.nested-in != root.parent ? 0px : (entry.separator ? 9px : 26px);
-                background: ((entry-touch.has-hover || root.open-child == j) && entry.enabled && !entry.separator) ? Tokens.hover : transparent;
+                background: ((entry-touch.has-hover || root.open-child == j) && entry.enabled && !entry.separator) ? Tokens.hover-on-raised : transparent;
                 border-radius: 3px;
 
                 if entry.separator: Rectangle {
@@ -89,7 +89,7 @@ component MenuColumn inherits Rectangle {
 
                     Text {
                         text: entry.separator ? "" : entry.label;
-                        color: !entry.enabled ? Tokens.text-disabled : (entry.selected ? Tokens.accent : Tokens.text-primary);
+                        color: !entry.enabled ? Tokens.text-disabled-on-raised : (entry.selected ? Tokens.accent : Tokens.text-primary);
                         font-size: Tokens.font-size-small;
                         font-weight: entry.selected ? 600 : 400;
                         vertical-alignment: center;
@@ -99,7 +99,7 @@ component MenuColumn inherits Rectangle {
                         width: 10px;
                         Icon {
                             source: Icons.chevron-right;
-                            color: Tokens.text-secondary;
+                            color: Tokens.text-secondary-on-raised;
                             width: 10px;
                             height: 10px;
                             x: (parent.width - self.width) / 2;
@@ -174,7 +174,7 @@ export component MenuBar inherits Rectangle {
             property <bool> open: root.any-open && MenuState.index == i;
 
             border-radius: Tokens.corner-radius;
-            background: btn.open ? Tokens.selected-surface : (touch.has-hover ? Tokens.hover : transparent);
+            background: btn.open ? Tokens.selected : (touch.has-hover ? Tokens.hover : transparent);
 
             HorizontalLayout {
                 padding-left: 6px;

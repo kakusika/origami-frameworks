@@ -76,7 +76,7 @@ export component OrigamiPage inherits Rectangle {
                 background: Tokens.surface;
                 border-radius: Tokens.corner-radius + 2px;
                 border-width: Tokens.border-width;
-                border-color: Tokens.border;
+                border-color: Tokens.border-on-surface;
 
                 VerticalLayout {
                     padding: Tokens.spacing-large;
@@ -90,7 +90,7 @@ export component OrigamiPage inherits Rectangle {
                     }
                     Text {
                         text: "Interactive showcase of desktop widgets, inputs, dialogues, menus, file tiles, and pickers grouped into collapsible sections.";
-                        color: Tokens.text-secondary;
+                        color: Tokens.text-secondary-on-surface;
                         font-size: Tokens.font-size-normal;
                         wrap: word-wrap;
                     }
@@ -595,7 +595,7 @@ export component OrigamiPage inherits Rectangle {
         height: 34px;
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
-        border-color: Tokens.border;
+        border-color: Tokens.border-on-raised;
 
         HorizontalLayout {
             padding-left: Tokens.spacing-large;

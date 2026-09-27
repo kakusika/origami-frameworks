@@ -95,7 +95,7 @@ export component CollapsibleTextField inherits Rectangle {
         Rectangle {
             background: Tokens.surface-raised;
             border-width: Tokens.border-width;
-            border-color: popup-input.has-focus ? Tokens.accent : Tokens.border;
+            border-color: popup-input.has-focus ? Tokens.accent : Tokens.border-on-raised;
             border-radius: Tokens.corner-radius;
 
             Rectangle {
@@ -105,7 +105,7 @@ export component CollapsibleTextField inherits Rectangle {
 
                 if root.text == "" && root.placeholder-text != "": Text {
                     text: root.placeholder-text;
-                    color: Tokens.text-disabled;
+                    color: Tokens.text-disabled-on-raised;
                     font-size: Tokens.font-size-normal;
                     vertical-alignment: center;
                     width: parent.width;

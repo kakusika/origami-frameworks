@@ -90,6 +90,12 @@ pub fn active_vault_root() -> PathBuf {
     }
 }
 
+/// The vault the user last opened, if they ever chose one -- unlike [`active_vault_root`] with no fallback to the
+/// dev vault, for an app that would rather open nothing than a path that only exists on one machine.
+pub fn active_vault() -> Option<PathBuf> {
+    load_default().active_vault.map(PathBuf::from)
+}
+
 /// Vaults the user has previously switched to, most-recent first. For the
 /// vault-picker UI's recent-vaults list.
 pub fn recent_vaults() -> Vec<PathBuf> {

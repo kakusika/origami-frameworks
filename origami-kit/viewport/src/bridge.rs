@@ -94,3 +94,8 @@ impl ViewportBridge {
             .map_err(|e| anyhow::anyhow!("failed to import texture into Slint Image: {e:?}"))
     }
 }
+
+/// Returns recommended `WGPUSettings` enabling full vertex storage buffers and standard limits.
+pub fn recommended_wgpu_settings() -> slint::wgpu_30::WGPUSettings {
+    ViewportBridge::recommended_wgpu_settings()
+}

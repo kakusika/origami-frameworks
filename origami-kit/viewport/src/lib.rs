@@ -6,5 +6,7 @@
 pub mod bridge;
 pub mod vulkan;
 
-pub use bridge::ViewportBridge;
-pub use vulkan::{OffscreenPass, VulkanContext};
+pub use bridge::{recommended_wgpu_settings, ViewportBridge};
+pub use vulkan::{
+    buffer::find_memory_type_index, OffscreenPass, VulkanContext, VulkanDeviceContext,
+};

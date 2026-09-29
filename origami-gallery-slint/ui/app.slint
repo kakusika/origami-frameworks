@@ -4,6 +4,7 @@ import { OrigamiPage } from "origami_page.slint";
 import { RegionsPage } from "regions_page.slint";
 import { PanePage } from "pane_page.slint";
 import { FoundationPage } from "foundation_page.slint";
+import { ViewportPage } from "viewport_page.slint";
 import { PaneCell } from "@origami/pane_host.slint";
 import { PaneOutlineRow } from "@origami/pane_manager.slint";
 import { EditableListEntry } from "@origami/editable_list_view.slint";
@@ -51,6 +52,18 @@ export component AppWindow inherits Window {
     callback drag-hover(length, length);
     callback set-active-leaf(int);
     callback manager-action(int, int, string);
+
+    // ViewportPage property forwardings
+    in-out property <image> viewport-image;
+    in-out property <int> viewport-width: 0;
+    in-out property <int> viewport-height: 0;
+    in-out property <float> viewport-fps: 60.0;
+    in-out property <bool> viewport-paused: false;
+    in-out property <float> viewport-speed: 1.0;
+
+    callback viewport-toggle-pause();
+    callback viewport-speed-changed(float);
+    callback viewport-resized(length, length);
 
     VerticalLayout {
         // Top navigation bar
@@ -199,6 +212,28 @@ export component AppWindow inherits Window {
                                 clicked => { root.current-tab = 3; }
                             }
                         }
+
+                        tab4 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 4 ? Tokens.accent : (tab4-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Viewport";
+                                color: root.current-tab == 4 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 4 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab4-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 4; }
+                            }
+                        }
                     }
                 }
             }
@@ -238,5 +273,18 @@ export component AppWindow inherits Window {
             manager-action(n, l, a) => { root.manager-action(n, l, a); }
         }
         if root.current-tab == 3: FoundationPage { horizontal-stretch: 1; vertical-stretch: 1; }
+        if root.current-tab == 4: ViewportPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            viewport-image: root.viewport-image;
+            viewport-width: root.viewport-width;
+            viewport-height: root.viewport-height;
+            fps: root.viewport-fps;
+            is-paused: root.viewport-paused;
+            rotation-speed: root.viewport-speed;
+            toggle-pause => { root.viewport-toggle-pause(); }
+            speed-changed(s) => { root.viewport-speed-changed(s); }
+            viewport-resized(w, h) => { root.viewport-resized(w, h); }
+        }
     }
 }

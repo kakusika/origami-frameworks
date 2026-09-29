@@ -10,9 +10,4 @@ naga = { workspace = true }
 wgpu = { workspace = true }
 wgpu-hal = { workspace = true }
 
-slint = { version = "1.18", default-features = false, features = [
-  "backend-winit",
-  "renderer-skia",
-  "compat-1-2",
-  "unstable-wgpu-30",
-] }
+slint = { workspace = true }

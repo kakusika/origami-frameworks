@@ -1,0 +1,202 @@
+import { Tokens } from "@origami/tokens.slint";
+import { AppButton, ToggleSwitch, OptionSlider, Badge, Divider } from "@origami/components.slint";
+
+// Live showcase of origami-viewport offscreen wgpu rendering inside Slint.
+export component ViewportPage inherits Rectangle {
+    in-out property <image> viewport-image;
+    in-out property <string> renderer-info: "wgpu (Vulkan)";
+    in-out property <int> viewport-width: 0;
+    in-out property <int> viewport-height: 0;
+    in-out property <float> fps: 60.0;
+    in-out property <bool> is-paused: false;
+    in-out property <float> rotation-speed: 1.0;
+
+    callback toggle-pause();
+    callback speed-changed(float);
+    callback viewport-resized(length, length);
+
+    VerticalLayout {
+        padding: Tokens.spacing-large;
+        spacing: Tokens.spacing-medium;
+
+        // Page Header Card
+        Rectangle {
+            height: 72px;
+            background: Tokens.surface;
+            border-radius: Tokens.corner-radius + 2px;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border-on-surface;
+
+            HorizontalLayout {
+                padding: Tokens.spacing-large;
+                spacing: Tokens.spacing-medium;
+
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 2px;
+
+                    Text {
+                        text: "Viewport Integration (origami-viewport)";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large;
+                        color: Tokens.text-primary;
+                    }
+                    Text {
+                        text: "GPU offscreen rendering with wgpu / Vulkan, embedded into Slint UI via ViewportBridge.";
+                        color: Tokens.text-secondary-on-surface;
+                        font-size: Tokens.font-size-small;
+                    }
+                }
+
+                Rectangle { horizontal-stretch: 1; }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: Tokens.spacing-small;
+
+                    Badge {
+                        text: root.renderer-info;
+                        variant: "accent";
+                    }
+                    Badge {
+                        text: root.viewport-width + " × " + root.viewport-height + " px";
+                        variant: "neutral";
+                    }
+                }
+            }
+        }
+
+        // Main Viewport & Controls Layout
+        HorizontalLayout {
+            spacing: Tokens.spacing-large;
+
+            // Viewport Display Area
+            Rectangle {
+                horizontal-stretch: 3;
+                background: #0d0f14;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border-on-surface;
+                clip: true;
+
+                init => {
+                    root.viewport-resized(self.width, self.height);
+                }
+
+                viewport-touch := TouchArea {
+                    width: 100%;
+                    height: 100%;
+
+                    changed width => {
+                        root.viewport-resized(self.width, self.height);
+                    }
+                    changed height => {
+                        root.viewport-resized(self.width, self.height);
+                    }
+
+                    Image {
+                        width: 100%;
+                        height: 100%;
+                        source: root.viewport-image;
+                        image-fit: fill;
+                    }
+                }
+
+                // Overlay Controls & Stats
+                Rectangle {
+                    x: 12px;
+                    y: 12px;
+                    background: #14161fcc;
+                    border-radius: Tokens.corner-radius;
+                    border-width: 1px;
+                    border-color: #ffffff18;
+
+                    HorizontalLayout {
+                        padding: 8px;
+                        spacing: 12px;
+
+                        Text {
+                            text: Math.round(root.fps * 10) / 10 + " FPS";
+                            color: #a0aec0;
+                            font-size: Tokens.font-size-small;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            // Side Controls Panel
+            Rectangle {
+                horizontal-stretch: 1;
+                min-width: 260px;
+                background: Tokens.surface;
+                border-radius: Tokens.corner-radius + 2px;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border-on-surface;
+
+                VerticalLayout {
+                    padding: Tokens.spacing-large;
+                    spacing: Tokens.spacing-medium;
+
+                    Text {
+                        text: "Controls";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large;
+                        color: Tokens.text-primary;
+                    }
+
+                    Divider {}
+
+                    HorizontalLayout {
+                        alignment: space-between;
+                        Text {
+                            text: "Animation";
+                            color: Tokens.text-primary;
+                            font-size: Tokens.font-size-normal;
+                            vertical-alignment: center;
+                        }
+                        ToggleSwitch {
+                            checked: !root.is-paused;
+                            toggled => { root.toggle-pause(); }
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: Tokens.spacing-small;
+                        Text {
+                            text: "Rotation Speed (" + (Math.round(root.rotation-speed * 10) / 10) + "x)";
+                            color: Tokens.text-secondary-on-surface;
+                            font-size: Tokens.font-size-small;
+                        }
+                        OptionSlider {
+                            value: root.rotation-speed / 3.0;
+                            value-changed(val) => {
+                                root.rotation-speed = val * 3.0;
+                                root.speed-changed(root.rotation-speed);
+                            }
+                        }
+                    }
+
+                    Divider {}
+
+                    Text {
+                        text: "Architecture Info";
+                        font-weight: 600;
+                        font-size: Tokens.font-size-normal;
+                        color: Tokens.text-primary;
+                    }
+
+                    Text {
+                        text: "• ViewportBridge synchronizes wgpu render target directly with Slint rendering loop\n• Textures converted to slint::Image on GPU without CPU copy\n• Automatic resize tracking handles UI layout and HiDPI changes seamlessly";
+                        color: Tokens.text-secondary-on-surface;
+                        font-size: Tokens.font-size-small;
+                        wrap: word-wrap;
+                    }
+
+                    Rectangle { vertical-stretch: 1; }
+                }
+            }
+        }
+    }
+}

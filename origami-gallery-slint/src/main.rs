@@ -1,6 +1,7 @@
 slint::include_modules!();
 
 mod theme;
+mod viewport_demo;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -164,6 +165,11 @@ fn relayout(state: &Rc<RefCell<AppState>>, app: &AppWindow) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
+    let settings = origami_viewport::recommended_wgpu_settings();
+    let _ = slint::BackendSelector::new()
+        .require_wgpu_30(slint::wgpu_30::WGPUConfiguration::Automatic(settings))
+        .select();
+
     let app = AppWindow::new()?;
     theme::apply_default(&app);
 
@@ -392,6 +398,77 @@ fn main() -> Result<(), slint::PlatformError> {
                 list_model.set_row_data(idx, b);
             }
         });
+    }
+
+    // Viewport Integration Demo
+    let viewport_demo = Rc::new(RefCell::new(viewport_demo::ViewportDemo::new()));
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        app.on_viewport_resized(move |w, h| {
+            viewport_demo
+                .borrow_mut()
+                .resize(w.max(1.0) as u32, h.max(1.0) as u32);
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        let app_weak = app.as_weak();
+        app.on_viewport_toggle_pause(move || {
+            let paused = viewport_demo.borrow_mut().toggle_pause();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_viewport_paused(paused);
+            }
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        app.on_viewport_speed_changed(move |speed| {
+            viewport_demo.borrow_mut().set_speed(speed);
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        let app_weak = app.as_weak();
+        let _ = app.window().set_rendering_notifier(move |state, api| {
+            let slint::GraphicsAPI::WGPU30 { device, queue, .. } = api else {
+                return;
+            };
+            let Some(app) = app_weak.upgrade() else { return };
+
+            if matches!(state, slint::RenderingState::BeforeRendering) {
+                if let Some((img, w, h, fps_opt)) =
+                    viewport_demo.borrow_mut().render(device, queue)
+                {
+                    app.set_viewport_image(img);
+                    app.set_viewport_width(w as i32);
+                    app.set_viewport_height(h as i32);
+                    if let Some(fps) = fps_opt {
+                        app.set_viewport_fps(fps);
+                    }
+                }
+            }
+        });
+    }
+
+    // Continuous redraw timer for viewport animation
+    let redraw_timer = slint::Timer::default();
+    {
+        let app_weak = app.as_weak();
+        redraw_timer.start(
+            slint::TimerMode::Repeated,
+            std::time::Duration::from_millis(16),
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.get_current_tab() == 4 && !app.get_viewport_paused() {
+                        app.window().request_redraw();
+                    }
+                }
+            },
+        );
     }
 
     app.run()

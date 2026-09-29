@@ -20,7 +20,7 @@ drawer overlay, maximize, detach) have been exercised by hand yet.
       `close_group`, `prune_empty_groups(keep)`, `divider_baseline`,
       `resize_pair`) + `PaneNode::{find, tab_index}`, 15 new tests; gallery
       switched to them (its `resize_pair` copy and drawer-toggle copies are gone)
-- [ ] G1 part 2: switch mumeum (`apps/desktop/src/panes.rs`, `app_state.rs`) to
+- [x] G1 part 2: switch mumeum (`apps/desktop/src/panes.rs`, `app_state.rs`) to
       the library API and drop its copies. Needs this repo committed and
       pushed first (mumeum depends on it by git). Note mumeum's `convert_group`
       had no "drawer children must all be panes" check; the library adds it.

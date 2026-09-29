@@ -1,5 +1,5 @@
 [package]
-name = "origami-slint-build"
+name = "origami-build"
 version.workspace = true
 edition.workspace = true
 

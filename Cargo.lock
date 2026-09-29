@@ -3083,6 +3083,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "origami"
+version = "0.1.0"
+dependencies = [
+ "origami-panes",
+]
+
+[[package]]
+name = "origami-build"
+version = "0.1.0"
+dependencies = [
+ "slint-build",
+]
+
+[[package]]
 name = "origami-config"
 version = "0.1.0"
 dependencies = [
@@ -3094,11 +3108,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "origami-gallery-slint"
+name = "origami-gallery"
 version = "0.1.0"
 dependencies = [
- "origami-slint",
- "origami-slint-build",
+ "origami",
+ "origami-build",
  "origami-theme",
  "origami-viewport",
  "serde_json",
@@ -3113,20 +3127,6 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "origami-slint"
-version = "0.1.0"
-dependencies = [
- "origami-panes",
-]
-
-[[package]]
-name = "origami-slint-build"
-version = "0.1.0"
-dependencies = [
- "slint-build",
 ]
 
 [[package]]

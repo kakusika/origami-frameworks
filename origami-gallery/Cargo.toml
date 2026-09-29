@@ -1,20 +1,20 @@
 [package]
-name = "origami-gallery-slint"
+name = "origami-gallery"
 version.workspace = true
 edition.workspace = true
 
 [[bin]]
-name = "origami-gallery-slint"
+name = "origami-gallery"
 path = "src/main.rs"
 
 [dependencies]
 slint = { workspace = true }
 origami-theme = { workspace = true }
-origami-slint = { workspace = true }
+origami = { workspace = true }
 origami-viewport = { workspace = true }
 wgpu = { workspace = true }
 serde_json = { workspace = true }
 
 [build-dependencies]
 slint-build = { workspace = true }
-origami-slint-build = { workspace = true }
+origami-build = { workspace = true }

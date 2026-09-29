@@ -1,8 +1,8 @@
 [package]
-name = "origami-slint"
+name = "origami"
 version.workspace = true
 edition.workspace = true
-links = "origami_slint"
+links = "origami"
 build = "build.rs"
 
 [dependencies]

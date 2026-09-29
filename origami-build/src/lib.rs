@@ -3,18 +3,24 @@ use std::path::PathBuf;
 
 /// Returns the path to the `@origami` Slint UI library directory.
 ///
-/// Discovered dynamically via `DEP_ORIGAMI_SLINT_UI_DIR` when `origami-slint` is a Cargo
-/// dependency, with fallback to sibling directory layout if called outside standard build flows.
+/// Discovered dynamically via `DEP_ORIGAMI_UI_DIR` (or legacy `DEP_ORIGAMI_SLINT_UI_DIR`)
+/// when `origami` is a Cargo dependency, with fallback to sibling directory layout
+/// if called outside standard build flows.
 pub fn ui_dir() -> PathBuf {
-    if let Ok(dir) = std::env::var("DEP_ORIGAMI_SLINT_UI_DIR") {
-        let path = PathBuf::from(dir);
-        if path.exists() {
-            return path;
+    for env_var in &["DEP_ORIGAMI_UI_DIR", "DEP_ORIGAMI_SLINT_UI_DIR"] {
+        if let Ok(dir) = std::env::var(env_var) {
+            let path = PathBuf::from(dir);
+            if path.exists() {
+                return path;
+            }
         }
     }
     if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
         let manifest_path = PathBuf::from(manifest);
         for rel in &[
+            "../origami/ui",
+            "../../origami/ui",
+            "../../../origami-frameworks/origami/ui",
             "../origami-slint/ui",
             "../../origami-slint/ui",
             "../../../origami-frameworks/origami-slint/ui",
@@ -26,7 +32,7 @@ pub fn ui_dir() -> PathBuf {
         }
     }
     panic!(
-        "origami-slint UI directory not found. Ensure `origami-slint` is a dependency in Cargo.toml."
+        "origami UI directory not found. Ensure `origami` is a dependency in Cargo.toml."
     );
 }
 

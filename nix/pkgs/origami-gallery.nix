@@ -12,9 +12,9 @@ let
   src = ../..;
   commonArgs = {
     inherit src;
-    pname = "origami-gallery-slint";
+    pname = "origami-gallery";
     version = "0.1.0";
-    cargoExtraArgs = "-p origami-gallery-slint";
+    cargoExtraArgs = "-p origami-gallery";
 
     nativeBuildInputs = [
       pkg-config

@@ -9,8 +9,8 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 ## Crates
 
 ### Core & UI
-- **`origami-slint`**: Reusable Slint UI widgets, layouts, panels, menus, and dialogs.
-- **`origami-slint-build`**: Build script helper for configuring Slint compilation and resource paths.
+- **`origami`**: Reusable Slint UI widgets, layouts, panels, menus, and dialogs.
+- **`origami-build`**: Build script helper for configuring Slint compilation and `@origami` resource paths.
 
 ### Origami Kit
 - **`origami-kit/panes` (`origami-panes`)**: Headless workspace layout engine supporting nested splits, tabs, drawers, floating windows, and drag-and-drop docking geometry.
@@ -19,7 +19,7 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 - **`origami-kit/viewport` (`origami-viewport`)**: Hardware-accelerated offscreen Vulkan context and image rendering bridge for Slint viewports.
 
 ### Gallery
-- **`origami-gallery-slint`**: Interactive component gallery showcasing all widgets, pane configurations, and viewport renderers.
+- **`origami-gallery`**: Interactive component gallery showcasing all widgets, pane configurations, and viewport renderers.
 
 ## Building and Running
 
@@ -30,7 +30,7 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 
 ### Run Gallery
 ```bash
-cargo run -p origami-gallery-slint
+cargo run -p origami-gallery
 ```
 
 ### Run Tests

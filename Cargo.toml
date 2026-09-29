@@ -2,28 +2,28 @@
 resolver = "3"
 
 members = [
-  "origami-gallery-slint",
+  "origami",
+  "origami-build",
+  "origami-gallery",
   "origami-kit/config",
   "origami-kit/panes",
   "origami-kit/theme",
   "origami-kit/viewport",
-  "origami-slint",
-  "origami-slint-build",
 ]
 
-default-members = ["origami-gallery-slint"]
+default-members = ["origami-gallery"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
+origami = { path = "origami" }
+origami-build = { path = "origami-build" }
 origami-config = { path = "origami-kit/config" }
 origami-panes = { path = "origami-kit/panes" }
 origami-theme = { path = "origami-kit/theme" }
 origami-viewport = { path = "origami-kit/viewport" }
-origami-slint = { path = "origami-slint" }
-origami-slint-build = { path = "origami-slint-build" }
 
 #[ Crates.io ]
 anyhow = "1"

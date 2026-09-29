@@ -546,7 +546,7 @@ mod tests {
     /// this fails (and prints the lines to paste) when they drift apart.
     #[test]
     fn tokens_slint_defaults_match_the_resolved_default_theme() {
-        let slint = include_str!("../../../origami-slint/ui/tokens.slint");
+        let slint = include_str!("../../../origami/ui/tokens.slint");
         let declared = |name: &str| -> Option<String> {
             let prefix = format!("in-out property <color> {name}: ");
             slint.lines().find_map(|l| {

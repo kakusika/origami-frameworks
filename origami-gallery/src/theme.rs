@@ -15,7 +15,7 @@ fn color(rgba: Rgba) -> Color {
 fn apply(app: &AppWindow, theme: &ResolvedTheme) {
     let tokens = app.global::<Tokens>();
 
-    origami_slint::push_color_tokens!(&tokens, theme.colors, color);
+    origami::push_color_tokens!(&tokens, theme.colors, color);
 
     tokens.set_corner_radius(theme.shape.corner_radius_px);
     tokens.set_border_width(theme.shape.border_width_px);

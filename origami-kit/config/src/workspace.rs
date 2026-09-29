@@ -162,8 +162,14 @@ mod tests {
     fn files_live_under_the_apps_vault_namespace() {
         let root = Path::new("/vault");
         let ns = &crate::identity::app_identity().vault_namespace;
-        assert_eq!(workspace_path(root), root.join(ns).join("workspaces").join("workspace.yaml"));
-        assert_eq!(session_path(root), root.join(ns).join("workspaces").join("session.yaml"));
+        assert_eq!(
+            workspace_path(root),
+            root.join(ns).join("workspaces").join("workspace.yaml")
+        );
+        assert_eq!(
+            session_path(root),
+            root.join(ns).join("workspaces").join("session.yaml")
+        );
     }
 
     #[test]
@@ -171,7 +177,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!(
             "origami-config-session-test-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         assert_eq!(load_session_json(&dir), None);
 
@@ -179,12 +188,21 @@ mod tests {
         save_session_json(&dir, r#"{"activeLeafId":3}"#).unwrap();
         save_session_json(&dir, r#"{"activeLeafId":4}"#).unwrap();
 
-        let session: serde_json::Value = serde_json::from_str(&load_session_json(&dir).unwrap()).unwrap();
+        let session: serde_json::Value =
+            serde_json::from_str(&load_session_json(&dir).unwrap()).unwrap();
         assert_eq!(session["activeLeafId"], 4);
-        let tree: serde_json::Value = serde_json::from_str(&load_workspace_json(&dir).unwrap()).unwrap();
+        let tree: serde_json::Value =
+            serde_json::from_str(&load_workspace_json(&dir).unwrap()).unwrap();
         assert_eq!(tree["type"], "pane");
-        let names: Vec<_> = fs::read_dir(workspaces_dir(&dir)).unwrap().map(|e| e.unwrap().file_name()).collect();
-        assert_eq!(names.len(), 2, "only workspace.yaml and session.yaml: {names:?}");
+        let names: Vec<_> = fs::read_dir(workspaces_dir(&dir))
+            .unwrap()
+            .map(|e| e.unwrap().file_name())
+            .collect();
+        assert_eq!(
+            names.len(),
+            2,
+            "only workspace.yaml and session.yaml: {names:?}"
+        );
 
         fs::remove_dir_all(&dir).unwrap();
     }

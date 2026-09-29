@@ -76,7 +76,7 @@ const TOKYONIGHT_STORM: PalettePreset = PalettePreset {
     button_text: RgbColor::new(0xc0, 0xca, 0xf5),    // fg
     tooltip_base: RgbColor::new(0x1f, 0x23, 0x35),   // bg_dark
     tooltip_text: RgbColor::new(0xc0, 0xca, 0xf5),   // fg
-    light: RgbColor::new(0x3b, 0x42, 0x61),          // fg_gutter (one step above bg_highlight; fg_dark is a text color)
+    light: RgbColor::new(0x3b, 0x42, 0x61), // fg_gutter (one step above bg_highlight; fg_dark is a text color)
 };
 
 const TOKYONIGHT_NIGHT: PalettePreset = PalettePreset {
@@ -217,9 +217,9 @@ const FLEXOKI_LIGHT: PalettePreset = PalettePreset {
     base: RgbColor::new(0xff, 0xfc, 0xf0),           // paper
     alternate_base: RgbColor::new(0xff, 0xfc, 0xf0), // paper
     text: RgbColor::new(0x10, 0x0f, 0x0f),
-    button: RgbColor::new(0xf2, 0xf0, 0xe5),         // bg-2
+    button: RgbColor::new(0xf2, 0xf0, 0xe5), // bg-2
     button_text: RgbColor::new(0x10, 0x0f, 0x0f),
-    tooltip_base: RgbColor::new(0xf2, 0xf0, 0xe5),   // bg-2
+    tooltip_base: RgbColor::new(0xf2, 0xf0, 0xe5), // bg-2
     tooltip_text: RgbColor::new(0x10, 0x0f, 0x0f),
     light: RgbColor::new(0xff, 0xff, 0xff),
 };
@@ -230,9 +230,9 @@ const FLEXOKI_DARK: PalettePreset = PalettePreset {
     base: RgbColor::new(0x10, 0x0f, 0x0f),           // bg
     alternate_base: RgbColor::new(0x10, 0x0f, 0x0f), // bg
     text: RgbColor::new(0xf2, 0xf0, 0xe5),
-    button: RgbColor::new(0x1c, 0x1b, 0x1a),         // bg-2
+    button: RgbColor::new(0x1c, 0x1b, 0x1a), // bg-2
     button_text: RgbColor::new(0xf2, 0xf0, 0xe5),
-    tooltip_base: RgbColor::new(0x1c, 0x1b, 0x1a),   // bg-2
+    tooltip_base: RgbColor::new(0x1c, 0x1b, 0x1a), // bg-2
     tooltip_text: RgbColor::new(0xf2, 0xf0, 0xe5),
     light: RgbColor::new(0x28, 0x27, 0x26), // ui (tx-2 is a text color)
 };

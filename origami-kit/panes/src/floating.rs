@@ -49,7 +49,12 @@ pub struct FloatingWindows {
 
 impl FloatingWindows {
     pub fn new() -> Self {
-        Self { windows: Vec::new(), next_id: 1, next_z: 1, active: None }
+        Self {
+            windows: Vec::new(),
+            next_id: 1,
+            next_z: 1,
+            active: None,
+        }
     }
 
     /// Open windows, back to front.
@@ -104,7 +109,9 @@ impl FloatingWindows {
 
     /// Records where the widget moved/resized to. `false` if the id is unknown.
     pub fn set_geometry(&mut self, id: i32, x: f32, y: f32, width: f32, height: f32) -> bool {
-        self.with(id, |w| (w.x, w.y, w.width, w.height) = (x, y, width, height))
+        self.with(id, |w| {
+            (w.x, w.y, w.width, w.height) = (x, y, width, height)
+        })
     }
 
     pub fn set_state(&mut self, id: i32, minimized: bool, maximized: bool) -> bool {
@@ -124,8 +131,11 @@ impl FloatingWindows {
     /// The windows worth saving, back to front: those with a `view_type`.
     /// (QML `serializeWindows`.)
     pub fn serialize(&self) -> Value {
-        let saved: Vec<&FloatingWindow> =
-            self.windows.iter().filter(|w| !w.view_type.is_empty()).collect();
+        let saved: Vec<&FloatingWindow> = self
+            .windows
+            .iter()
+            .filter(|w| !w.view_type.is_empty())
+            .collect();
         serde_json::to_value(saved).unwrap_or(Value::Array(Vec::new()))
     }
 
@@ -225,7 +235,10 @@ mod tests {
         assert!(fw.set_geometry(a, 1.0, 2.0, 3.0, 4.0));
         assert!(fw.set_state(a, true, false));
         let w = fw.get(a).unwrap();
-        assert_eq!((w.x, w.y, w.width, w.height, w.minimized), (1.0, 2.0, 3.0, 4.0, true));
+        assert_eq!(
+            (w.x, w.y, w.width, w.height, w.minimized),
+            (1.0, 2.0, 3.0, 4.0, true)
+        );
         assert!(!fw.set_geometry(999, 0.0, 0.0, 0.0, 0.0));
     }
 
@@ -264,7 +277,10 @@ mod tests {
         assert_eq!(dropped, 2);
         assert_eq!(fw.windows().len(), 1);
         let w = &fw.windows()[0];
-        assert_eq!((w.view_type.as_str(), w.x, w.minimized), ("preview", 5.0, true));
+        assert_eq!(
+            (w.view_type.as_str(), w.x, w.minimized),
+            ("preview", 5.0, true)
+        );
         assert_eq!(w.props, json!({"path": "/v/a"}));
     }
 

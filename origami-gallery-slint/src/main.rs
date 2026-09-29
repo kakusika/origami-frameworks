@@ -5,9 +5,9 @@ mod theme;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use origami_slint::outline::{OutlineKind, OutlineRow, outline};
-use origami_slint::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
 use origami_slint::edit::DividerDragBaseline;
+use origami_slint::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
+use origami_slint::outline::{OutlineKind, OutlineRow, outline};
 use origami_slint::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
 use serde_json::json;
 use slint::{Model, ModelRc, SharedString, VecModel};
@@ -206,12 +206,16 @@ fn main() -> Result<(), slint::PlatformError> {
                 {
                     let mut st = state.borrow_mut();
                     if let Some(root) = st.tree.root.as_mut() {
-                        if let Some(PaneNode::Tabs { current_index, .. }) = root.find_node_mut(group_id) {
+                        if let Some(PaneNode::Tabs { current_index, .. }) =
+                            root.find_node_mut(group_id)
+                        {
                             *current_index = index as usize;
                         }
                     }
                 }
-                app.set_pane_status(format!("Switched to tab index {} in group {}", index, group_id).into());
+                app.set_pane_status(
+                    format!("Switched to tab index {} in group {}", index, group_id).into(),
+                );
                 relayout(&state, &app);
             }
         });
@@ -332,9 +336,15 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // EditableListView interactive handlers
     let list_model = Rc::new(VecModel::from(vec![
-        EditableListEntry { label: "Layer 1 (Background)".into() },
-        EditableListEntry { label: "Layer 2 (Main Art)".into() },
-        EditableListEntry { label: "Layer 3 (Overlay)".into() },
+        EditableListEntry {
+            label: "Layer 1 (Background)".into(),
+        },
+        EditableListEntry {
+            label: "Layer 2 (Main Art)".into(),
+        },
+        EditableListEntry {
+            label: "Layer 3 (Overlay)".into(),
+        },
     ]));
     app.set_editable_items(ModelRc::from(list_model.clone()));
 

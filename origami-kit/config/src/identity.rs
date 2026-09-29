@@ -38,7 +38,12 @@ static APP_IDENTITY: OnceLock<AppIdentity> = OnceLock::new();
 /// (e.g. from a second app embedding this crate transitively) is silently
 /// ignored rather than switching an already-running app's config location
 /// out from under it.
-pub fn set_app_identity(qualifier: &str, organization: &str, application: &str, vault_namespace: &str) {
+pub fn set_app_identity(
+    qualifier: &str,
+    organization: &str,
+    application: &str,
+    vault_namespace: &str,
+) {
     let _ = APP_IDENTITY.set(AppIdentity {
         qualifier: qualifier.to_string(),
         organization: organization.to_string(),

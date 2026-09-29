@@ -28,7 +28,10 @@ pub static MAPPING_STATIC: &[(&str, &str)] = mapping::MAPPING;
 /// copy into its own build, the way `cettila-slint` already does today --
 /// without needing the `qt-resource` feature's Qt build step at all.
 pub fn vendor_dir() -> &'static std::path::Path {
-    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/vendor/tabler-icons/outline"))
+    std::path::Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/vendor/tabler-icons/outline"
+    ))
 }
 
 #[cfg(test)]

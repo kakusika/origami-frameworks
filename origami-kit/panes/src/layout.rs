@@ -158,7 +158,7 @@ pub struct PaneRect {
     pub kind: CellKind,
     pub view_type: String, // only meaningful for CellKind::Content
     pub title: String,     // tab label / drawer rail label / pane title
-    pub active: bool,       // TabLabel: is current tab; DrawerRail: is expanded
+    pub active: bool,      // TabLabel: is current tab; DrawerRail: is expanded
 }
 
 impl PaneRect {
@@ -190,7 +190,9 @@ fn find_node(node: &PaneNode, target_id: i32) -> Option<&PaneNode> {
         return Some(node);
     }
     match node {
-        PaneNode::Split { children, .. } => children.iter().find_map(|c| find_node(&c.node, target_id)),
+        PaneNode::Split { children, .. } => {
+            children.iter().find_map(|c| find_node(&c.node, target_id))
+        }
         PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
             children.iter().find_map(|c| find_node(&c.node, target_id))
         }
@@ -206,8 +208,18 @@ pub fn layout_tree(
     maximized_leaf_id: Option<i32>,
 ) -> Vec<PaneRect> {
     let mut out = Vec::new();
-    let display_root = maximized_leaf_id.and_then(|id| find_node(root, id)).unwrap_or(root);
-    layout_node(display_root, viewport, metrics, None, active_leaf_id, false, &mut out);
+    let display_root = maximized_leaf_id
+        .and_then(|id| find_node(root, id))
+        .unwrap_or(root);
+    layout_node(
+        display_root,
+        viewport,
+        metrics,
+        None,
+        active_leaf_id,
+        false,
+        &mut out,
+    );
     out
 }
 
@@ -234,12 +246,28 @@ fn layout_node(
             id,
             orientation,
             children,
-        } => layout_split(*id, orientation, children, rect, metrics, active_leaf_id, out),
+        } => layout_split(
+            *id,
+            orientation,
+            children,
+            rect,
+            metrics,
+            active_leaf_id,
+            out,
+        ),
         PaneNode::Tabs {
             id,
             children,
             current_index,
-        } => layout_tabs(*id, children, *current_index, rect, metrics, active_leaf_id, out),
+        } => layout_tabs(
+            *id,
+            children,
+            *current_index,
+            rect,
+            metrics,
+            active_leaf_id,
+            out,
+        ),
         PaneNode::Drawer {
             id,
             children,
@@ -275,14 +303,24 @@ fn layout_node(
                 let inner = rect.inset(margin, margin, margin, margin);
 
                 let header_h = metrics.header_height().min(inner.h);
-                let mut header = PaneRect::new(*id, Rect::new(inner.x, inner.y, inner.w, header_h), 1, CellKind::Header);
+                let mut header = PaneRect::new(
+                    *id,
+                    Rect::new(inner.x, inner.y, inner.w, header_h),
+                    1,
+                    CellKind::Header,
+                );
                 header.child_id = -1; // no owning group -- a bare standalone pane
                 header.title = title.clone();
                 header.view_type = view_type.clone();
                 header.active = active_leaf_id == Some(*id);
                 out.push(header);
 
-                Rect::new(inner.x, inner.y + header_h, inner.w, (inner.h - header_h).max(0.0))
+                Rect::new(
+                    inner.x,
+                    inner.y + header_h,
+                    inner.w,
+                    (inner.h - header_h).max(0.0),
+                )
             };
 
             let mut r = PaneRect::new(*id, content_rect, 0, CellKind::Content);
@@ -299,7 +337,9 @@ fn layout_node(
 // out of scope: no toolbar node kind is ported here).
 fn fixed_size_px(node: &PaneNode, metrics: &LayoutMetrics) -> f32 {
     match node {
-        PaneNode::Drawer { expanded: false, .. } => metrics.collapsed_drawer_size(),
+        PaneNode::Drawer {
+            expanded: false, ..
+        } => metrics.collapsed_drawer_size(),
         _ => 0.0,
     }
 }
@@ -366,11 +406,29 @@ fn layout_split(
         let lead = if i > 0 { gap / 2.0 } else { 0.0 };
         let trail = if i < last { gap / 2.0 } else { 0.0 };
         let child_rect = if horizontal {
-            Rect::new(rect.x + offset + lead, rect.y, (*size - lead - trail).max(0.0), rect.h)
+            Rect::new(
+                rect.x + offset + lead,
+                rect.y,
+                (*size - lead - trail).max(0.0),
+                rect.h,
+            )
         } else {
-            Rect::new(rect.x, rect.y + offset + lead, rect.w, (*size - lead - trail).max(0.0))
+            Rect::new(
+                rect.x,
+                rect.y + offset + lead,
+                rect.w,
+                (*size - lead - trail).max(0.0),
+            )
         };
-        layout_node(&child.node, child_rect, metrics, Some(orientation), active_leaf_id, false, out);
+        layout_node(
+            &child.node,
+            child_rect,
+            metrics,
+            Some(orientation),
+            active_leaf_id,
+            false,
+            out,
+        );
         offset += size;
     }
 
@@ -470,8 +528,21 @@ fn layout_tabs(
         header.active = active_leaf_id == Some(id);
         out.push(header);
 
-        let content_body = Rect::new(body.x, body.y + header_h, body.w, (body.h - header_h).max(0.0));
-        layout_node(&current.node, content_body, metrics, None, active_leaf_id, true, out);
+        let content_body = Rect::new(
+            body.x,
+            body.y + header_h,
+            body.w,
+            (body.h - header_h).max(0.0),
+        );
+        layout_node(
+            &current.node,
+            content_body,
+            metrics,
+            None,
+            active_leaf_id,
+            true,
+            out,
+        );
     }
 }
 
@@ -539,8 +610,21 @@ fn layout_drawer(
             header.active = active_leaf_id == Some(id);
             out.push(header);
 
-            let content_body = Rect::new(body.x, body.y + header_h, body.w, (body.h - header_h).max(0.0));
-            layout_node(&current.node, content_body, metrics, None, active_leaf_id, true, out);
+            let content_body = Rect::new(
+                body.x,
+                body.y + header_h,
+                body.w,
+                (body.h - header_h).max(0.0),
+            );
+            layout_node(
+                &current.node,
+                content_body,
+                metrics,
+                None,
+                active_leaf_id,
+                true,
+                out,
+            );
         }
     }
 }
@@ -585,9 +669,18 @@ mod tests {
                 },
             ],
         };
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 100.0), &LayoutMetrics::default(), None, None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            None,
+        );
 
-        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        let content: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Content)
+            .collect();
         assert_eq!(content.len(), 2);
         // Below each bare pane's own 32px PaneHeader row (see
         // `metrics.header_height()`), inside its frame's 2px margin. Each
@@ -596,7 +689,10 @@ mod tests {
         assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 92.0, 64.0));
         assert_eq!(content[1].rect, Rect::new(106.0, 34.0, 92.0, 64.0));
 
-        let dividers: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Divider).collect();
+        let dividers: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Divider)
+            .collect();
         assert_eq!(dividers.len(), 1);
         // The divider fills the 8px gap centered on the boundary at x=100.
         assert_eq!(dividers[0].rect, Rect::new(96.0, 0.0, 8.0, 100.0));
@@ -628,16 +724,28 @@ mod tests {
                 },
             ],
         };
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 100.0), &LayoutMetrics::default(), None, None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            None,
+        );
 
-        let rail: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::DrawerRail).collect();
+        let rail: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::DrawerRail)
+            .collect();
         assert_eq!(rail.len(), 1);
         assert_eq!(rail[0].rect, Rect::new(0.0, 0.0, 36.0, 100.0));
 
         // Collapsed drawer emits no body/frame/content for its child.
         assert!(rects.iter().all(|r| r.id != 1));
 
-        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        let content: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Content)
+            .collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
         // The rail is 36px; the pane pulls back 4px (half the 8px split gap)
@@ -648,9 +756,18 @@ mod tests {
     #[test]
     fn bare_pane_header_carries_no_owning_group() {
         let tree = pane(1, "board");
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), Some(1), None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 100.0, 100.0),
+            &LayoutMetrics::default(),
+            Some(1),
+            None,
+        );
 
-        let headers: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Header).collect();
+        let headers: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Header)
+            .collect();
         assert_eq!(headers.len(), 1);
         assert_eq!(headers[0].id, 1);
         assert_eq!(headers[0].child_id, -1);
@@ -667,13 +784,35 @@ mod tests {
                 id: Some(9),
                 orientation: orientation.to_string(),
                 children: vec![
-                    SplitChild { size: 0.5, node: pane(1, "a") },
-                    SplitChild { size: 0.5, node: pane(2, "b") },
+                    SplitChild {
+                        size: 0.5,
+                        node: pane(1, "a"),
+                    },
+                    SplitChild {
+                        size: 0.5,
+                        node: pane(2, "b"),
+                    },
                 ],
             };
-            let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 200.0), &LayoutMetrics::default(), None, None);
-            let frame = |id: i32| rects.iter().find(|r| r.kind == CellKind::GroupFrame && r.id == id).unwrap().rect;
-            let div = rects.iter().find(|r| r.kind == CellKind::Divider).unwrap().rect;
+            let rects = layout_tree(
+                &tree,
+                Rect::new(0.0, 0.0, 200.0, 200.0),
+                &LayoutMetrics::default(),
+                None,
+                None,
+            );
+            let frame = |id: i32| {
+                rects
+                    .iter()
+                    .find(|r| r.kind == CellKind::GroupFrame && r.id == id)
+                    .unwrap()
+                    .rect
+            };
+            let div = rects
+                .iter()
+                .find(|r| r.kind == CellKind::Divider)
+                .unwrap()
+                .rect;
             let (a, b) = (frame(1), frame(2));
             if orientation == "horizontal" {
                 assert_eq!(b.x - (a.x + a.w), 8.0, "gap between frames");
@@ -690,14 +829,26 @@ mod tests {
     #[test]
     fn bare_pane_is_framed_like_a_group_body() {
         let tree = pane(1, "board");
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), None, None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 100.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            None,
+        );
 
-        let frames: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::GroupFrame).collect();
+        let frames: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::GroupFrame)
+            .collect();
         assert_eq!(frames.len(), 1);
         assert_eq!(frames[0].id, 1);
         assert_eq!(frames[0].rect, Rect::new(0.0, 0.0, 100.0, 100.0));
 
-        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        let content: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Content)
+            .collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 96.0, 64.0));
     }
@@ -707,10 +858,25 @@ mod tests {
         let tree = PaneNode::Tabs {
             id: 5,
             current_index: 0,
-            children: vec![GroupChild { node: pane(1, "board") }],
+            children: vec![GroupChild {
+                node: pane(1, "board"),
+            }],
         };
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), None, None);
-        assert_eq!(rects.iter().filter(|r| r.kind == CellKind::GroupFrame).count(), 1, "only the group's frame");
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 100.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            None,
+        );
+        assert_eq!(
+            rects
+                .iter()
+                .filter(|r| r.kind == CellKind::GroupFrame)
+                .count(),
+            1,
+            "only the group's frame"
+        );
     }
 
     #[test]
@@ -719,13 +885,26 @@ mod tests {
             id: 5,
             current_index: 1,
             children: vec![
-                GroupChild { node: pane(1, "board") },
-                GroupChild { node: pane(2, "calendar") },
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "calendar"),
+                },
             ],
         };
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 100.0), &LayoutMetrics::default(), Some(5), None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            &LayoutMetrics::default(),
+            Some(5),
+            None,
+        );
 
-        let headers: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Header).collect();
+        let headers: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Header)
+            .collect();
         assert_eq!(headers.len(), 1);
         // The active child (index 1, pane 2) is what the header's grip
         // would drag -- not the inactive tab (pane 1).
@@ -741,8 +920,14 @@ mod tests {
             id: Some(0),
             orientation: "horizontal".into(),
             children: vec![
-                SplitChild { size: 0.5, node: pane(1, "board") },
-                SplitChild { size: 0.5, node: pane(2, "table") },
+                SplitChild {
+                    size: 0.5,
+                    node: pane(1, "board"),
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: pane(2, "table"),
+                },
             ],
         };
         let viewport = Rect::new(0.0, 0.0, 200.0, 100.0);
@@ -751,7 +936,10 @@ mod tests {
         // Only pane 2's own subtree renders -- pane 1 is entirely absent,
         // not just visually hidden.
         assert!(rects.iter().all(|r| r.id != 1));
-        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        let content: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Content)
+            .collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
         // Full viewport width (less the frame's 2px side margins), not its
@@ -762,8 +950,18 @@ mod tests {
     #[test]
     fn unresolvable_maximized_id_falls_back_to_the_whole_tree() {
         let tree = pane(1, "board");
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 100.0, 100.0), &LayoutMetrics::default(), None, Some(999));
-        assert!(rects.iter().any(|r| r.id == 1 && r.kind == CellKind::Content));
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 100.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            Some(999),
+        );
+        assert!(
+            rects
+                .iter()
+                .any(|r| r.id == 1 && r.kind == CellKind::Content)
+        );
     }
 
     #[test]
@@ -772,13 +970,26 @@ mod tests {
             id: 5,
             current_index: 1,
             children: vec![
-                GroupChild { node: pane(1, "board") },
-                GroupChild { node: pane(2, "calendar") },
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "calendar"),
+                },
             ],
         };
-        let rects = layout_tree(&tree, Rect::new(0.0, 0.0, 200.0, 100.0), &LayoutMetrics::default(), None, None);
+        let rects = layout_tree(
+            &tree,
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            &LayoutMetrics::default(),
+            None,
+            None,
+        );
 
-        let labels: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::TabLabel).collect();
+        let labels: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::TabLabel)
+            .collect();
         assert_eq!(labels.len(), 2);
         assert!(!labels[0].active);
         assert!(labels[1].active);
@@ -786,14 +997,23 @@ mod tests {
         assert_eq!(labels[1].child_id, 2);
         assert_eq!(labels[1].index, 1);
 
-        let add: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::TabAdd).collect();
+        let add: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::TabAdd)
+            .collect();
         assert_eq!(add.len(), 1);
         assert_eq!(add[0].id, 5);
 
-        let frames: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::GroupFrame).collect();
+        let frames: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::GroupFrame)
+            .collect();
         assert_eq!(frames.len(), 1);
 
-        let content: Vec<_> = rects.iter().filter(|r| r.kind == CellKind::Content).collect();
+        let content: Vec<_> = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::Content)
+            .collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
     }

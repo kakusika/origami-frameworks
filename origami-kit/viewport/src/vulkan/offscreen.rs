@@ -54,8 +54,11 @@ impl OffscreenPass {
             .subpasses(std::slice::from_ref(&subpass))
             .dependencies(std::slice::from_ref(&dependency));
 
-        let render_pass =
-            unsafe { context.ash_device.create_render_pass(&render_pass_info, None)? };
+        let render_pass = unsafe {
+            context
+                .ash_device
+                .create_render_pass(&render_pass_info, None)?
+        };
 
         Ok(Self {
             context,
@@ -104,7 +107,11 @@ impl OffscreenPass {
             .view_type(vk::ImageViewType::TYPE_2D)
             .format(vk::Format::R8G8B8A8_UNORM)
             .subresource_range(subresource_range);
-        let image_view = unsafe { self.context.ash_device.create_image_view(&view_info, None)? };
+        let image_view = unsafe {
+            self.context
+                .ash_device
+                .create_image_view(&view_info, None)?
+        };
 
         // 2. Create Framebuffer
         let framebuffer_info = vk::FramebufferCreateInfo::default()
@@ -113,20 +120,31 @@ impl OffscreenPass {
             .width(width)
             .height(height)
             .layers(1);
-        let framebuffer =
-            unsafe { self.context.ash_device.create_framebuffer(&framebuffer_info, None)? };
+        let framebuffer = unsafe {
+            self.context
+                .ash_device
+                .create_framebuffer(&framebuffer_info, None)?
+        };
 
         // 3. Allocate CommandBuffer
         let alloc_info = vk::CommandBufferAllocateInfo::default()
             .command_pool(self.command_pool)
             .level(vk::CommandBufferLevel::PRIMARY)
             .command_buffer_count(1);
-        let cmd = unsafe { self.context.ash_device.allocate_command_buffers(&alloc_info)?[0] };
+        let cmd = unsafe {
+            self.context
+                .ash_device
+                .allocate_command_buffers(&alloc_info)?[0]
+        };
 
         // 4. Record draw commands
         let begin_info = vk::CommandBufferBeginInfo::default()
             .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
-        unsafe { self.context.ash_device.begin_command_buffer(cmd, &begin_info)? };
+        unsafe {
+            self.context
+                .ash_device
+                .begin_command_buffer(cmd, &begin_info)?
+        };
 
         let clear_values = [vk::ClearValue {
             color: vk::ClearColorValue {
@@ -162,8 +180,7 @@ impl OffscreenPass {
             let fence_info = vk::FenceCreateInfo::default();
             let fence = unsafe { self.context.ash_device.create_fence(&fence_info, None)? };
 
-            let submit_info =
-                vk::SubmitInfo::default().command_buffers(std::slice::from_ref(&cmd));
+            let submit_info = vk::SubmitInfo::default().command_buffers(std::slice::from_ref(&cmd));
 
             unsafe {
                 self.context
@@ -178,8 +195,12 @@ impl OffscreenPass {
 
         // 6. Cleanup temporary resources
         unsafe {
-            self.context.ash_device.free_command_buffers(self.command_pool, &[cmd]);
-            self.context.ash_device.destroy_framebuffer(framebuffer, None);
+            self.context
+                .ash_device
+                .free_command_buffers(self.command_pool, &[cmd]);
+            self.context
+                .ash_device
+                .destroy_framebuffer(framebuffer, None);
             self.context.ash_device.destroy_image_view(image_view, None);
         }
 
@@ -190,8 +211,12 @@ impl OffscreenPass {
 impl Drop for OffscreenPass {
     fn drop(&mut self) {
         unsafe {
-            self.context.ash_device.destroy_render_pass(self.render_pass, None);
-            self.context.ash_device.destroy_command_pool(self.command_pool, None);
+            self.context
+                .ash_device
+                .destroy_render_pass(self.render_pass, None);
+            self.context
+                .ash_device
+                .destroy_command_pool(self.command_pool, None);
         }
     }
 }

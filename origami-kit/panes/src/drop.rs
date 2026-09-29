@@ -39,7 +39,13 @@ pub enum DropZone {
 /// Returns the drop zone for a point, plus whether it's a root-window-edge
 /// zone (which applies at the whole tree's root, ignoring which leaf was
 /// actually hovered) rather than a leaf-local one.
-pub fn compute_zone(leaf_rect: Rect, viewport_w: f32, viewport_h: f32, x: f32, y: f32) -> (DropZone, bool) {
+pub fn compute_zone(
+    leaf_rect: Rect,
+    viewport_w: f32,
+    viewport_h: f32,
+    x: f32,
+    y: f32,
+) -> (DropZone, bool) {
     if x < ROOT_EDGE {
         return (DropZone::Left, true);
     }
@@ -87,23 +93,43 @@ pub const HIGHLIGHT_LINE_THICKNESS: f32 = 6.0;
 /// along the appropriate edge of the leaf (or, for a root-window-edge
 /// zone, the whole viewport) for every zone except `Center`, which
 /// highlights the entire leaf.
-pub fn highlight_rect(zone: DropZone, is_root: bool, leaf_rect: Rect, viewport_w: f32, viewport_h: f32) -> Rect {
+pub fn highlight_rect(
+    zone: DropZone,
+    is_root: bool,
+    leaf_rect: Rect,
+    viewport_w: f32,
+    viewport_h: f32,
+) -> Rect {
     if matches!(zone, DropZone::Center) {
         return leaf_rect;
     }
     let (base, w, h) = if is_root {
-        (Rect::new(0.0, 0.0, viewport_w, viewport_h), viewport_w, viewport_h)
+        (
+            Rect::new(0.0, 0.0, viewport_w, viewport_h),
+            viewport_w,
+            viewport_h,
+        )
     } else {
         (leaf_rect, leaf_rect.w, leaf_rect.h)
     };
     match zone {
         DropZone::Center => unreachable!(),
         DropZone::Left => Rect::new(base.x, base.y, HIGHLIGHT_LINE_THICKNESS, h),
-        DropZone::Right => Rect::new(base.x + w - HIGHLIGHT_LINE_THICKNESS, base.y, HIGHLIGHT_LINE_THICKNESS, h),
-        DropZone::Top | DropZone::DrawerTop => Rect::new(base.x, base.y, w, HIGHLIGHT_LINE_THICKNESS),
-        DropZone::Bottom | DropZone::DrawerBottom => {
-            Rect::new(base.x, base.y + h - HIGHLIGHT_LINE_THICKNESS, w, HIGHLIGHT_LINE_THICKNESS)
+        DropZone::Right => Rect::new(
+            base.x + w - HIGHLIGHT_LINE_THICKNESS,
+            base.y,
+            HIGHLIGHT_LINE_THICKNESS,
+            h,
+        ),
+        DropZone::Top | DropZone::DrawerTop => {
+            Rect::new(base.x, base.y, w, HIGHLIGHT_LINE_THICKNESS)
         }
+        DropZone::Bottom | DropZone::DrawerBottom => Rect::new(
+            base.x,
+            base.y + h - HIGHLIGHT_LINE_THICKNESS,
+            w,
+            HIGHLIGHT_LINE_THICKNESS,
+        ),
     }
 }
 
@@ -129,7 +155,9 @@ pub fn find_target_leaf(rects: &[PaneRect], x: f32, y: f32) -> Option<(i32, Rect
         .min_by(|a, b| {
             let area_a = a.rect.w * a.rect.h;
             let area_b = b.rect.w * b.rect.h;
-            area_a.partial_cmp(&area_b).unwrap_or(std::cmp::Ordering::Equal)
+            area_a
+                .partial_cmp(&area_b)
+                .unwrap_or(std::cmp::Ordering::Equal)
         })
         .map(|r| (r.id, r.rect))
 }
@@ -143,8 +171,14 @@ pub fn find_target_leaf(rects: &[PaneRect], x: f32, y: f32) -> Option<(i32, Rect
 // well within its `min(w,h)*0.28`-capped-at-90px threshold for most pane
 // sizes) and wrongly create a split instead.
 pub fn find_tab_strip_target(rects: &[PaneRect], x: f32, y: f32) -> Option<(i32, usize)> {
-    if let Some(add) = rects.iter().find(|r| r.kind == CellKind::TabAdd && r.rect.contains(x, y)) {
-        let count = rects.iter().filter(|r| r.kind == CellKind::TabLabel && r.id == add.id).count();
+    if let Some(add) = rects
+        .iter()
+        .find(|r| r.kind == CellKind::TabAdd && r.rect.contains(x, y))
+    {
+        let count = rects
+            .iter()
+            .filter(|r| r.kind == CellKind::TabLabel && r.id == add.id)
+            .count();
         return Some((add.id, count));
     }
     rects
@@ -152,7 +186,11 @@ pub fn find_tab_strip_target(rects: &[PaneRect], x: f32, y: f32) -> Option<(i32,
         .find(|r| r.kind == CellKind::TabLabel && r.rect.contains(x, y))
         .map(|tab| {
             let midpoint = tab.rect.x + tab.rect.w / 2.0;
-            let index = if x < midpoint { tab.index } else { tab.index + 1 };
+            let index = if x < midpoint {
+                tab.index
+            } else {
+                tab.index + 1
+            };
             (tab.id, index.max(0) as usize)
         })
 }
@@ -163,7 +201,10 @@ pub fn find_tab_strip_target(rects: &[PaneRect], x: f32, y: f32) -> Option<(i32,
 /// zone other than `center`) a consumer already renders for edge-zone
 /// drops, which is exactly this line's own look.
 pub fn tab_insertion_line_rect(rects: &[PaneRect], group_id: i32, index: usize) -> Option<Rect> {
-    let mut labels: Vec<&PaneRect> = rects.iter().filter(|r| r.kind == CellKind::TabLabel && r.id == group_id).collect();
+    let mut labels: Vec<&PaneRect> = rects
+        .iter()
+        .filter(|r| r.kind == CellKind::TabLabel && r.id == group_id)
+        .collect();
     labels.sort_by_key(|r| r.index);
     let bar = labels.first()?.rect;
     let x = if index == 0 {
@@ -184,26 +225,40 @@ pub fn tab_insertion_line_rect(rects: &[PaneRect], group_id: i32, index: usize) 
 /// shifts every later sibling down by one -- without this, dragging
 /// rightward within the same strip would always land one slot short of
 /// where it visually looked like it was dropped.
-pub fn apply_index_drop(tree: &mut PaneTree, source: DragSource, target_group_id: i32, index: usize) -> bool {
+pub fn apply_index_drop(
+    tree: &mut PaneTree,
+    source: DragSource,
+    target_group_id: i32,
+    index: usize,
+) -> bool {
     let applied = apply_index_drop_inner(tree, source, target_group_id, index);
     tree.assign_missing_ids();
     applied
 }
 
-fn apply_index_drop_inner(tree: &mut PaneTree, source: DragSource, target_group_id: i32, index: usize) -> bool {
+fn apply_index_drop_inner(
+    tree: &mut PaneTree,
+    source: DragSource,
+    target_group_id: i32,
+    index: usize,
+) -> bool {
     let Some(root) = tree.root.as_mut() else {
         return false;
     };
 
     let index = match source {
-        DragSource::Group { group_id, index: from_index } if group_id == target_group_id && index > from_index => {
-            index - 1
-        }
+        DragSource::Group {
+            group_id,
+            index: from_index,
+        } if group_id == target_group_id && index > from_index => index - 1,
         _ => index,
     };
 
     let dragged = match source {
-        DragSource::Group { group_id, index: from_index } => {
+        DragSource::Group {
+            group_id,
+            index: from_index,
+        } => {
             let Some(source_group) = root.find_node_mut(group_id) else {
                 return false;
             };
@@ -221,7 +276,10 @@ fn apply_index_drop_inner(tree: &mut PaneTree, source: DragSource, target_group_
     let Some(target) = root.find_node_mut(target_group_id) else {
         // Target vanished mid-drag -- put it back rather than lose it.
         match source {
-            DragSource::Group { group_id, index: from_index } => {
+            DragSource::Group {
+                group_id,
+                index: from_index,
+            } => {
                 if let Some(source_group) = root.find_node_mut(group_id) {
                     reinsert_child(source_group, from_index, dragged);
                 }
@@ -250,7 +308,9 @@ fn find_node(node: &PaneNode, target_id: i32) -> Option<&PaneNode> {
         return Some(node);
     }
     match node {
-        PaneNode::Split { children, .. } => children.iter().find_map(|c| find_node(&c.node, target_id)),
+        PaneNode::Split { children, .. } => {
+            children.iter().find_map(|c| find_node(&c.node, target_id))
+        }
         PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
             children.iter().find_map(|c| find_node(&c.node, target_id))
         }
@@ -267,7 +327,16 @@ fn group_child_count(node: &PaneNode) -> usize {
 
 fn extract_child(node: &mut PaneNode, index: usize) -> Option<PaneNode> {
     match node {
-        PaneNode::Tabs { children, current_index, .. } | PaneNode::Drawer { children, current_index, .. } => {
+        PaneNode::Tabs {
+            children,
+            current_index,
+            ..
+        }
+        | PaneNode::Drawer {
+            children,
+            current_index,
+            ..
+        } => {
             if index >= children.len() {
                 return None;
             }
@@ -284,7 +353,16 @@ fn extract_child(node: &mut PaneNode, index: usize) -> Option<PaneNode> {
 }
 
 fn reinsert_child(node: &mut PaneNode, index: usize, child: PaneNode) {
-    if let PaneNode::Tabs { children, current_index, .. } | PaneNode::Drawer { children, current_index, .. } = node
+    if let PaneNode::Tabs {
+        children,
+        current_index,
+        ..
+    }
+    | PaneNode::Drawer {
+        children,
+        current_index,
+        ..
+    } = node
     {
         let idx = index.min(children.len());
         children.insert(idx, GroupChild { node: child });
@@ -304,12 +382,26 @@ fn renormalize(children: &mut [SplitChild]) {
 // PaneDropOverlay.qml's "center" effect: append to an existing tabs/drawer
 // group, or -- dropping onto a bare pane -- wrap it in a brand new Tabs
 // group with the dragged pane appended as the new/last (selected) tab.
-fn apply_center(root: &mut PaneNode, target_id: i32, dragged: PaneNode, new_group_id: i32) -> Result<(), PaneNode> {
+fn apply_center(
+    root: &mut PaneNode,
+    target_id: i32,
+    dragged: PaneNode,
+    new_group_id: i32,
+) -> Result<(), PaneNode> {
     let Some(target) = root.find_node_mut(target_id) else {
         return Err(dragged);
     };
     match target {
-        PaneNode::Tabs { children, current_index, .. } | PaneNode::Drawer { children, current_index, .. } => {
+        PaneNode::Tabs {
+            children,
+            current_index,
+            ..
+        }
+        | PaneNode::Drawer {
+            children,
+            current_index,
+            ..
+        } => {
             children.push(GroupChild { node: dragged });
             *current_index = children.len() - 1;
             Ok(())
@@ -331,16 +423,40 @@ fn apply_center(root: &mut PaneNode, target_id: i32, dragged: PaneNode, new_grou
 // inserting an existing (already-extracted) node rather than constructing
 // a fresh pane, and supporting `before` (left/top) vs. after (right/
 // bottom) insertion, which the vendored version doesn't need.
-fn insert_at_split(node: &mut PaneNode, target_id: i32, orientation: &str, before: bool, slot: &mut Option<PaneNode>) -> bool {
+fn insert_at_split(
+    node: &mut PaneNode,
+    target_id: i32,
+    orientation: &str,
+    before: bool,
+    slot: &mut Option<PaneNode>,
+) -> bool {
     if node.id() == Some(target_id) {
         let Some(new_node) = slot.take() else {
             return false;
         };
         let old = std::mem::replace(node, placeholder());
         let children = if before {
-            vec![SplitChild { size: 0.5, node: new_node }, SplitChild { size: 0.5, node: old }]
+            vec![
+                SplitChild {
+                    size: 0.5,
+                    node: new_node,
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: old,
+                },
+            ]
         } else {
-            vec![SplitChild { size: 0.5, node: old }, SplitChild { size: 0.5, node: new_node }]
+            vec![
+                SplitChild {
+                    size: 0.5,
+                    node: old,
+                },
+                SplitChild {
+                    size: 0.5,
+                    node: new_node,
+                },
+            ]
         };
         *node = PaneNode::Split {
             id: None,
@@ -351,7 +467,11 @@ fn insert_at_split(node: &mut PaneNode, target_id: i32, orientation: &str, befor
     }
 
     match node {
-        PaneNode::Split { orientation: split_orientation, children, .. } => {
+        PaneNode::Split {
+            orientation: split_orientation,
+            children,
+            ..
+        } => {
             if split_orientation == orientation {
                 if let Some(idx) = children.iter().position(|c| c.node.id() == Some(target_id)) {
                     let Some(new_node) = slot.take() else {
@@ -360,15 +480,23 @@ fn insert_at_split(node: &mut PaneNode, target_id: i32, orientation: &str, befor
                     let half = children[idx].size / 2.0;
                     children[idx].size = half;
                     let insert_idx = if before { idx } else { idx + 1 };
-                    children.insert(insert_idx, SplitChild { size: half, node: new_node });
+                    children.insert(
+                        insert_idx,
+                        SplitChild {
+                            size: half,
+                            node: new_node,
+                        },
+                    );
                     return true;
                 }
             }
-            children.iter_mut().any(|c| insert_at_split(&mut c.node, target_id, orientation, before, slot))
+            children
+                .iter_mut()
+                .any(|c| insert_at_split(&mut c.node, target_id, orientation, before, slot))
         }
-        PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
-            children.iter_mut().any(|c| insert_at_split(&mut c.node, target_id, orientation, before, slot))
-        }
+        PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => children
+            .iter_mut()
+            .any(|c| insert_at_split(&mut c.node, target_id, orientation, before, slot)),
         PaneNode::Pane { .. } => false,
     }
 }
@@ -378,22 +506,59 @@ fn insert_at_split(node: &mut PaneNode, target_id: i32, orientation: &str, befor
 // Tabs, Drawer, or bare Pane) gets wrapped wholesale alongside the dragged
 // node 50/50, unless the root is already a same-orientation Split, in
 // which case the dragged node just becomes a new sibling at that end.
-fn apply_split_root(root: &mut PaneNode, orientation: &str, before: bool, dragged: PaneNode) -> Result<(), PaneNode> {
+fn apply_split_root(
+    root: &mut PaneNode,
+    orientation: &str,
+    before: bool,
+    dragged: PaneNode,
+) -> Result<(), PaneNode> {
     let root_node = std::mem::replace(root, placeholder());
     match root_node {
-        PaneNode::Split { id, orientation: root_orientation, mut children } if root_orientation == orientation => {
+        PaneNode::Split {
+            id,
+            orientation: root_orientation,
+            mut children,
+        } if root_orientation == orientation => {
             let insert_idx = if before { 0 } else { children.len() };
             let new_share = 1.0 / (children.len() as f64 + 1.0);
-            children.insert(insert_idx, SplitChild { size: new_share, node: dragged });
+            children.insert(
+                insert_idx,
+                SplitChild {
+                    size: new_share,
+                    node: dragged,
+                },
+            );
             renormalize(&mut children);
-            *root = PaneNode::Split { id, orientation: root_orientation, children };
+            *root = PaneNode::Split {
+                id,
+                orientation: root_orientation,
+                children,
+            };
             Ok(())
         }
         other => {
             let children = if before {
-                vec![SplitChild { size: 0.5, node: dragged }, SplitChild { size: 0.5, node: other }]
+                vec![
+                    SplitChild {
+                        size: 0.5,
+                        node: dragged,
+                    },
+                    SplitChild {
+                        size: 0.5,
+                        node: other,
+                    },
+                ]
             } else {
-                vec![SplitChild { size: 0.5, node: other }, SplitChild { size: 0.5, node: dragged }]
+                vec![
+                    SplitChild {
+                        size: 0.5,
+                        node: other,
+                    },
+                    SplitChild {
+                        size: 0.5,
+                        node: dragged,
+                    },
+                ]
             };
             *root = PaneNode::Split {
                 id: None,
@@ -424,7 +589,13 @@ fn apply_split(
     }
 }
 
-fn insert_in_drawer(node: &mut PaneNode, target_id: i32, before: bool, new_drawer_id: i32, slot: &mut Option<PaneNode>) -> bool {
+fn insert_in_drawer(
+    node: &mut PaneNode,
+    target_id: i32,
+    before: bool,
+    new_drawer_id: i32,
+    slot: &mut Option<PaneNode>,
+) -> bool {
     if node.id() == Some(target_id) {
         let Some(new_node) = slot.take() else {
             return false;
@@ -446,19 +617,25 @@ fn insert_in_drawer(node: &mut PaneNode, target_id: i32, before: bool, new_drawe
     }
 
     match node {
-        PaneNode::Split { children, .. } => {
-            children.iter_mut().any(|c| insert_in_drawer(&mut c.node, target_id, before, new_drawer_id, slot))
-        }
-        PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => {
-            children.iter_mut().any(|c| insert_in_drawer(&mut c.node, target_id, before, new_drawer_id, slot))
-        }
+        PaneNode::Split { children, .. } => children
+            .iter_mut()
+            .any(|c| insert_in_drawer(&mut c.node, target_id, before, new_drawer_id, slot)),
+        PaneNode::Tabs { children, .. } | PaneNode::Drawer { children, .. } => children
+            .iter_mut()
+            .any(|c| insert_in_drawer(&mut c.node, target_id, before, new_drawer_id, slot)),
         PaneNode::Pane { .. } => false,
     }
 }
 
 // drawer-top/bottom: wraps target in a new vertical drawer (expanded),
 // dragged pane first (top) or last (bottom).
-fn apply_drawer(root: &mut PaneNode, target_id: i32, before: bool, dragged: PaneNode, new_drawer_id: i32) -> Result<(), PaneNode> {
+fn apply_drawer(
+    root: &mut PaneNode,
+    target_id: i32,
+    before: bool,
+    dragged: PaneNode,
+    new_drawer_id: i32,
+) -> Result<(), PaneNode> {
     let mut slot = Some(dragged);
     if insert_in_drawer(root, target_id, before, new_drawer_id, &mut slot) {
         Ok(())
@@ -499,8 +676,12 @@ pub enum DragSource {
 // survivor's own id intact.
 fn extract_standalone(node: &mut PaneNode, target_id: i32) -> Option<PaneNode> {
     let removable_idx: Option<usize> = match node {
-        PaneNode::Split { children, .. } => children.iter().position(|c| c.node.id() == Some(target_id)),
-        PaneNode::Drawer { children, .. } => children.iter().position(|c| c.node.id() == Some(target_id)),
+        PaneNode::Split { children, .. } => {
+            children.iter().position(|c| c.node.id() == Some(target_id))
+        }
+        PaneNode::Drawer { children, .. } => {
+            children.iter().position(|c| c.node.id() == Some(target_id))
+        }
         _ => None,
     };
 
@@ -515,7 +696,11 @@ fn extract_standalone(node: &mut PaneNode, target_id: i32) -> Option<PaneNode> {
                 }
                 Some(removed)
             }
-            PaneNode::Drawer { children, current_index, .. } => {
+            PaneNode::Drawer {
+                children,
+                current_index,
+                ..
+            } => {
                 let removed = children.remove(idx).node;
                 if *current_index >= children.len() {
                     *current_index = children.len().saturating_sub(1);
@@ -527,9 +712,15 @@ fn extract_standalone(node: &mut PaneNode, target_id: i32) -> Option<PaneNode> {
     }
 
     match node {
-        PaneNode::Split { children, .. } => children.iter_mut().find_map(|c| extract_standalone(&mut c.node, target_id)),
-        PaneNode::Tabs { children, .. } => children.iter_mut().find_map(|c| extract_standalone(&mut c.node, target_id)),
-        PaneNode::Drawer { children, .. } => children.iter_mut().find_map(|c| extract_standalone(&mut c.node, target_id)),
+        PaneNode::Split { children, .. } => children
+            .iter_mut()
+            .find_map(|c| extract_standalone(&mut c.node, target_id)),
+        PaneNode::Tabs { children, .. } => children
+            .iter_mut()
+            .find_map(|c| extract_standalone(&mut c.node, target_id)),
+        PaneNode::Drawer { children, .. } => children
+            .iter_mut()
+            .find_map(|c| extract_standalone(&mut c.node, target_id)),
         PaneNode::Pane { .. } => None,
     }
 }
@@ -544,13 +735,25 @@ fn extract_standalone(node: &mut PaneNode, target_id: i32) -> Option<PaneNode> {
 /// reinserted where it came from (or, for a `Standalone` source whose
 /// original Split position no longer resolves, wrapped back in at the
 /// tree's root) so nothing is silently lost.
-pub fn apply_drop(tree: &mut PaneTree, source: DragSource, target_leaf_id: i32, zone: DropZone, is_root: bool) -> bool {
+pub fn apply_drop(
+    tree: &mut PaneTree,
+    source: DragSource,
+    target_leaf_id: i32,
+    zone: DropZone,
+    is_root: bool,
+) -> bool {
     let applied = apply_drop_inner(tree, source, target_leaf_id, zone, is_root);
     tree.assign_missing_ids();
     applied
 }
 
-fn apply_drop_inner(tree: &mut PaneTree, source: DragSource, target_leaf_id: i32, zone: DropZone, is_root: bool) -> bool {
+fn apply_drop_inner(
+    tree: &mut PaneTree,
+    source: DragSource,
+    target_leaf_id: i32,
+    zone: DropZone,
+    is_root: bool,
+) -> bool {
     let new_id = tree.gen_id();
 
     let Some(root) = tree.root.as_mut() else {
@@ -667,16 +870,32 @@ mod tests {
                         id: 10,
                         current_index: 0,
                         children: vec![
-                            GroupChild { node: pane(1, "board") },
-                            GroupChild { node: pane(2, "table") },
+                            GroupChild {
+                                node: pane(1, "board"),
+                            },
+                            GroupChild {
+                                node: pane(2, "table"),
+                            },
                         ],
                     },
                 },
-                SplitChild { size: 0.5, node: pane(3, "calendar") },
+                SplitChild {
+                    size: 0.5,
+                    node: pane(3, "calendar"),
+                },
             ],
         }));
 
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 3, DropZone::Center, false));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 1
+            },
+            3,
+            DropZone::Center,
+            false
+        ));
 
         if let Some(PaneNode::Split { children, .. }) = &tree.root {
             if let PaneNode::Tabs { children: c1, .. } = &children[0].node {
@@ -685,7 +904,12 @@ mod tests {
             } else {
                 panic!("expected group 10 to remain Tabs");
             }
-            if let PaneNode::Tabs { children: c2, current_index, .. } = &children[1].node {
+            if let PaneNode::Tabs {
+                children: c2,
+                current_index,
+                ..
+            } = &children[1].node
+            {
                 assert_eq!(c2.len(), 2);
                 assert_eq!(c2[0].node.id(), Some(3));
                 assert_eq!(c2[1].node.id(), Some(2));
@@ -704,20 +928,42 @@ mod tests {
             id: 10,
             current_index: 0,
             children: vec![
-                GroupChild { node: pane(1, "board") },
-                GroupChild { node: pane(2, "table") },
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "table"),
+                },
             ],
         }));
 
         // No other leaf to drop onto -- drop tab 2 onto its own group's
         // left edge, wrapping the (now single-child) group in a new split.
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 10, DropZone::Left, false));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 1
+            },
+            10,
+            DropZone::Left,
+            false
+        ));
 
-        if let Some(PaneNode::Split { orientation, children, .. }) = &tree.root {
+        if let Some(PaneNode::Split {
+            orientation,
+            children,
+            ..
+        }) = &tree.root
+        {
             assert_eq!(orientation, "horizontal");
             assert_eq!(children.len(), 2);
             assert_eq!(children[0].node.id(), Some(2));
-            if let PaneNode::Tabs { children: remaining, .. } = &children[1].node {
+            if let PaneNode::Tabs {
+                children: remaining,
+                ..
+            } = &children[1].node
+            {
                 assert_eq!(remaining.len(), 1);
                 assert_eq!(remaining[0].node.id(), Some(1));
             } else {
@@ -747,15 +993,37 @@ mod tests {
         let mut tree = PaneTree::new(Some(PaneNode::Tabs {
             id: 10,
             current_index: 0,
-            children: vec![GroupChild { node: pane(1, "board") }, GroupChild { node: pane(2, "table") }],
+            children: vec![
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "table"),
+                },
+            ],
         }));
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 10, DropZone::Left, false));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 1
+            },
+            10,
+            DropZone::Left,
+            false
+        ));
 
-        let Some(PaneNode::Split { id: Some(split_id), .. }) = &tree.root else {
+        let Some(PaneNode::Split {
+            id: Some(split_id), ..
+        }) = &tree.root
+        else {
             panic!("the new split needs an id, got {:?}", tree.root);
         };
         let split_id = *split_id;
-        assert!(tree.divider_baseline(split_id, 0).is_some(), "the divider must be resizable");
+        assert!(
+            tree.divider_baseline(split_id, 0).is_some(),
+            "the divider must be resizable"
+        );
     }
 
     #[test]
@@ -766,18 +1034,37 @@ mod tests {
             id: Some(0),
             orientation: "horizontal".to_string(),
             children: vec![
-                SplitChild { size: 0.5, node: pane(1, "board") },
+                SplitChild {
+                    size: 0.5,
+                    node: pane(1, "board"),
+                },
                 SplitChild {
                     size: 0.5,
                     node: PaneNode::Tabs {
                         id: 10,
                         current_index: 0,
-                        children: vec![GroupChild { node: pane(2, "table") }, GroupChild { node: pane(3, "text") }],
+                        children: vec![
+                            GroupChild {
+                                node: pane(2, "table"),
+                            },
+                            GroupChild {
+                                node: pane(3, "text"),
+                            },
+                        ],
                     },
                 },
             ],
         }));
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 1 }, 1, DropZone::Bottom, false));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 1
+            },
+            1,
+            DropZone::Bottom,
+            false
+        ));
 
         let mut ids = Vec::new();
         split_ids(tree.root.as_ref().unwrap(), &mut ids);
@@ -785,7 +1072,10 @@ mod tests {
         assert!(ids.iter().all(Option::is_some), "{ids:?}");
         assert_ne!(ids[0], ids[1], "split ids must be distinct: {ids:?}");
         for id in ids.into_iter().flatten() {
-            assert!(tree.divider_baseline(id, 0).is_some(), "split {id} must be resizable");
+            assert!(
+                tree.divider_baseline(id, 0).is_some(),
+                "split {id} must be resizable"
+            );
         }
     }
 
@@ -794,24 +1084,40 @@ mod tests {
         let mut tree = PaneTree::new(Some(PaneNode::Split {
             id: Some(0),
             orientation: "horizontal".into(),
-            children: vec![
-                SplitChild {
-                    size: 1.0,
-                    node: PaneNode::Tabs {
-                        id: 10,
-                        current_index: 0,
-                        children: vec![
-                            GroupChild { node: pane(1, "board") },
-                            GroupChild { node: pane(2, "table") },
-                        ],
-                    },
+            children: vec![SplitChild {
+                size: 1.0,
+                node: PaneNode::Tabs {
+                    id: 10,
+                    current_index: 0,
+                    children: vec![
+                        GroupChild {
+                            node: pane(1, "board"),
+                        },
+                        GroupChild {
+                            node: pane(2, "table"),
+                        },
+                    ],
                 },
-            ],
+            }],
         }));
 
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 0 }, 10, DropZone::Bottom, true));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 0
+            },
+            10,
+            DropZone::Bottom,
+            true
+        ));
 
-        if let Some(PaneNode::Split { orientation, children, .. }) = &tree.root {
+        if let Some(PaneNode::Split {
+            orientation,
+            children,
+            ..
+        }) = &tree.root
+        {
             assert_eq!(orientation, "vertical");
             assert_eq!(children.len(), 2);
             assert_eq!(children[1].node.id(), Some(1));
@@ -826,14 +1132,33 @@ mod tests {
             id: 10,
             current_index: 0,
             children: vec![
-                GroupChild { node: pane(1, "board") },
-                GroupChild { node: pane(2, "table") },
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "table"),
+                },
             ],
         }));
 
-        assert!(apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 0 }, 10, DropZone::DrawerTop, false));
+        assert!(apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 0
+            },
+            10,
+            DropZone::DrawerTop,
+            false
+        ));
 
-        if let Some(PaneNode::Drawer { children, expanded, current_index, .. }) = &tree.root {
+        if let Some(PaneNode::Drawer {
+            children,
+            expanded,
+            current_index,
+            ..
+        }) = &tree.root
+        {
             assert!(expanded);
             assert_eq!(*current_index, 0);
             assert_eq!(children[0].node.id(), Some(1));
@@ -847,10 +1172,21 @@ mod tests {
         let mut tree = PaneTree::new(Some(PaneNode::Tabs {
             id: 10,
             current_index: 0,
-            children: vec![GroupChild { node: pane(1, "board") }],
+            children: vec![GroupChild {
+                node: pane(1, "board"),
+            }],
         }));
 
-        assert!(!apply_drop(&mut tree, DragSource::Group { group_id: 10, index: 0 }, 10, DropZone::Left, false));
+        assert!(!apply_drop(
+            &mut tree,
+            DragSource::Group {
+                group_id: 10,
+                index: 0
+            },
+            10,
+            DropZone::Left,
+            false
+        ));
         if let Some(PaneNode::Tabs { children, .. }) = &tree.root {
             assert_eq!(children.len(), 1);
         } else {
@@ -874,10 +1210,15 @@ mod tests {
                         id: 10,
                         current_index: 0,
                         expanded: false,
-                        children: vec![GroupChild { node: pane(1, "table") }],
+                        children: vec![GroupChild {
+                            node: pane(1, "table"),
+                        }],
                     },
                 },
-                SplitChild { size: 0.7, node: pane(2, "board") },
+                SplitChild {
+                    size: 0.7,
+                    node: pane(2, "board"),
+                },
             ],
         }));
 
@@ -895,7 +1236,11 @@ mod tests {
             assert_eq!(children.len(), 2);
             assert_eq!(children[0].node.id(), Some(2));
             match &children[1].node {
-                PaneNode::Drawer { id, children: drawer_children, .. } => {
+                PaneNode::Drawer {
+                    id,
+                    children: drawer_children,
+                    ..
+                } => {
                     assert_eq!(*id, 10);
                     assert_eq!(drawer_children.len(), 1);
                     assert_eq!(drawer_children[0].node.id(), Some(1));
@@ -927,9 +1272,21 @@ mod tests {
 
     fn tab_strip_rects(group_id: i32, count: i32) -> Vec<PaneRect> {
         let mut rects: Vec<PaneRect> = (0..count)
-            .map(|i| test_rect(group_id, Rect::new(i as f32 * 60.0, 0.0, 60.0, 30.0), i, CellKind::TabLabel))
+            .map(|i| {
+                test_rect(
+                    group_id,
+                    Rect::new(i as f32 * 60.0, 0.0, 60.0, 30.0),
+                    i,
+                    CellKind::TabLabel,
+                )
+            })
             .collect();
-        rects.push(test_rect(group_id, Rect::new(count as f32 * 60.0, 0.0, 30.0, 30.0), 0, CellKind::TabAdd));
+        rects.push(test_rect(
+            group_id,
+            Rect::new(count as f32 * 60.0, 0.0, 30.0, 30.0),
+            0,
+            CellKind::TabAdd,
+        ));
         rects
     }
 
@@ -960,9 +1317,15 @@ mod tests {
             id: 10,
             current_index: 0,
             children: vec![
-                GroupChild { node: pane(1, "board") },
-                GroupChild { node: pane(2, "calendar") },
-                GroupChild { node: pane(3, "table") },
+                GroupChild {
+                    node: pane(1, "board"),
+                },
+                GroupChild {
+                    node: pane(2, "calendar"),
+                },
+                GroupChild {
+                    node: pane(3, "table"),
+                },
             ],
         }));
 
@@ -971,7 +1334,10 @@ mod tests {
         // last, not second-to-last, once the -1 shift adjustment applies.
         assert!(apply_index_drop(
             &mut tree,
-            DragSource::Group { group_id: 10, index: 0 },
+            DragSource::Group {
+                group_id: 10,
+                index: 0
+            },
             10,
             3
         ));
@@ -995,7 +1361,9 @@ mod tests {
                     node: PaneNode::Tabs {
                         id: 10,
                         current_index: 0,
-                        children: vec![GroupChild { node: pane(1, "board") }],
+                        children: vec![GroupChild {
+                            node: pane(1, "board"),
+                        }],
                     },
                 },
                 SplitChild {
@@ -1004,8 +1372,12 @@ mod tests {
                         id: 20,
                         current_index: 0,
                         children: vec![
-                            GroupChild { node: pane(2, "calendar") },
-                            GroupChild { node: pane(3, "table") },
+                            GroupChild {
+                                node: pane(2, "calendar"),
+                            },
+                            GroupChild {
+                                node: pane(3, "table"),
+                            },
                         ],
                     },
                 },
@@ -1016,7 +1388,10 @@ mod tests {
         // two existing tabs), not just appended at the end.
         assert!(apply_index_drop(
             &mut tree,
-            DragSource::Group { group_id: 10, index: 0 },
+            DragSource::Group {
+                group_id: 10,
+                index: 0
+            },
             20,
             1
         ));

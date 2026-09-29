@@ -137,7 +137,11 @@ pub fn scheme_of(id: &str) -> Option<&'static str> {
 pub fn relative_luminance(c: RgbColor) -> f32 {
     let lin = |v: u8| {
         let v = v as f32 / 255.0;
-        if v <= 0.03928 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) }
+        if v <= 0.03928 {
+            v / 12.92
+        } else {
+            ((v + 0.055) / 1.055).powf(2.4)
+        }
     };
     0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
 }
@@ -153,7 +157,8 @@ pub fn contrast_ratio(a: RgbColor, b: RgbColor) -> f32 {
 /// black than to white. Unknown ids count as light, like `preset_by_id`.
 pub fn is_dark_variant(id: &str) -> bool {
     let base = preset_by_id(id).base;
-    contrast_ratio(base, RgbColor::new(0, 0, 0)) < contrast_ratio(base, RgbColor::new(255, 255, 255))
+    contrast_ratio(base, RgbColor::new(0, 0, 0))
+        < contrast_ratio(base, RgbColor::new(255, 255, 255))
 }
 
 /// All twelve `QPalette` roles `theme_palette.cpp` applies, after composing
@@ -223,10 +228,24 @@ mod tests {
 
     #[test]
     fn dark_variants_are_told_from_light_ones() {
-        for id in ["dark", "tokyonight-storm", "tokyonight-night", "catppuccin-frappe", "catppuccin-macchiato", "catppuccin-mocha", "flexoki-dark"] {
+        for id in [
+            "dark",
+            "tokyonight-storm",
+            "tokyonight-night",
+            "catppuccin-frappe",
+            "catppuccin-macchiato",
+            "catppuccin-mocha",
+            "flexoki-dark",
+        ] {
             assert!(is_dark_variant(id), "{id}");
         }
-        for id in ["light", "tokyonight-day", "catppuccin-latte", "flexoki-light", "nonsense"] {
+        for id in [
+            "light",
+            "tokyonight-day",
+            "catppuccin-latte",
+            "flexoki-light",
+            "nonsense",
+        ] {
             assert!(!is_dark_variant(id), "{id}");
         }
     }

@@ -8,7 +8,9 @@ fn main() {
     // the identical shape/reasoning: one QmlModule per crate, no
     // `.export()` (which needs a `links` manifest key this crate has no
     // downstream C++/CMake consumer to justify declaring).
-    CxxQtBuilder::new_qml_module(QmlModule::new("la.cettila.SettingsKit").qml_files(["qml/CategorySidebar.qml"]))
-        .qt_module("Quick")
-        .build();
+    CxxQtBuilder::new_qml_module(
+        QmlModule::new("la.cettila.SettingsKit").qml_files(["qml/CategorySidebar.qml"]),
+    )
+    .qt_module("Quick")
+    .build();
 }

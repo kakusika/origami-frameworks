@@ -20,16 +20,19 @@ pub struct Rgba {
 
 impl Rgba {
     pub const fn opaque(rgb: RgbColor) -> Self {
-        Self { r: rgb.r, g: rgb.g, b: rgb.b, a: 255 }
+        Self {
+            r: rgb.r,
+            g: rgb.g,
+            b: rgb.b,
+            a: 255,
+        }
     }
 }
 
 /// Pre-composites `fg` over `bg` at `alpha`, returning an opaque result --
 /// ported from `Theme.qml`'s `opaqueBlend()`.
 fn opaque_blend(fg: RgbColor, bg: RgbColor, alpha: f32) -> RgbColor {
-    let mix = |f: u8, b: u8| -> u8 {
-        (f as f32 * alpha + b as f32 * (1.0 - alpha)).round() as u8
-    };
+    let mix = |f: u8, b: u8| -> u8 { (f as f32 * alpha + b as f32 * (1.0 - alpha)).round() as u8 };
     RgbColor::new(mix(fg.r, bg.r), mix(fg.g, bg.g), mix(fg.b, bg.b))
 }
 
@@ -37,11 +40,21 @@ fn opaque_blend(fg: RgbColor, bg: RgbColor, alpha: f32) -> RgbColor {
 /// reaches `min_ratio` against every one of `backings` (or is `fg` itself).
 /// So a quiet text color stays as quiet as the palette allows, but never
 /// below the floor on any of the colors it is drawn over.
-fn blend_with_contrast(fg: RgbColor, ground: RgbColor, backings: &[RgbColor], alpha: f32, min_ratio: f32) -> RgbColor {
+fn blend_with_contrast(
+    fg: RgbColor,
+    ground: RgbColor,
+    backings: &[RgbColor],
+    alpha: f32,
+    min_ratio: f32,
+) -> RgbColor {
     let mut a = alpha;
     loop {
         let c = opaque_blend(fg, ground, a);
-        if a >= 1.0 || backings.iter().all(|&bg| contrast_ratio(c, bg) >= min_ratio) {
+        if a >= 1.0
+            || backings
+                .iter()
+                .all(|&bg| contrast_ratio(c, bg) >= min_ratio)
+        {
             return c;
         }
         a = (a + 0.02).min(1.0);
@@ -125,7 +138,11 @@ impl ColorTokens {
             ("destructive-pressed".into(), self.destructive_pressed),
             ("success".into(), self.success),
         ];
-        for (suffix, g) in [("", &self.on_background), ("-on-surface", &self.on_surface), ("-on-raised", &self.on_raised)] {
+        for (suffix, g) in [
+            ("", &self.on_background),
+            ("-on-surface", &self.on_surface),
+            ("-on-raised", &self.on_raised),
+        ] {
             for (name, color) in [
                 ("border", g.border),
                 ("border-hover", g.border_hover),
@@ -172,8 +189,20 @@ fn ground_tokens(ground: RgbColor, text: RgbColor, accent: RgbColor) -> GroundTo
         hover: o(hover),
         pressed: o(opaque_blend(accent, ground, 0.5)),
         selected: o(selected),
-        text_secondary: o(blend_with_contrast(text, ground, &backings, 0.65, TEXT_SECONDARY_MIN_CONTRAST)),
-        text_disabled: o(blend_with_contrast(text, ground, &backings, 0.45, TEXT_DISABLED_MIN_CONTRAST)),
+        text_secondary: o(blend_with_contrast(
+            text,
+            ground,
+            &backings,
+            0.65,
+            TEXT_SECONDARY_MIN_CONTRAST,
+        )),
+        text_disabled: o(blend_with_contrast(
+            text,
+            ground,
+            &backings,
+            0.45,
+            TEXT_DISABLED_MIN_CONTRAST,
+        )),
         accent_soft: o(opaque_blend(accent, ground, 0.35)),
         accent_strong: o(opaque_blend(accent, ground, 0.6)),
         border_hover: o(opaque_blend(text, ground, 0.6)),
@@ -265,7 +294,11 @@ fn animation_speed_multiplier(preset: AnimationSpeed) -> f32 {
 }
 
 fn scaled_duration(base_ms: f32, multiplier: f32, enabled: bool) -> i32 {
-    if enabled { (base_ms * multiplier).round() as i32 } else { 0 }
+    if enabled {
+        (base_ms * multiplier).round() as i32
+    } else {
+        0
+    }
 }
 
 /// Ported from `Units.qml`'s `veryShortDuration`/`shortDuration`/
@@ -351,25 +384,51 @@ mod tests {
 
     #[test]
     fn animation_speed_scales_base_durations() {
-        assert_eq!(scaled_duration(50.0, animation_speed_multiplier(AnimationSpeed::Slow), true), 88);
-        assert_eq!(scaled_duration(500.0, animation_speed_multiplier(AnimationSpeed::Fast), true), 250);
-        assert_eq!(scaled_duration(300.0, animation_speed_multiplier(AnimationSpeed::Normal), true), 360);
+        assert_eq!(
+            scaled_duration(50.0, animation_speed_multiplier(AnimationSpeed::Slow), true),
+            88
+        );
+        assert_eq!(
+            scaled_duration(
+                500.0,
+                animation_speed_multiplier(AnimationSpeed::Fast),
+                true
+            ),
+            250
+        );
+        assert_eq!(
+            scaled_duration(
+                300.0,
+                animation_speed_multiplier(AnimationSpeed::Normal),
+                true
+            ),
+            360
+        );
     }
 
     #[test]
     fn opaque_blend_matches_the_qml_formula() {
         let white = RgbColor::new(255, 255, 255);
         let black = RgbColor::new(0, 0, 0);
-        assert_eq!(opaque_blend(white, black, 0.5), RgbColor::new(128, 128, 128));
+        assert_eq!(
+            opaque_blend(white, black, 0.5),
+            RgbColor::new(128, 128, 128)
+        );
     }
 
     #[test]
     fn ui_scale_scales_spacing_only() {
-        let theme = resolve(&ThemeSettings { ui_scale: 2.0, ..ThemeSettings::default() });
+        let theme = resolve(&ThemeSettings {
+            ui_scale: 2.0,
+            ..ThemeSettings::default()
+        });
         assert_eq!(theme.spacing.small_px, 8.0);
         assert_eq!(theme.spacing.medium_px, 16.0);
         assert_eq!(theme.spacing.large_px, 32.0);
-        assert_eq!(theme.shape.corner_radius_px, 4.0, "shape is unaffected by ui_scale");
+        assert_eq!(
+            theme.shape.corner_radius_px, 4.0,
+            "shape is unaffected by ui_scale"
+        );
     }
 
     #[test]
@@ -400,16 +459,38 @@ mod tests {
             variant: "catppuccin-mocha".to_string(),
             ..ThemeSettings::default()
         });
-        assert_eq!(theme.colors.accent, Rgba::opaque(palette::default_accent_for("catppuccin-mocha")));
+        assert_eq!(
+            theme.colors.accent,
+            Rgba::opaque(palette::default_accent_for("catppuccin-mocha"))
+        );
     }
 
     #[test]
     fn every_token_is_opaque() {
         for scheme in palette::presets::SCHEMES {
             for v in scheme.variants {
-                let c = resolve(&ThemeSettings { variant: v.id.to_string(), ..ThemeSettings::default() }).colors;
+                let c = resolve(&ThemeSettings {
+                    variant: v.id.to_string(),
+                    ..ThemeSettings::default()
+                })
+                .colors;
                 for g in [c.on_background, c.on_surface, c.on_raised] {
-                    for t in [g.border, g.divider, g.hover, g.pressed, g.selected, g.text_secondary, g.text_disabled, g.accent_soft, g.accent_strong, g.border_hover, g.destructive_soft, g.destructive_border, g.success_soft, g.success_border] {
+                    for t in [
+                        g.border,
+                        g.divider,
+                        g.hover,
+                        g.pressed,
+                        g.selected,
+                        g.text_secondary,
+                        g.text_disabled,
+                        g.accent_soft,
+                        g.accent_strong,
+                        g.border_hover,
+                        g.destructive_soft,
+                        g.destructive_border,
+                        g.success_soft,
+                        g.success_border,
+                    ] {
                         assert_eq!(t.a, 255, "{}", v.id);
                     }
                 }
@@ -422,7 +503,11 @@ mod tests {
         let rgb = |t: Rgba| RgbColor::new(t.r, t.g, t.b);
         for scheme in palette::presets::SCHEMES {
             for v in scheme.variants {
-                let c = resolve(&ThemeSettings { variant: v.id.to_string(), ..ThemeSettings::default() }).colors;
+                let c = resolve(&ThemeSettings {
+                    variant: v.id.to_string(),
+                    ..ThemeSettings::default()
+                })
+                .colors;
                 for (name, ground, g) in [
                     ("background", c.background, c.on_background),
                     ("surface", c.surface, c.on_surface),
@@ -432,13 +517,25 @@ mod tests {
                     // pointer or when selected they are as high as the body
                     // text itself reaches there (the accent wash can leave
                     // even that short of them).
-                    for (over, backing, strict) in [("", rgb(ground), true), (" hovered", rgb(g.hover), false), (" selected", rgb(g.selected), false)] {
+                    for (over, backing, strict) in [
+                        ("", rgb(ground), true),
+                        (" hovered", rgb(g.hover), false),
+                        (" selected", rgb(g.selected), false),
+                    ] {
                         let cap = contrast_ratio(rgb(c.text_primary), backing);
                         let floor = |min: f32| if strict { min } else { min.min(cap) - 0.05 };
                         let s = contrast_ratio(rgb(g.text_secondary), backing);
                         let d = contrast_ratio(rgb(g.text_disabled), backing);
-                        assert!(s >= floor(TEXT_SECONDARY_MIN_CONTRAST), "{} secondary on{over} {name}: {s}", v.id);
-                        assert!(d >= floor(TEXT_DISABLED_MIN_CONTRAST), "{} disabled on{over} {name}: {d}", v.id);
+                        assert!(
+                            s >= floor(TEXT_SECONDARY_MIN_CONTRAST),
+                            "{} secondary on{over} {name}: {s}",
+                            v.id
+                        );
+                        assert!(
+                            d >= floor(TEXT_DISABLED_MIN_CONTRAST),
+                            "{} disabled on{over} {name}: {d}",
+                            v.id
+                        );
                     }
                 }
             }
@@ -452,7 +549,11 @@ mod tests {
         let slint = include_str!("../../../origami-slint/ui/tokens.slint");
         let declared = |name: &str| -> Option<String> {
             let prefix = format!("in-out property <color> {name}: ");
-            slint.lines().find_map(|l| l.trim().strip_prefix(&prefix).map(|v| v.trim_end_matches(';').to_string()))
+            slint.lines().find_map(|l| {
+                l.trim()
+                    .strip_prefix(&prefix)
+                    .map(|v| v.trim_end_matches(';').to_string())
+            })
         };
         let mut wrong = Vec::new();
         for (name, c) in resolve(&ThemeSettings::default()).colors.slint_properties() {
@@ -461,6 +562,10 @@ mod tests {
                 wrong.push(format!("    in-out property <color> {name}: {want};"));
             }
         }
-        assert!(wrong.is_empty(), "tokens.slint is out of date:\n{}", wrong.join("\n"));
+        assert!(
+            wrong.is_empty(),
+            "tokens.slint is out of date:\n{}",
+            wrong.join("\n")
+        );
     }
 }

@@ -23,9 +23,8 @@ impl VulkanContext {
         let ash_device = hal_device.raw_device().clone();
         let raw_instance = hal_device.shared_instance().raw_instance();
         let physical_device = hal_device.raw_physical_device();
-        let memory_properties = unsafe {
-            raw_instance.get_physical_device_memory_properties(physical_device)
-        };
+        let memory_properties =
+            unsafe { raw_instance.get_physical_device_memory_properties(physical_device) };
         let hal_queue = unsafe { queue.as_hal::<wgpu_hal::api::Vulkan>() }
             .context("wgpu::Queue::as_hal::<Vulkan> returned None")?;
         let queue = hal_queue.as_raw();

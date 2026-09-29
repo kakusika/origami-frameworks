@@ -1238,15 +1238,24 @@ mod tests {
             props: json!({}),
         }));
         assert!(tree.split_pane(1, "horizontal", "text", "b").is_some());
-        let Some(PaneNode::Split { id: Some(first), .. }) = &tree.root else {
+        let Some(PaneNode::Split {
+            id: Some(first), ..
+        }) = &tree.root
+        else {
             panic!("expected a split with an id, got {:?}", tree.root);
         };
         let first = *first;
         assert!(tree.divider_baseline(first, 0).is_some());
 
         assert!(tree.split_root("vertical", false, "text", "c").is_some());
-        let Some(PaneNode::Split { id: Some(second), .. }) = &tree.root else {
-            panic!("expected the new root split to have an id, got {:?}", tree.root);
+        let Some(PaneNode::Split {
+            id: Some(second), ..
+        }) = &tree.root
+        else {
+            panic!(
+                "expected the new root split to have an id, got {:?}",
+                tree.root
+            );
         };
         assert_ne!(*second, first, "each split gets its own id");
     }
@@ -1261,16 +1270,29 @@ mod tests {
             children: vec![
                 SplitChild {
                     size: 0.5,
-                    node: PaneNode::Pane { id: 1, title: "a".into(), view_type: "text".into(), props: json!({}) },
+                    node: PaneNode::Pane {
+                        id: 1,
+                        title: "a".into(),
+                        view_type: "text".into(),
+                        props: json!({}),
+                    },
                 },
                 SplitChild {
                     size: 0.5,
-                    node: PaneNode::Tabs { id: 2, children: vec![], current_index: 0 },
+                    node: PaneNode::Tabs {
+                        id: 2,
+                        children: vec![],
+                        current_index: 0,
+                    },
                 },
             ],
         }));
         assert!(tree.remove_standalone(1));
-        assert!(matches!(tree.root, Some(PaneNode::Tabs { id: 2, .. })), "got {:?}", tree.root);
+        assert!(
+            matches!(tree.root, Some(PaneNode::Tabs { id: 2, .. })),
+            "got {:?}",
+            tree.root
+        );
     }
 
     #[test]

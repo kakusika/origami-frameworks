@@ -57,10 +57,7 @@ impl ViewportBridge {
 
     /// Ensures the render target texture is created and up to date for the given device.
     /// Returns `(texture, was_recreated)`.
-    pub fn ensure_texture(
-        &mut self,
-        device: &wgpu::Device,
-    ) -> Result<(&wgpu::Texture, bool)> {
+    pub fn ensure_texture(&mut self, device: &wgpu::Device) -> Result<(&wgpu::Texture, bool)> {
         let recreated = if self.needs_recreate || self.texture.is_none() {
             let texture = device.create_texture(&wgpu::TextureDescriptor {
                 label: Some("origami_viewport_target"),

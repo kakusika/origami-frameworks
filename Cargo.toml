@@ -2,8 +2,6 @@
 resolver = "3"
 
 members = [
-  # "origami",
-  # "origami-gallery",
   "origami-gallery-slint",
   "origami-kit/config",
   "origami-kit/panes",
@@ -13,14 +11,13 @@ members = [
   "origami-slint-build",
 ]
 
-# default-members = ["origami"]
+default-members = ["origami-gallery-slint"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-# origami = { path = "origami" }
 origami-config = { path = "origami-kit/config" }
 origami-panes = { path = "origami-kit/panes" }
 origami-theme = { path = "origami-kit/theme" }
@@ -32,11 +29,6 @@ origami-slint-build = { path = "origami-slint-build" }
 anyhow = "1"
 ash = "0.38"
 clap = { version = "4.6", features = ["derive"] }
-cxx = "1"
-cxx-qt = "0.9"
-cxx-qt-lib = "0.9"
-cxx-qt-build = "0.9"
-qt-build-utils = "0.9.1"
 directories = "6.0"
 notify = "8.2"
 naga = { version = "30", features = ["wgsl-in", "spv-out"] }

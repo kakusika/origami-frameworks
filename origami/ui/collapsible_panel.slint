@@ -29,7 +29,10 @@ export component CollapsiblePanel inherits Rectangle {
     width: root.expanded ? root.panel-width : 30px;
     height: root.expanded ? body.preferred-height : 30px;
 
-    animate width { duration: 120ms; easing: ease-out; }
+    animate width {
+        duration: 120ms;
+        easing: ease-out;
+    }
 
     // Collapsed: a small chip with one arrow that re-expands the panel.
     Rectangle {
@@ -84,7 +87,10 @@ export component BottomPanel inherits Rectangle {
     width: root.expanded ? root.panel-width : 30px;
     height: root.expanded ? body.preferred-height + 30px + 4px : 30px;
 
-    animate width { duration: 120ms; easing: ease-out; }
+    animate width {
+        duration: 120ms;
+        easing: ease-out;
+    }
 
     // Collapsed handle, bottom left.
     Rectangle {

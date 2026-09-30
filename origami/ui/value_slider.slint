@@ -52,7 +52,10 @@ export component ValueSlider inherits Rectangle {
     // fill's left corners exactly on the track's own curve at any amount.
     clip: true;
 
-    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
 
     // Filled portion. No hover shade; only a held press darkens it.
     Rectangle {

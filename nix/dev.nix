@@ -1,32 +1,48 @@
 {
   lib,
   pkgs,
-  inputs,
-  stdenv,
   mkShell,
+  fenix,
+  tmtbook,
+  tomet,
+  tomet-lsp,
+  twrit,
   ...
 }:
 let
-  rustToolchain = inputs.fenix.packages.${stdenv.hostPlatform.system}.stable.withComponents [
-    "cargo"
-    "clippy"
-    "rustc"
-    "rust-src"
-    # "rust-analyzer"
+  rustToolchain = fenix.combine [
+    (fenix.stable.withComponents [
+      "cargo"
+      "clippy"
+      "rustc"
+      "rust-src"
+      "rustfmt"
+      "rust-analyzer"
+    ])
   ];
 in
 mkShell rec {
   buildInputs = with pkgs; [
-    #[ Develop ]
-    ##[ Rust ]
+    #= Develop
+    tomet
+    tomet-lsp
+    tmtbook
+    twrit
+    just
+    #== Slint
+    slint-lsp
+    slint-viewer
+    #== Build
+    pkg-config
+    #== Rust
     rustToolchain
     cargo-edit
     cargo-outdated
     cargo-nextest
     stdenv.cc.cc.lib
 
-    #[ Runtime ]
-    ##[ Wayland & Input ]
+    #= Runtime
+    #== Wayland
     fontconfig
     freetype
     openssl
@@ -34,18 +50,14 @@ mkShell rec {
     wayland
     libxkbcommon
     libinput
+    pipewire
 
-    ##[ Vulkan & Graphics ]
+    #== Graphics
+    libGL
+    mesa
     vulkan-loader
     vulkan-validation-layers
     vulkan-tools
-    vulkan-headers
-    libGL
-    mesa
-
-    ##[ Misc ]
-    pipewire
-    pkg-config
   ];
 
   PKG_CONFIG_PATH = lib.makeSearchPathOutput "dev" "lib/pkgconfig" [
@@ -73,6 +85,6 @@ mkShell rec {
   VK_LAYER_PATH = "${pkgs.vulkan-validation-layers}/share/vulkan/explicit_layer.d";
 
   shellHook = ''
-    echo "🦀 Origami Frameworks (Rust + Slint)"
+    echo "🦀 Rust Slint Tomet"
   '';
 }

@@ -85,7 +85,15 @@ export component PaneHost inherits Rectangle {
     }
 
     pure function menu(id: string, label: string, items: [MenuEntry]) -> MenuBarMenu {
-        return { id: id, label: label, icon: @image-url(""), has-icon: false, chevron: false, bold: false, items: items };
+        return {
+            id: id,
+            label: label,
+            icon: @image-url(""),
+            has-icon: false,
+            chevron: false,
+            bold: false,
+            items: items
+        };
     }
 
     // The menus of a pane header, by view type: the view-type button, then
@@ -100,14 +108,30 @@ export component PaneHost inherits Rectangle {
             return [type-menu(view-type, title), extra[0], extra[1], view-menu(maximized)];
         }
         if extra.length >= 3 {
-            return [type-menu(view-type, title), extra[0], extra[1], extra[2], view-menu(maximized)];
+            return [
+                type-menu(view-type, title),
+                extra[0],
+                extra[1],
+                extra[2],
+                view-menu(maximized)
+            ];
         }
         // texteditor gets a mode switch and a file menu, board a file and an add menu.
         if view-type == "texteditor" {
             return [
                 type-menu(view-type, title),
-                { id: "mode", label: mode == "block" ? "ブロック" : "ソース", icon: @image-url(""), has-icon: false, chevron: true, bold: false,
-                  items: [entry("mode-source", "ソース", mode != "block"), entry("mode-block", "ブロック", mode == "block")] },
+                {
+                    id: "mode",
+                    label: mode == "block" ? "ブロック" : "ソース",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    chevron: true,
+                    bold: false,
+                    items: [
+                        entry("mode-source", "ソース", mode != "block"),
+                        entry("mode-block", "ブロック", mode == "block")
+                    ]
+                },
                 menu("file", "ファイル", [entry("file-open", "開く...", false), entry("file-clear", "クリア", false)]),
                 view-menu(maximized),
             ];
@@ -115,8 +139,14 @@ export component PaneHost inherits Rectangle {
         if view-type == "board" {
             return [
                 type-menu(view-type, title),
-                menu("file", "ファイル", [entry("file-save", "名前を付けて保存...", false), entry("file-open", "開く...", false)]),
-                menu("add", "追加", [entry("add-text-input", "テキスト入力を追加", false), entry("add-image", "画像を追加", false)]),
+                menu("file", "ファイル", [
+                    entry("file-save", "名前を付けて保存...", false),
+                    entry("file-open", "開く...", false)
+                ]),
+                menu("add", "追加", [
+                    entry("add-text-input", "テキスト入力を追加", false),
+                    entry("add-image", "画像を追加", false)
+                ]),
                 view-menu(maximized),
             ];
         }
@@ -124,7 +154,15 @@ export component PaneHost inherits Rectangle {
     }
 
     pure function type-menu(view-type: string, title: string) -> MenuBarMenu {
-        return { id: "type", label: title, icon: view-type == "file-grid" ? Icons.folder : Icons.file, has-icon: true, chevron: true, bold: true, items: root.picker-items };
+        return {
+            id: "type",
+            label: title,
+            icon: view-type == "file-grid" ? Icons.folder : Icons.file,
+            has-icon: true,
+            chevron: true,
+            bold: true,
+            items: root.picker-items
+        };
     }
 
     pure function view-menu(maximized: bool) -> MenuBarMenu {
@@ -394,6 +432,7 @@ export component PaneHost inherits Rectangle {
                     x: (parent.width - self.width) / 2;
                     y: (parent.height - self.height) / 2;
                 }
+
                 close-touch := TouchArea {
                     clicked => { root.close-tab(cell.id, cell.child-id); }
                 }
@@ -416,7 +455,17 @@ export component PaneHost inherits Rectangle {
                 height: parent.height;
                 owner: "tabs-" + cell.id;
                 container-right: root.absolute-position.x + root.width;
-                menus: [{ id: "add-tab", label: "", icon: Icons.plus, has-icon: true, chevron: false, bold: false, items: root.picker-items }];
+                menus: [
+                    {
+                        id: "add-tab",
+                        label: "",
+                        icon: Icons.plus,
+                        has-icon: true,
+                        chevron: false,
+                        bold: false,
+                        items: root.picker-items
+                    }
+                ];
                 triggered(menu-id, item-id) => { root.picker-picked("add-tab", cell.id, item-id); }
             }
 
@@ -446,6 +495,7 @@ export component PaneHost inherits Rectangle {
                 vertical-alignment: center;
                 wrap: word-wrap;
             }
+
             rail-touch := TouchArea {
                 mouse-cursor: MouseCursor.move;
                 pointer-event(event) => {
@@ -517,6 +567,11 @@ export component PaneHost inherits Rectangle {
         background: Tokens.surface-raised;
         border-width: Tokens.border-width;
         border-color: Tokens.accent;
-        Text { text: root.drag-label; color: Tokens.text-primary; horizontal-alignment: center; vertical-alignment: center; }
+        Text {
+            text: root.drag-label;
+            color: Tokens.text-primary;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
     }
 }

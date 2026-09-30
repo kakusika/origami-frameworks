@@ -1,10 +1,14 @@
 # -----------------------------------------------------------------------
 # Files ignored by Git.
 #
-# Keep project-specific ignore rules in subdirectories whenever possible.
+# Keep project-specific ignore rules in the top section.
 # -----------------------------------------------------------------------
 
-#[ Build file ]
+# -----------------------------------------------------------------------
+# Shared ignore rules
+# -----------------------------------------------------------------------
+
+#= Build
 build/
 dist/
 package/
@@ -12,19 +16,22 @@ result
 result-*
 target/
 
-#[ Dev ]
+#= Develop
 .direnv/
 .claude/
-.cargo/
+.cargo/config.toml
 .idea/
+.zed/
 .vscode/
+*.swp
+*~
 
-#[ User's variable ]
+#= Environment
 .env
 .env.*
 !.env.example
 
-#[ OS ]
+#= OS
 .DS_Store
 Desktop.ini
 Thumbs.db

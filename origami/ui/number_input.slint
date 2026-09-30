@@ -28,7 +28,10 @@ export component NumberInput inherits Rectangle {
     border-color: root.editing ? Tokens.accent : (drag-touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
     clip: true;
 
-    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
 
     HorizontalLayout {
         padding: 0px;
@@ -70,9 +73,9 @@ export component NumberInput inherits Rectangle {
                 width: 100%;
                 height: 100%;
                 text: (root.label != "" ? root.label + ": " : "") +
-                      (root.prefix != "" ? root.prefix + " " : "") +
-                      (root.decimals > 0 ? (Math.round(root.value * Math.pow(10, root.decimals)) / Math.pow(10, root.decimals)) : Math.round(root.value)) +
-                      (root.suffix != "" ? " " + root.suffix : "");
+                    (root.prefix != "" ? root.prefix + " " : "") +
+                    (root.decimals > 0 ? (Math.round(root.value * Math.pow(10, root.decimals)) / Math.pow(10, root.decimals)) : Math.round(root.value)) +
+                    (root.suffix != "" ? " " + root.suffix : "");
                 color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                 font-size: Tokens.font-size-small;
                 font-weight: 500;

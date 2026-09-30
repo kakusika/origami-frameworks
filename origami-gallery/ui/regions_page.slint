@@ -7,7 +7,10 @@ import { IconStack } from "@origami/icon_stack.slint";
 import { HamburgerButton } from "@origami/hamburger_button.slint";
 import { SideTitleBar, SideMenuEntry } from "@origami/side_title_bar.slint";
 import { Icons } from "@origami/icons.slint";
-import { CollapsiblePanel, BottomPanel } from "@origami/collapsible_panel.slint";
+import {
+    CollapsiblePanel,
+    BottomPanel,
+} from "@origami/collapsible_panel.slint";
 import { ToolBar, ToolBarSeparator } from "@origami/tool_bar.slint";
 import { StatusBar } from "@origami/status_bar.slint";
 import { FloatingWindow } from "@origami/floating_window.slint";
@@ -41,11 +44,51 @@ export component RegionsPage inherits Rectangle {
             x: 10px;
             y: 30px;
             items: [
-                { kind: "item", label: "New Project", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                { kind: "item", label: "Open File...", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                { kind: "separator", label: "", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                { kind: "item", label: "Save All", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                { kind: "item", label: "Quit", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                {
+                    kind: "item",
+                    label: "New Project",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    enabled: true,
+                    selected: false,
+                    submenu: []
+                },
+                {
+                    kind: "item",
+                    label: "Open File...",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    enabled: true,
+                    selected: false,
+                    submenu: []
+                },
+                {
+                    kind: "separator",
+                    label: "",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    enabled: true,
+                    selected: false,
+                    submenu: []
+                },
+                {
+                    kind: "item",
+                    label: "Save All",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    enabled: true,
+                    selected: false,
+                    submenu: []
+                },
+                {
+                    kind: "item",
+                    label: "Quit",
+                    icon: @image-url(""),
+                    has-icon: false,
+                    enabled: true,
+                    selected: false,
+                    submenu: []
+                },
             ];
             triggered(i) => { root.status = "FileMenu triggered item " + i; }
         }
@@ -90,7 +133,9 @@ export component RegionsPage inherits Rectangle {
                 }
             }
 
-            Rectangle { horizontal-stretch: 1; }
+            Rectangle {
+                horizontal-stretch: 1;
+            }
 
             Text {
                 text: "Interactive Desktop Shell Canvas";
@@ -110,18 +155,51 @@ export component RegionsPage inherits Rectangle {
                 BarStart {
                     HamburgerButton {
                         items: [
-                            { kind: "item", label: "Hamburger item 1", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Hamburger item 2", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            {
+                                kind: "item",
+                                label: "Hamburger item 1",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Hamburger item 2",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
                         ];
                         triggered(i) => { root.status = "Hamburger: item " + i; }
                     }
+
                     DragHandle { }
-                    DragHandle { horizontal: true; }
-                    IconStack { icons: [Icons.file, Icons.folder, Icons.plus]; }
-                    IconStack { icons: [Icons.file, Icons.folder, Icons.plus, Icons.x, Icons.check, Icons.maximize]; }
-                    ActionButton { text: "Start A"; }
-                    ActionButton { text: "Start B"; }
+
+                    DragHandle {
+                        horizontal: true;
+                    }
+
+                    IconStack {
+                        icons: [Icons.file, Icons.folder, Icons.plus];
+                    }
+
+                    IconStack {
+                        icons: [Icons.file, Icons.folder, Icons.plus, Icons.x, Icons.check, Icons.maximize];
+                    }
+
+                    ActionButton {
+                        text: "Start A";
+                    }
+
+                    ActionButton {
+                        text: "Start B";
+                    }
                 }
+
                 BarCenter {
                     Text {
                         text: "Centered on the whole bar";
@@ -130,8 +208,12 @@ export component RegionsPage inherits Rectangle {
                         vertical-alignment: center;
                     }
                 }
+
                 BarEnd {
-                    ActionButton { text: "End"; primary: true; }
+                    ActionButton {
+                        text: "End";
+                        primary: true;
+                    }
                 }
             }
         }
@@ -157,16 +239,60 @@ export component RegionsPage inherits Rectangle {
                 y: 0px;
                 height: parent.height;
                 menus: [
-                    { text: "File", icon: Icons.file, items: [
-                        { kind: "item", label: "New", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                        { kind: "item", label: "Open", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                    ] },
-                    { text: "Folders", icon: Icons.folder, items: [
-                        { kind: "item", label: "Show all", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                    ] },
-                    { text: "Add", icon: Icons.plus, items: [
-                        { kind: "item", label: "Add item", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                    ] },
+                    {
+                        text: "File",
+                        icon: Icons.file,
+                        items: [
+                            {
+                                kind: "item",
+                                label: "New",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Open",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                        ]
+                    },
+                    {
+                        text: "Folders",
+                        icon: Icons.folder,
+                        items: [
+                            {
+                                kind: "item",
+                                label: "Show all",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                        ]
+                    },
+                    {
+                        text: "Add",
+                        icon: Icons.plus,
+                        items: [
+                            {
+                                kind: "item",
+                                label: "Add item",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                        ]
+                    },
                 ];
                 triggered(m, i) => { root.status = "SideTitleBar: menu " + m + " item " + i; }
             }
@@ -175,15 +301,31 @@ export component RegionsPage inherits Rectangle {
             CollapsiblePanel {
                 x: parent.width - self.width - 12px;
                 y: 12px;
-                Text { text: "Right panel"; color: Tokens.text-primary; }
-                Text { text: "Collapse with the arrow"; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+                Text {
+                    text: "Right panel";
+                    color: Tokens.text-primary;
+                }
+
+                Text {
+                    text: "Collapse with the arrow";
+                    color: Tokens.text-secondary;
+                    font-size: Tokens.font-size-small;
+                }
             }
 
             BottomPanel {
                 x: 12px;
                 y: parent.height - self.height - 12px;
-                Text { text: "Bottom panel"; color: Tokens.text-primary; }
-                Text { text: "Toggle with the arrow above the body"; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+                Text {
+                    text: "Bottom panel";
+                    color: Tokens.text-primary;
+                }
+
+                Text {
+                    text: "Toggle with the arrow above the body";
+                    color: Tokens.text-secondary;
+                    font-size: Tokens.font-size-small;
+                }
             }
 
             // Floating Window 1 (Inspector)
@@ -207,6 +349,7 @@ export component RegionsPage inherits Rectangle {
                         font-weight: 700;
                         color: Tokens.text-primary;
                     }
+
                     Text {
                         text: "This virtual window floats above the workspace. It supports live dragging, smooth resizing, maximize toggle, and minimization.";
                         color: Tokens.text-secondary;
@@ -220,6 +363,7 @@ export component RegionsPage inherits Rectangle {
                             text: "Action 1";
                             clicked => { root.status = "Inspector: Action 1 executed"; }
                         }
+
                         AppButton {
                             text: "Action 2";
                             primary: true;
@@ -249,6 +393,7 @@ export component RegionsPage inherits Rectangle {
                         font-weight: 700;
                         color: Tokens.text-primary;
                     }
+
                     Rectangle {
                         background: Tokens.background;
                         border-radius: Tokens.corner-radius;

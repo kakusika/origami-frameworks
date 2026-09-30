@@ -1,5 +1,11 @@
 import { Tokens } from "@origami/tokens.slint";
-import { AppButton, ToggleSwitch, OptionSlider, Badge, Divider } from "@origami/components.slint";
+import {
+    AppButton,
+    ToggleSwitch,
+    OptionSlider,
+    Badge,
+    Divider,
+} from "@origami/components.slint";
 
 // Live showcase of origami-viewport offscreen wgpu rendering inside Slint.
 export component ViewportPage inherits Rectangle {
@@ -41,6 +47,7 @@ export component ViewportPage inherits Rectangle {
                         font-size: Tokens.font-size-large;
                         color: Tokens.text-primary;
                     }
+
                     Text {
                         text: "GPU offscreen rendering with wgpu / Vulkan, embedded into Slint UI via ViewportBridge.";
                         color: Tokens.text-secondary-on-surface;
@@ -48,7 +55,9 @@ export component ViewportPage inherits Rectangle {
                     }
                 }
 
-                Rectangle { horizontal-stretch: 1; }
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
 
                 HorizontalLayout {
                     alignment: center;
@@ -58,6 +67,7 @@ export component ViewportPage inherits Rectangle {
                         text: root.renderer-info;
                         variant: "accent";
                     }
+
                     Badge {
                         text: root.viewport-width + " × " + root.viewport-height + " px";
                         variant: "neutral";
@@ -146,7 +156,7 @@ export component ViewportPage inherits Rectangle {
                         color: Tokens.text-primary;
                     }
 
-                    Divider {}
+                    Divider { }
 
                     HorizontalLayout {
                         alignment: space-between;
@@ -156,6 +166,7 @@ export component ViewportPage inherits Rectangle {
                             font-size: Tokens.font-size-normal;
                             vertical-alignment: center;
                         }
+
                         ToggleSwitch {
                             checked: !root.is-paused;
                             toggled => { root.toggle-pause(); }
@@ -169,6 +180,7 @@ export component ViewportPage inherits Rectangle {
                             color: Tokens.text-secondary-on-surface;
                             font-size: Tokens.font-size-small;
                         }
+
                         OptionSlider {
                             value: root.rotation-speed / 3.0;
                             value-changed(val) => {
@@ -178,7 +190,7 @@ export component ViewportPage inherits Rectangle {
                         }
                     }
 
-                    Divider {}
+                    Divider { }
 
                     Text {
                         text: "Architecture Info";
@@ -194,7 +206,9 @@ export component ViewportPage inherits Rectangle {
                         wrap: word-wrap;
                     }
 
-                    Rectangle { vertical-stretch: 1; }
+                    Rectangle {
+                        vertical-stretch: 1;
+                    }
                 }
             }
         }

@@ -1,24 +1,49 @@
 {
+  pkgs,
+  tomet,
+  ...
+}:
+{
   projectRootFile = "flake.nix";
   programs = {
-    #[ Nix ]
+    #= Nix
     nixfmt.enable = true;
     statix.enable = true;
     deadnix.enable = true;
-    #[ Shell ]
+
+    #= Shell
     shfmt.enable = true;
     shellcheck.enable = true;
 
-    #[ Main ]
-    rustfmt.enable = true; # Rust
-    taplo.enable = true; # Toml
-
-    #[ Sub ]
-    # prettier.enable = true;
-    # biome.enable = true;
+    #= Main
+    rustfmt.enable = true;
+    taplo.enable = true;
   };
+
   settings = {
-    global.excludes = [ ]; # https://github.com/numtide/treefmt-nix/issues/171
+    global.excludes = [
+      "*.lock"
+    ];
+
+    formatter = {
+      tomet = {
+        command = "${tomet}/bin/tomet";
+        options = [
+          "format"
+          "-i"
+        ];
+        includes = [ "*.tmt" ];
+      };
+
+      slint = {
+        command = "${pkgs.slint-lsp}/bin/slint-lsp";
+        options = [
+          "format"
+          "-i"
+        ];
+        includes = [ "*.slint" ];
+      };
+    };
 
     shfmt = {
       includes = [ "*.sh" ];
@@ -30,14 +55,10 @@
 
     prettier = {
       includes = [
-        # "*.js"
-        # "*.ts"
         "*.svelte"
-        # "*.json"
-        # "*.md"
-        # "*.css"
       ];
     };
+
     biome = {
       includes = [
         "*.js"

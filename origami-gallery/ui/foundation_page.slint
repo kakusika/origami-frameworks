@@ -1,5 +1,27 @@
 import { Tokens } from "@origami/tokens.slint";
-import { SectionLabel, AppButton, ToggleSwitch, DropdownButton, ColorSwatchRow, OptionSlider, CollapsibleSection, SidebarCategoryList, CheckBox, RadioButton, AppTextField, AppTextArea, ProgressBar, Badge, Divider, Card, ButtonGroup, ButtonGroupItem, ToolTip, TabBar, TabItem } from "@origami/components.slint";
+import {
+    SectionLabel,
+    AppButton,
+    ToggleSwitch,
+    DropdownButton,
+    ColorSwatchRow,
+    OptionSlider,
+    CollapsibleSection,
+    SidebarCategoryList,
+    CheckBox,
+    RadioButton,
+    AppTextField,
+    AppTextArea,
+    ProgressBar,
+    Badge,
+    Divider,
+    Card,
+    ButtonGroup,
+    ButtonGroupItem,
+    ToolTip,
+    TabBar,
+    TabItem,
+} from "@origami/components.slint";
 import { Icons } from "@origami/icons.slint";
 
 // Live showcase of every basic design-system component grouped into collapsible sections.
@@ -46,6 +68,7 @@ export component FoundationPage inherits Rectangle {
                         font-size: Tokens.font-size-large + 2px;
                         color: Tokens.text-primary;
                     }
+
                     Text {
                         text: "Design-system tokens, basic buttons, selection controls, text fields, badges, and progress bars.";
                         color: Tokens.text-secondary-on-surface;
@@ -69,22 +92,49 @@ export component FoundationPage inherits Rectangle {
                     // AppButton
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "AppButton (Button Variants)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "AppButton (Button Variants)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
                             alignment: start;
-                            AppButton { text: "Default"; clicked => { root.status = "AppButton: Default clicked"; } }
-                            AppButton { text: "Primary"; primary: true; clicked => { root.status = "AppButton: Primary clicked"; } }
-                            AppButton { text: "Destructive"; destructive: true; clicked => { root.status = "AppButton: Destructive clicked"; } }
-                            AppButton { text: "Disabled"; enabled: false; }
+                            AppButton {
+                                text: "Default";
+                                clicked => { root.status = "AppButton: Default clicked"; }
+                            }
+
+                            AppButton {
+                                text: "Primary";
+                                primary: true;
+                                clicked => { root.status = "AppButton: Primary clicked"; }
+                            }
+
+                            AppButton {
+                                text: "Destructive";
+                                destructive: true;
+                                clicked => { root.status = "AppButton: Destructive clicked"; }
+                            }
+
+                            AppButton {
+                                text: "Disabled";
+                                enabled: false;
+                            }
                         }
                     }
 
                     // ButtonGroup & ToolTip
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ButtonGroup (Segmented Selection)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ButtonGroup (Segmented Selection)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         ButtonGroup {
                             items: [
@@ -102,7 +152,12 @@ export component FoundationPage inherits Rectangle {
                     // ToggleSwitch
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ToggleSwitch"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ToggleSwitch";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         ToggleSwitch {
                             text: "Enable high contrast mode";
@@ -113,7 +168,12 @@ export component FoundationPage inherits Rectangle {
                     // ColorSwatchRow
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ColorSwatchRow"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ColorSwatchRow";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         ColorSwatchRow {
                             swatches: root.swatches;
@@ -141,7 +201,12 @@ export component FoundationPage inherits Rectangle {
                     // DropdownButton
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "DropdownButton"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "DropdownButton";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         DropdownButton {
                             text: "Choose a theme";
@@ -153,7 +218,12 @@ export component FoundationPage inherits Rectangle {
                     // OptionSlider
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "OptionSlider (Left-to-Thumb Fill)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "OptionSlider (Left-to-Thumb Fill)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         OptionSlider {
                             label: "Volume";
@@ -170,7 +240,12 @@ export component FoundationPage inherits Rectangle {
                     // CheckBox & RadioButton
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "CheckBox & RadioButton"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "CheckBox & RadioButton";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-large;
@@ -199,7 +274,12 @@ export component FoundationPage inherits Rectangle {
                     // AppTextField & AppTextArea
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "AppTextField & AppTextArea"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "AppTextField & AppTextArea";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -232,7 +312,12 @@ export component FoundationPage inherits Rectangle {
                     // Pill Style TabBar
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "Pill Style TabBar (Continuous Sliding Indicator)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "Pill Style TabBar (Continuous Sliding Indicator)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         TabBar {
                             tabs: [
@@ -252,7 +337,12 @@ export component FoundationPage inherits Rectangle {
                     // Underline Style TabBar
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "Underline Style TabBar"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "Underline Style TabBar";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         TabBar {
                             tabs: [
@@ -268,7 +358,12 @@ export component FoundationPage inherits Rectangle {
                     // SidebarCategoryList
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "SidebarCategoryList"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "SidebarCategoryList";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         SidebarCategoryList {
                             width: 220px;
@@ -296,7 +391,12 @@ export component FoundationPage inherits Rectangle {
                     // Badges & Progress
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ProgressBar & Badges"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ProgressBar & Badges";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         ProgressBar {
                             progress: root.demo-progress;
@@ -306,18 +406,42 @@ export component FoundationPage inherits Rectangle {
                             spacing: Tokens.spacing-small;
                             alignment: start;
 
-                            Badge { text: "Active"; variant: "accent"; }
-                            Badge { text: "Success"; variant: "success"; }
-                            Badge { text: "Error"; variant: "destructive"; }
-                            Badge { text: "Draft"; variant: "neutral"; }
+                            Badge {
+                                text: "Active";
+                                variant: "accent";
+                            }
+
+                            Badge {
+                                text: "Success";
+                                variant: "success";
+                            }
+
+                            Badge {
+                                text: "Error";
+                                variant: "destructive";
+                            }
+
+                            Badge {
+                                text: "Draft";
+                                variant: "neutral";
+                            }
                         }
                     }
 
                     // Card Container
                     Card {
                         raised: true;
-                        Text { text: "Card Container (Raised Surface)"; font-weight: 600; color: Tokens.text-primary; }
-                        Text { text: "Standard surface card with elevated backdrop and border."; color: Tokens.text-secondary; font-size: Tokens.font-size-small; }
+                        Text {
+                            text: "Card Container (Raised Surface)";
+                            font-weight: 600;
+                            color: Tokens.text-primary;
+                        }
+
+                        Text {
+                            text: "Standard surface card with elevated backdrop and border.";
+                            color: Tokens.text-secondary;
+                            font-size: Tokens.font-size-small;
+                        }
                     }
                 }
             }

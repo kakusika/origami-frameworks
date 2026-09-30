@@ -8,8 +8,17 @@ import { Notifications, ToastHost } from "@origami/notifications.slint";
 import { ColorPickerPopup } from "@origami/color_picker_popup.slint";
 import { Breadcrumb, BreadcrumbSegment } from "@origami/breadcrumb.slint";
 import { CollapsibleTextField } from "@origami/collapsible_text_field.slint";
-import { EditableListView, EditableListEntry } from "@origami/editable_list_view.slint";
-import { ActionButton, IconButton, RoundButton, ToggleButton, DetailToggleButton } from "@origami/action_button.slint";
+import {
+    EditableListView,
+    EditableListEntry,
+} from "@origami/editable_list_view.slint";
+import {
+    ActionButton,
+    IconButton,
+    RoundButton,
+    ToggleButton,
+    DetailToggleButton,
+} from "@origami/action_button.slint";
 import { ToggleGroup, ToggleItem } from "@origami/toggle_group.slint";
 import { NumberInput } from "@origami/number_input.slint";
 import { ValueSlider } from "@origami/value_slider.slint";
@@ -46,8 +55,18 @@ export component OrigamiPage inherits Rectangle {
         { name: "Documents", path: "/vault/Documents", is-dir: true, has-thumbnail: false },
         { name: "Projects", path: "/vault/Projects", is-dir: true, has-thumbnail: false },
         { name: "notes.md", path: "/vault/notes.md", is-dir: false, has-thumbnail: false },
-        { name: "architecture.png", path: "/vault/architecture.png", is-dir: false, has-thumbnail: false },
-        { name: "settings.json", path: "/vault/settings.json", is-dir: false, has-thumbnail: false },
+        {
+            name: "architecture.png",
+            path: "/vault/architecture.png",
+            is-dir: false,
+            has-thumbnail: false
+        },
+        {
+            name: "settings.json",
+            path: "/vault/settings.json",
+            is-dir: false,
+            has-thumbnail: false
+        },
     ];
 
     property <[PickerRow]> demo-picker-rows: [
@@ -88,6 +107,7 @@ export component OrigamiPage inherits Rectangle {
                         font-size: Tokens.font-size-large + 2px;
                         color: Tokens.text-primary;
                     }
+
                     Text {
                         text: "Interactive showcase of desktop widgets, inputs, dialogues, menus, file tiles, and pickers grouped into collapsible sections.";
                         color: Tokens.text-secondary-on-surface;
@@ -111,7 +131,12 @@ export component OrigamiPage inherits Rectangle {
                     // ActionButton
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ActionButton"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ActionButton";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -123,11 +148,13 @@ export component OrigamiPage inherits Rectangle {
                                 primary: true;
                                 clicked => { root.status = "ActionButton: Save File clicked"; }
                             }
+
                             ActionButton {
                                 text: "Notifications";
                                 badge-text: "3";
                                 clicked => { root.status = "ActionButton: Notifications clicked"; }
                             }
+
                             ActionButton {
                                 text: "Delete Pane";
                                 destructive: true;
@@ -139,7 +166,12 @@ export component OrigamiPage inherits Rectangle {
                     // RoundButton & ToggleButton & DetailToggleButton
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "RoundButton & ToggleButton & DetailToggleButton"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "RoundButton & ToggleButton & DetailToggleButton";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -150,10 +182,12 @@ export component OrigamiPage inherits Rectangle {
                                 primary: true;
                                 clicked => { root.status = "RoundButton: Add (+) clicked"; }
                             }
+
                             RoundButton {
                                 icon: Icons.folder;
                                 clicked => { root.status = "RoundButton: Folder clicked"; }
                             }
+
                             RoundButton {
                                 icon: Icons.maximize;
                                 active: true;
@@ -181,6 +215,7 @@ export component OrigamiPage inherits Rectangle {
                                     root.status = "DetailToggleButton: Vulkan HW = " + (c ? "true" : "false");
                                 }
                             }
+
                             DetailToggleButton {
                                 horizontal-stretch: 1;
                                 title: "Real-time File Watcher";
@@ -196,7 +231,12 @@ export component OrigamiPage inherits Rectangle {
                     // ToggleGroup
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ToggleGroup (Segmented Buttons)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ToggleGroup (Segmented Buttons)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         ToggleGroup {
                             items: [
@@ -227,7 +267,12 @@ export component OrigamiPage inherits Rectangle {
                     // ValueSlider (Blender Style)
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ValueSlider (Blender Style: Drag to scrub / Click to type)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ValueSlider (Blender Style: Drag to scrub / Click to type)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-large;
@@ -256,7 +301,12 @@ export component OrigamiPage inherits Rectangle {
                     // RubberBandArea
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "RubberBandArea (hold Shift and drag over the grid)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "RubberBandArea (hold Shift and drag over the grid)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         Rectangle {
                             height: 3 * 44px + 8px;
@@ -298,7 +348,12 @@ export component OrigamiPage inherits Rectangle {
                     // NumberInput (Blender Style)
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "NumberInput (Blender Style: Drag to scrub / Click to edit)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "NumberInput (Blender Style: Drag to scrub / Click to edit)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-large;
@@ -334,7 +389,12 @@ export component OrigamiPage inherits Rectangle {
                     // CollapsibleTextField
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "CollapsibleTextField"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "CollapsibleTextField";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         CollapsibleTextField {
                             width: 240px;
@@ -346,7 +406,12 @@ export component OrigamiPage inherits Rectangle {
                     // ColorPickerPopup
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ColorPickerPopup"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ColorPickerPopup";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -356,6 +421,7 @@ export component OrigamiPage inherits Rectangle {
                                 text: "Open color picker";
                                 clicked => { picker2.show(); }
                             }
+
                             Rectangle {
                                 width: 30px;
                                 height: 30px;
@@ -364,6 +430,7 @@ export component OrigamiPage inherits Rectangle {
                                 border-width: Tokens.border-width;
                                 border-color: Tokens.border;
                             }
+
                             picker2 := ColorPickerPopup {
                                 x: open-color-btn.x;
                                 y: open-color-btn.y + open-color-btn.height;
@@ -389,7 +456,12 @@ export component OrigamiPage inherits Rectangle {
                     // EditableListView
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "EditableListView (Interactive List Manager)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "EditableListView (Interactive List Manager)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         EditableListView {
                             items: root.editable-items;
@@ -404,7 +476,12 @@ export component OrigamiPage inherits Rectangle {
                     // FileGrid
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "FileGrid (FileTile Grid)"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "FileGrid (FileTile Grid)";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         FileGrid {
                             height: 180px;
@@ -418,7 +495,12 @@ export component OrigamiPage inherits Rectangle {
                     // Breadcrumb
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "Breadcrumb"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "Breadcrumb";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         Breadcrumb {
                             height: 34px;
@@ -435,7 +517,12 @@ export component OrigamiPage inherits Rectangle {
                     // ViewTypePicker
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ViewTypePicker"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ViewTypePicker";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -443,6 +530,7 @@ export component OrigamiPage inherits Rectangle {
                                 text: "Open ViewTypePicker";
                                 clicked => { picker.show(); }
                             }
+
                             picker := ViewTypePicker {
                                 x: open-picker-btn.x;
                                 y: open-picker-btn.y + open-picker-btn.height;
@@ -470,7 +558,12 @@ export component OrigamiPage inherits Rectangle {
                     // Dialogs & Menus
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ThemedMenu & Dialogs"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ThemedMenu & Dialogs";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
@@ -480,18 +573,59 @@ export component OrigamiPage inherits Rectangle {
                                 text: "Open ThemedMenu";
                                 clicked => { menu.show(); }
                             }
+
                             menu := ThemedMenu {
                                 x: open-menu-btn.x;
                                 y: open-menu-btn.y + open-menu-btn.height;
                                 items: [
-                                    { kind: "item", label: "Rename", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                                    { kind: "item", label: "Duplicate", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                                    { kind: "separator", label: "", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                                    { kind: "item", label: "Delete", icon: @image-url(""), has-icon: false, enabled: false, selected: false, submenu: [] },
-                                    { kind: "submenu", label: "Convert to", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [
-                                        { label: "Board", icon: @image-url(""), has-icon: false, enabled: true, selected: true },
-                                        { label: "Calendar", icon: @image-url(""), has-icon: false, enabled: true, selected: false },
-                                    ] },
+                                    {
+                                        kind: "item",
+                                        label: "Rename",
+                                        icon: @image-url(""),
+                                        has-icon: false,
+                                        enabled: true,
+                                        selected: false,
+                                        submenu: []
+                                    },
+                                    {
+                                        kind: "item",
+                                        label: "Duplicate",
+                                        icon: @image-url(""),
+                                        has-icon: false,
+                                        enabled: true,
+                                        selected: false,
+                                        submenu: []
+                                    },
+                                    {
+                                        kind: "separator",
+                                        label: "",
+                                        icon: @image-url(""),
+                                        has-icon: false,
+                                        enabled: true,
+                                        selected: false,
+                                        submenu: []
+                                    },
+                                    {
+                                        kind: "item",
+                                        label: "Delete",
+                                        icon: @image-url(""),
+                                        has-icon: false,
+                                        enabled: false,
+                                        selected: false,
+                                        submenu: []
+                                    },
+                                    {
+                                        kind: "submenu",
+                                        label: "Convert to",
+                                        icon: @image-url(""),
+                                        has-icon: false,
+                                        enabled: true,
+                                        selected: false,
+                                        submenu: [
+                                            { label: "Board", icon: @image-url(""), has-icon: false, enabled: true, selected: true },
+                                            { label: "Calendar", icon: @image-url(""), has-icon: false, enabled: true, selected: false },
+                                        ]
+                                    },
                                 ];
                                 triggered(i) => { root.status = "ThemedMenu: triggered(" + i + ")"; }
                                 submenu-triggered(i, j) => { root.status = "ThemedMenu: submenu-triggered(" + i + ", " + j + ")"; }
@@ -501,17 +635,22 @@ export component OrigamiPage inherits Rectangle {
                                 text: "Open ModalDialog";
                                 clicked => { modal.show(); }
                             }
+
                             modal := ModalDialog {
                                 x: open-modal-btn.x;
                                 y: open-modal-btn.y + open-modal-btn.height;
                                 title: "Base ModalDialog";
-                                Text { text: "Arbitrary @children content goes here."; color: Tokens.text-secondary; }
+                                Text {
+                                    text: "Arbitrary @children content goes here.";
+                                    color: Tokens.text-secondary;
+                                }
                             }
 
                             open-confirm-btn := AppButton {
                                 text: "Open ConfirmDialog";
                                 clicked => { confirm.show(); }
                             }
+
                             confirm := ConfirmDialog {
                                 x: open-confirm-btn.x;
                                 y: open-confirm-btn.y + open-confirm-btn.height;
@@ -527,7 +666,12 @@ export component OrigamiPage inherits Rectangle {
                     // IoErrorBanner
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "IoErrorBanner"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "IoErrorBanner";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         AppButton {
                             text: banner.message == "" ? "Trigger error" : "Clear error";
@@ -535,6 +679,7 @@ export component OrigamiPage inherits Rectangle {
                                 banner.message = banner.message == "" ? "Failed to save board.json: permission denied" : "";
                             }
                         }
+
                         banner := IoErrorBanner {
                             width: parent.width;
                             dismissed => { banner.message = ""; }
@@ -544,22 +689,48 @@ export component OrigamiPage inherits Rectangle {
                     // ToastNotification
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        Text { text: "ToastNotification"; font-weight: 600; font-size: Tokens.font-size-small; color: Tokens.text-secondary; }
+                        Text {
+                            text: "ToastNotification";
+                            font-weight: 600;
+                            font-size: Tokens.font-size-small;
+                            color: Tokens.text-secondary;
+                        }
 
                         // Driven through the app-wide `Notifications` global
                         // (ErrorBus/ToastBus equivalent), not the widget directly.
                         HorizontalLayout {
                             spacing: Tokens.spacing-medium;
-                            AppButton { text: "Info"; clicked => { Notifications.info("Something happened"); } }
-                            AppButton { text: "Success"; clicked => { Notifications.success("Saved successfully"); } }
-                            AppButton { text: "Warning"; clicked => { Notifications.warning("Disk almost full"); } }
-                            AppButton { text: "Failure"; clicked => { Notifications.failure("Something went wrong"); } }
-                            AppButton { text: "Report error"; clicked => { Notifications.report-error("Could not read the vault"); } }
+                            AppButton {
+                                text: "Info";
+                                clicked => { Notifications.info("Something happened"); }
+                            }
+
+                            AppButton {
+                                text: "Success";
+                                clicked => { Notifications.success("Saved successfully"); }
+                            }
+
+                            AppButton {
+                                text: "Warning";
+                                clicked => { Notifications.warning("Disk almost full"); }
+                            }
+
+                            AppButton {
+                                text: "Failure";
+                                clicked => { Notifications.failure("Something went wrong"); }
+                            }
+
+                            AppButton {
+                                text: "Report error";
+                                clicked => { Notifications.report-error("Could not read the vault"); }
+                            }
                         }
+
                         IoErrorBanner {
                             message: Notifications.error-message;
                             dismissed => { Notifications.error-message = ""; }
                         }
+
                         ToastHost { }
                     }
                 }

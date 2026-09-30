@@ -1,6 +1,9 @@
 {
   craneLib,
   pkg-config,
+  python3,
+  ninja,
+  clang,
   fontconfig,
   freetype,
   wayland,
@@ -18,6 +21,9 @@ let
 
     nativeBuildInputs = [
       pkg-config
+      python3
+      ninja
+      clang
     ];
 
     buildInputs = [

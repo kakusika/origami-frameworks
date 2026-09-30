@@ -24,8 +24,14 @@ export component AppButton inherits Rectangle {
     border-color: !root.enabled ? Tokens.border-on-surface : root.destructive ? (area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.has-hover ? Tokens.accent : Tokens.border-on-surface;
     background: !root.enabled ? Tokens.surface : root.destructive ? (area.pressed ? Tokens.destructive-pressed : area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.pressed ? Tokens.accent-pressed : area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.pressed ? Tokens.pressed-on-surface : area.has-hover ? Tokens.hover-on-surface : Tokens.surface;
 
-    animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
-    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate background {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
 
     label := Text {
         width: 100%;
@@ -82,8 +88,14 @@ export component ToggleSwitch inherits Rectangle {
                 x: root.checked ? parent.width - self.width - 3px : 3px;
                 border-radius: self.height / 2;
                 background: white;
-                animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
-                animate width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+                animate x {
+                    duration: Tokens.anim-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+                }
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: ease-out;
+                }
             }
         }
     }
@@ -240,6 +252,7 @@ export component OptionSlider inherits Rectangle {
                 font-weight: 600;
                 horizontal-stretch: 1;
             }
+
             Text {
                 text: Math.round(root.value * 100) / 100;
                 color: Tokens.text-secondary;
@@ -283,8 +296,14 @@ export component OptionSlider inherits Rectangle {
                 border-color: slider-touch.pressed ? Tokens.accent : Tokens.border;
                 y: (parent.height - self.height) / 2;
                 x: (parent.width - self.width) * track.progress;
-                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate height {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
                 animate background { duration: Tokens.anim-very-short * 1ms; }
                 animate border-color { duration: Tokens.anim-very-short * 1ms; }
             }
@@ -325,7 +344,10 @@ export component CollapsibleSection inherits Rectangle {
     height: header.height + (root.expanded ? body.preferred-height + Tokens.spacing-medium : 0px);
     clip: true;
 
-    animate height { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+    animate height {
+        duration: Tokens.anim-short * 1ms;
+        easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+    }
 
     VerticalLayout {
         header := Rectangle {
@@ -419,7 +441,10 @@ export component SidebarCategoryList inherits Rectangle {
         height: 32px;
         border-radius: Tokens.corner-radius;
         background: Tokens.accent;
-        animate y { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate y {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
     }
 
     VerticalLayout {
@@ -478,8 +503,14 @@ export component CheckBox inherits Rectangle {
             border-color: !root.enabled ? Tokens.border-on-raised : root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border-on-raised);
             background: !root.enabled ? (root.checked ? Tokens.border-on-raised : Tokens.surface-raised) : root.checked ? (touch.pressed ? Tokens.accent-pressed : touch.has-hover ? Tokens.accent-hover : Tokens.accent) : (touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised);
 
-            animate background { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
-            animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+            animate background {
+                duration: Tokens.anim-very-short * 1ms;
+                easing: ease-out;
+            }
+            animate border-color {
+                duration: Tokens.anim-very-short * 1ms;
+                easing: ease-out;
+            }
 
             if root.checked: Icon {
                 source: @image-url("icons/check.svg");
@@ -488,8 +519,14 @@ export component CheckBox inherits Rectangle {
                 height: touch.pressed ? 10px : 13px;
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
-                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate height {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
             }
         }
 
@@ -533,7 +570,10 @@ export component RadioButton inherits Rectangle {
             border-color: !root.enabled ? Tokens.border-on-raised : root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border-on-raised);
             background: root.enabled && touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised;
 
-            animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+            animate border-color {
+                duration: Tokens.anim-very-short * 1ms;
+                easing: ease-out;
+            }
 
             if root.checked: Rectangle {
                 width: touch.pressed ? 6px : 8px;
@@ -542,8 +582,14 @@ export component RadioButton inherits Rectangle {
                 y: (parent.height - self.height) / 2;
                 border-radius: self.height / 2;
                 background: root.enabled ? Tokens.accent : Tokens.text-disabled;
-                animate width { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-                animate height { duration: Tokens.anim-very-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate height {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
             }
         }
 
@@ -580,8 +626,14 @@ export component AppTextField inherits Rectangle {
     border-color: !root.enabled ? Tokens.border-on-surface : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
     background: !root.enabled ? Tokens.background : Tokens.surface;
 
-    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
-    animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate border-width {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
     animate background { duration: Tokens.anim-very-short * 1ms; }
 
     HorizontalLayout {
@@ -631,8 +683,14 @@ export component AppTextArea inherits Rectangle {
     border-color: !root.enabled ? Tokens.border-on-surface : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
     background: !root.enabled ? Tokens.background : Tokens.surface;
 
-    animate border-color { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
-    animate border-width { duration: Tokens.anim-very-short * 1ms; easing: ease-out; }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate border-width {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
     animate background { duration: Tokens.anim-very-short * 1ms; }
 
     HorizontalLayout {
@@ -682,7 +740,10 @@ export component ProgressBar inherits Rectangle {
         height: parent.height;
         border-radius: parent.height / 2;
         background: Tokens.accent;
-        animate width { duration: Tokens.anim-short * 1ms; easing: ease-out; }
+        animate width {
+            duration: Tokens.anim-short * 1ms;
+            easing: ease-out;
+        }
     }
 }
 
@@ -694,23 +755,23 @@ export component Badge inherits Rectangle {
     width: label.preferred-width + Tokens.spacing-medium * 1.5;
     border-radius: self.height / 2;
     background: root.variant == "destructive" ? Tokens.destructive-soft-on-raised :
-                root.variant == "neutral" ? Tokens.surface-raised :
-                root.variant == "success" ? Tokens.success-soft-on-raised :
-                Tokens.accent-soft-on-raised;
+        root.variant == "neutral" ? Tokens.surface-raised :
+        root.variant == "success" ? Tokens.success-soft-on-raised :
+        Tokens.accent-soft-on-raised;
     border-width: 1px;
     border-color: root.variant == "destructive" ? Tokens.destructive-border-on-raised :
-                  root.variant == "neutral" ? Tokens.border-on-raised :
-                  root.variant == "success" ? Tokens.success-border-on-raised :
-                  Tokens.accent-strong-on-raised;
+        root.variant == "neutral" ? Tokens.border-on-raised :
+        root.variant == "success" ? Tokens.success-border-on-raised :
+        Tokens.accent-strong-on-raised;
 
     label := Text {
         text: root.text;
         font-size: Tokens.font-size-small;
         font-weight: 600;
         color: root.variant == "destructive" ? Tokens.destructive :
-               root.variant == "neutral" ? Tokens.text-secondary-on-raised :
-               root.variant == "success" ? #10b981 :
-               Tokens.accent;
+            root.variant == "neutral" ? Tokens.text-secondary-on-raised :
+            root.variant == "success" ? #10b981 :
+            Tokens.accent;
         horizontal-alignment: center;
         vertical-alignment: center;
     }
@@ -774,7 +835,10 @@ export component TabBar inherits Rectangle {
         border-radius: root.pill-style ? Tokens.corner-radius : 1px;
         background: Tokens.accent;
 
-        animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate x {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
         animate width { duration: Tokens.anim-very-short * 1ms; }
     }
 
@@ -880,7 +944,10 @@ export component ButtonGroup inherits Rectangle {
         border-radius: Tokens.corner-radius;
         background: root.enabled ? Tokens.accent : Tokens.border-hover;
 
-        animate x { duration: Tokens.anim-short * 1ms; easing: cubic-bezier(0.2, 0.9, 0.3, 1.0); }
+        animate x {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
         animate width { duration: Tokens.anim-very-short * 1ms; }
     }
 

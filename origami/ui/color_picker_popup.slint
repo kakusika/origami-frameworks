@@ -1,5 +1,9 @@
 import { Tokens } from "@origami/tokens.slint";
-import { AppButton, ColorSwatchRow, OptionSlider } from "@origami/components.slint";
+import {
+    AppButton,
+    ColorSwatchRow,
+    OptionSlider,
+} from "@origami/components.slint";
 
 // Full color picker popup: preset swatch palette, HSV sliders, hex field,
 // and a live preview -- ported from origami/qml/widgets/popups/
@@ -43,7 +47,23 @@ export component ColorPickerPopup inherits PopupWindow {
     property <float> s: 0.8;
     property <float> v: 0.9;
 
-    property <[color]> preset-colors: [#ef4444, #f97316, #f59e0b, #10b981, #06b6d4, #3b82f6, #6366f1, #8b5cf6, #ec4899, #f43f5e, #1e293b, #475569, #94a3b8, #e2e8f0, #ffffff];
+    property <[color]> preset-colors: [
+        #ef4444,
+        #f97316,
+        #f59e0b,
+        #10b981,
+        #06b6d4,
+        #3b82f6,
+        #6366f1,
+        #8b5cf6,
+        #ec4899,
+        #f43f5e,
+        #1e293b,
+        #475569,
+        #94a3b8,
+        #e2e8f0,
+        #ffffff
+    ];
 
     pure function rgb-max(r: float, g: float, b: float) -> float { return max(r, max(g, b)); }
     pure function rgb-min(r: float, g: float, b: float) -> float { return min(r, min(g, b)); }
@@ -148,7 +168,10 @@ export component ColorPickerPopup inherits PopupWindow {
                 picked(i) => { root.selected-color = root.preset-colors[i]; }
             }
 
-            Rectangle { height: 1px; background: Tokens.divider-on-raised; }
+            Rectangle {
+                height: 1px;
+                background: Tokens.divider-on-raised;
+            }
 
             OptionSlider {
                 label: "H";
@@ -162,6 +185,7 @@ export component ColorPickerPopup inherits PopupWindow {
                     root.syncing-from-hsv = false;
                 }
             }
+
             OptionSlider {
                 label: "S";
                 minimum: 0;
@@ -174,6 +198,7 @@ export component ColorPickerPopup inherits PopupWindow {
                     root.syncing-from-hsv = false;
                 }
             }
+
             OptionSlider {
                 label: "V";
                 minimum: 0;
@@ -230,6 +255,7 @@ export component ColorPickerPopup inherits PopupWindow {
                     text: "Cancel";
                     clicked => { root.close(); }
                 }
+
                 AppButton {
                     text: "OK";
                     primary: true;

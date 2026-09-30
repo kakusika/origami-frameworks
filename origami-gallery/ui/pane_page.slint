@@ -56,7 +56,9 @@ export component PanePage inherits Rectangle {
                     vertical-alignment: center;
                 }
 
-                Rectangle { horizontal-stretch: 1; }
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
 
                 AppButton {
                     text: "Reset Layout";
@@ -81,8 +83,8 @@ export component PanePage inherits Rectangle {
 
                 if cell.kind == "content": Rectangle {
                     background: cell.view-type == "board" ? #1e3a2f :
-                                cell.view-type == "calendar" ? #1e2f3a :
-                                cell.view-type == "notes" ? #3a2e1e : #252830;
+                        cell.view-type == "calendar" ? #1e2f3a :
+                        cell.view-type == "notes" ? #3a2e1e : #252830;
                     border-radius: Tokens.corner-radius;
                     border-width: 1px;
                     border-color: Tokens.border;
@@ -139,7 +141,12 @@ export component PanePage inherits Rectangle {
                 panel-width: 260px;
                 panel-color: Tokens.surface-raised;
 
-                Text { text: "Pane structure"; font-weight: 700; color: Tokens.text-primary; }
+                Text {
+                    text: "Pane structure";
+                    font-weight: 700;
+                    color: Tokens.text-primary;
+                }
+
                 PaneManager {
                     height: 220px;
                     rows: root.outline;

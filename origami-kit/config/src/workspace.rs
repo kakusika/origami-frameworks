@@ -20,8 +20,7 @@ use std::path::{Path, PathBuf};
 /// `VaultPickerDialog.qml`). `fs_entries::default_root()` (`origami` crate)
 /// resolves through that same function, so it always matches whichever
 /// vault is actually active rather than this constant directly.
-pub const DEFAULT_VAULT_ROOT: &str =
-    "/home/user/projects/develop/cettila-projects/cettila/sandbox";
+pub const DEFAULT_VAULT_ROOT: &str = "/home/user/projects/develop/cettila-projects/cettila/sandbox";
 
 /// The directory a vault keeps its workspace files in: `<vault>/<app's vault namespace>/workspaces/` (`.cettila`
 /// unless the app set its own identity, see `crate::identity`).

@@ -437,11 +437,12 @@ fn main() -> Result<(), slint::PlatformError> {
             let slint::GraphicsAPI::WGPU30 { device, queue, .. } = api else {
                 return;
             };
-            let Some(app) = app_weak.upgrade() else { return };
+            let Some(app) = app_weak.upgrade() else {
+                return;
+            };
 
             if matches!(state, slint::RenderingState::BeforeRendering) {
-                if let Some((img, w, h, fps_opt)) =
-                    viewport_demo.borrow_mut().render(device, queue)
+                if let Some((img, w, h, fps_opt)) = viewport_demo.borrow_mut().render(device, queue)
                 {
                     app.set_viewport_image(img);
                     app.set_viewport_width(w as i32);

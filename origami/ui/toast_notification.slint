@@ -52,7 +52,10 @@ export component ToastNotification inherits Rectangle {
         border-color: root.toast-type == "success" ? #4caf50 : root.toast-type == "warning" ? #ffb300 : root.toast-type == "negative" ? Tokens.destructive : Tokens.accent;
 
         opacity: root.showing ? 1.0 : 0.0;
-        animate opacity { duration: Tokens.anim-short * 1ms; easing: ease-out; }
+        animate opacity {
+            duration: Tokens.anim-short * 1ms;
+            easing: ease-out;
+        }
 
         layout := HorizontalLayout {
             padding-left: Tokens.spacing-large;

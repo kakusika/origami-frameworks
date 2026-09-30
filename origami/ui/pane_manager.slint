@@ -106,18 +106,90 @@ export component PaneManager inherits Rectangle {
                         height: 24px;
                         y: (parent.height - self.height) / 2;
                         items: row.kind == "pane" ? [
-                            { kind: "item", label: "Activate", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Close", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            {
+                                kind: "item",
+                                label: "Activate",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Close",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
                         ] : row.kind == "tabs" ? [
-                            { kind: "item", label: "Close all tabs", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Convert to drawer", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            {
+                                kind: "item",
+                                label: "Close all tabs",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Convert to drawer",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Close group",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
                         ] : row.kind == "drawer" ? [
-                            { kind: "item", label: row.expanded ? "Collapse" : "Expand", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Convert to tabs", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
-                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            {
+                                kind: "item",
+                                label: row.expanded ? "Collapse" : "Expand",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Convert to tabs",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
+                            {
+                                kind: "item",
+                                label: "Close group",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
                         ] : [
-                            { kind: "item", label: "Close group", icon: @image-url(""), has-icon: false, enabled: true, selected: false, submenu: [] },
+                            {
+                                kind: "item",
+                                label: "Close group",
+                                icon: @image-url(""),
+                                has-icon: false,
+                                enabled: true,
+                                selected: false,
+                                submenu: []
+                            },
                         ];
                         triggered(i) => {
                             if row.kind == "pane" {

@@ -31,9 +31,7 @@ pub fn ui_dir() -> PathBuf {
             }
         }
     }
-    panic!(
-        "origami UI directory not found. Ensure `origami` is a dependency in Cargo.toml."
-    );
+    panic!("origami UI directory not found. Ensure `origami` is a dependency in Cargo.toml.");
 }
 
 /// Returns a HashMap mapping `"origami"` to its UI directory path.

@@ -37,7 +37,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
 slint = { version = "1.18", default-features = false, features = [
-  "backend-winit",
+  "backend-winit-wayland",
   "compat-1-2",
   "renderer-skia",
   "unstable-wgpu-30",

@@ -22,6 +22,14 @@ export struct RichTextFragment {
     is-element: bool,
     text: string,
     factory: component-factory,
+    // `origami-richtext-flow::TextStyle`, pre-decoded by the caller's own
+    // seam: Slint's expression language has no bitwise operators to
+    // decode a packed `StyleId` here, so the unpacked booleans travel
+    // instead. Unused when `is-element` is true.
+    bold: bool,
+    italic: bool,
+    mark: bool,
+    strikeout: bool,
 }
 
 export struct RichTextLine {
@@ -35,6 +43,10 @@ export component FlowView {
     // `Measure` trait) -- a silent mismatched default would make wrap
     // decisions subtly wrong rather than obviously unset.
     in property <length> font-size;
+    // Themeable: this crate has no theme tokens of its own to pull a
+    // highlight color from, so a caller with real design tokens should
+    // override this rather than live with the plain default.
+    in property <brush> mark-background: #fff59d80;
 
     VerticalLayout {
         alignment: start;
@@ -42,14 +54,25 @@ export component FlowView {
         for line in root.lines: HorizontalLayout {
             alignment: start;
 
-            for frag in line.fragments: HorizontalLayout {
-                if !frag.is-element: Text {
+            for frag in line.fragments: Rectangle {
+                background: !frag.is-element && frag.mark ? root.mark-background : transparent;
+
+                if !frag.is-element: text-item := Text {
                     text: frag.text;
                     font-size: root.font-size;
+                    font-weight: frag.bold ? 700 : 400;
+                    font-italic: frag.italic;
                 }
 
                 if frag.is-element: ComponentContainer {
                     component-factory: frag.factory;
+                }
+
+                if !frag.is-element && frag.strikeout: Rectangle {
+                    y: parent.height / 2;
+                    width: text-item.preferred-width;
+                    height: 1px;
+                    background: text-item.color;
                 }
             }
         }

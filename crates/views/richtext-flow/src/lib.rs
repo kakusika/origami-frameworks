@@ -12,4 +12,4 @@ pub mod layout;
 pub mod model;
 
 pub use layout::{Fragment, Line, Measure, layout_block};
-pub use model::{Block, BlockKind, ElementId, Inline, Position, StyleId};
+pub use model::{Block, BlockKind, ElementId, Inline, Position, StyleId, TextStyle};

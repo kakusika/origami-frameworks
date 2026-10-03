@@ -3,9 +3,12 @@
 Slint-facing half of the text + embedded-element renderer
 (`origami-richtext-flow` has the pure document model and line-breaking
 engine). Ships `ui/flow_view.slint` -- a generic `FlowView` component that
-renders lines of positioned fragments, embedding real Slint components for
-element fragments via `slint::ComponentFactory`/`ComponentContainer`
-rather than flattening them to a label or an image.
+renders a resolved line's fragments left to right via Slint's own
+`HorizontalLayout`, embedding real Slint components for element fragments
+via `slint::ComponentFactory`/`ComponentContainer` rather than flattening
+them to a label or an image. `RichTextFragment` carries no coordinate --
+`origami-richtext-flow::layout::Fragment`'s `x` is internal bookkeeping for
+the line-*breaking* decision, not something `FlowView` needs to consume.
 
 ## Why this crate's Rust side is thin
 
@@ -40,8 +43,10 @@ step.
   for why this isn't shared across apps), and resolve an `ElementId` to one
   when constructing each `RichTextFragment`.
 - Font-metrics text measurement for `origami-richtext-flow`'s `Measure`
-  trait: use an offscreen `Text` element's `preferred-width`, the technique
-  mumeum's `LineNumberGutter` already uses for line-height.
+  trait, once real word-wrap needs it to decide where a line breaks (an
+  offscreen `Text` element's `preferred-width`, the technique mumeum's
+  `LineNumberGutter` already uses for line-height) -- not needed just to
+  render an already-resolved line, which `FlowView` lays out natively.
 
 ## Known gaps
 

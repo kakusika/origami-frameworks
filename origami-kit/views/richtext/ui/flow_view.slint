@@ -7,14 +7,15 @@
 // seam code (its `render.rs`-equivalent) must construct from
 // `origami-richtext-flow`'s `Fragment`/`Line` on every change.
 //
-// TODO: unverified against a real Slint compile -- this crate has no
-// `slint_build` step of its own, so the first real syntax check happens
-// when an app actually imports it (see
-// `.agents/tasks/richtext-view-scaffold.md`).
+// A resolved line's fragments are positioned by Slint's own
+// `HorizontalLayout`, not by any coordinate carried on `RichTextFragment`:
+// `origami-richtext-flow::layout::Fragment`'s `x` is bookkeeping for the
+// Rust-side line-breaking *decision* (which fragments end up on which
+// line), not a pixel position this component needs to consume -- a line,
+// once resolved, lays its fragments out left to right exactly like any
+// other row of mixed `Text`/widget elements would.
 
 export struct RichTextFragment {
-    // Position within the line, in the flow's own coordinate space.
-    x: length,
     // Text fragments render `text`; element fragments instantiate `factory`.
     // Slint has no tagged-union property type, so this flag picks the arm
     // instead of e.g. an `enum` discriminant on the struct.
@@ -24,29 +25,26 @@ export struct RichTextFragment {
 }
 
 export struct RichTextLine {
-    y: length,
-    height: length,
     fragments: [RichTextFragment],
 }
 
 export component FlowView {
     in property <[RichTextLine]> lines;
 
-    for line in root.lines: Rectangle {
-        y: line.y;
-        height: line.height;
+    VerticalLayout {
+        alignment: start;
 
-        for frag in line.fragments: Rectangle {
-            x: frag.x;
-            height: parent.height;
+        for line in root.lines: HorizontalLayout {
+            alignment: start;
 
-            if !frag.is-element: Text {
-                text: frag.text;
-                vertical-alignment: center;
-            }
+            for frag in line.fragments: HorizontalLayout {
+                if !frag.is-element: Text {
+                    text: frag.text;
+                }
 
-            if frag.is-element: ComponentContainer {
-                component-factory: frag.factory;
+                if frag.is-element: ComponentContainer {
+                    component-factory: frag.factory;
+                }
             }
         }
     }

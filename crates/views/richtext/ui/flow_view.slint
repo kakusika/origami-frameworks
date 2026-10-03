@@ -30,6 +30,11 @@ export struct RichTextLine {
 
 export component FlowView {
     in property <[RichTextLine]> lines;
+    // No default: the caller's text fragments must render at the same
+    // size the caller measured them at (see `origami-richtext-flow`'s
+    // `Measure` trait) -- a silent mismatched default would make wrap
+    // decisions subtly wrong rather than obviously unset.
+    in property <length> font-size;
 
     VerticalLayout {
         alignment: start;
@@ -40,6 +45,7 @@ export component FlowView {
             for frag in line.fragments: HorizontalLayout {
                 if !frag.is-element: Text {
                     text: frag.text;
+                    font-size: root.font-size;
                 }
 
                 if frag.is-element: ComponentContainer {

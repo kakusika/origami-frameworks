@@ -8,9 +8,9 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 
 ## Crates
 
-### Crates
 - **`crates/origami`**: Reusable Slint UI widgets, layouts, panels, menus, and dialogs.
 - **`crates/origami-build`**: Build script helper for configuring Slint compilation and `@origami` resource paths.
+- **`crates/origami-mobile`**: Touch-first Slint widgets, icons, and tokens for mobile apps -- `.slint` source only, no consumer in this repo yet.
 - **`crates/origami-panes`**: Headless workspace layout engine supporting nested splits, tabs, drawers, floating windows, and drag-and-drop docking geometry.
 - **`crates/origami-theme`**: Design tokens, color palettes, and theme mode resolvers.
 - **`crates/origami-config`**: Application settings, session state, and vault workspace persistence.

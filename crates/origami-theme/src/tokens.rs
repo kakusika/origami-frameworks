@@ -568,4 +568,45 @@ mod tests {
             wrong.join("\n")
         );
     }
+
+    /// Same check as `tokens_slint_defaults_match_the_resolved_default_theme`,
+    /// for `origami-mobile`'s `ThemeColors` global -- its roles are a named
+    /// subset of `ColorTokens`/`GroundTokens` (see
+    /// `origami_mobile::push_mobile_color_tokens!`'s field list, which this
+    /// mirrors), not `slint_properties()`'s full desktop vocabulary.
+    #[test]
+    fn mobile_theme_colors_defaults_match_the_resolved_default_theme() {
+        let slint = include_str!("../../origami-mobile/ui/tokens.slint");
+        let declared = |name: &str| -> Option<String> {
+            let prefix = format!("in-out property <color> {name}: ");
+            slint.lines().find_map(|l| {
+                l.trim()
+                    .strip_prefix(&prefix)
+                    .map(|v| v.trim_end_matches(';').to_string())
+            })
+        };
+        let c = resolve(&ThemeSettings::default()).colors;
+        let mapping: [(&str, Rgba); 8] = [
+            ("danger", c.destructive),
+            ("success", c.success),
+            ("separator", c.on_background.divider),
+            ("muted", c.on_background.text_secondary),
+            ("page-background", c.background),
+            ("surface", c.surface),
+            ("surface-elevated", c.surface_raised),
+            ("card-border", c.on_raised.border),
+        ];
+        let mut wrong = Vec::new();
+        for (name, color) in mapping {
+            let want = format!("#{:02x}{:02x}{:02x}", color.r, color.g, color.b);
+            if declared(name).as_deref() != Some(want.as_str()) {
+                wrong.push(format!("    in-out property <color> {name}: {want};"));
+            }
+        }
+        assert!(
+            wrong.is_empty(),
+            "origami-mobile's ui/tokens.slint ThemeColors is out of date:\n{}",
+            wrong.join("\n")
+        );
+    }
 }

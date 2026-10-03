@@ -3076,6 +3076,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "origami-mobile"
+version = "0.1.0"
+
+[[package]]
 name = "origami-panes"
 version = "0.1.0"
 dependencies = [

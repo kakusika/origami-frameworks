@@ -47,6 +47,10 @@ export component FlowView {
     // highlight color from, so a caller with real design tokens should
     // override this rather than live with the plain default.
     in property <brush> mark-background: #fff59d80;
+    // No theme of its own (see `mark-background`'s doc) -- a caller with
+    // real design tokens should override this to match its own body text
+    // color instead of this plain default.
+    in property <brush> text-color: #000000;
 
     VerticalLayout {
         alignment: start;
@@ -54,25 +58,40 @@ export component FlowView {
         for line in root.lines: HorizontalLayout {
             alignment: start;
 
-            for frag in line.fragments: Rectangle {
-                background: !frag.is-element && frag.mark ? root.mark-background : transparent;
+            // The wrapper here must stay `HorizontalLayout`, not a bare
+            // `Rectangle`: a `Rectangle` sitting directly in the outer
+            // per-line `HorizontalLayout` does not reliably report a
+            // single conditional child's size back up for positioning the
+            // next fragment (discovered the hard way -- fragments
+            // overlapped at the origin instead of flowing left to right).
+            // A nested nested `HorizontalLayout` does, the same way the
+            // proven `Rectangle { HorizontalLayout { Text {...} } }` chip
+            // pattern elsewhere in this ecosystem never puts `Text`
+            // directly inside a bare `Rectangle` either.
+            for frag in line.fragments: HorizontalLayout {
+                if !frag.is-element: Rectangle {
+                    background: frag.mark ? root.mark-background : transparent;
 
-                if !frag.is-element: text-item := Text {
-                    text: frag.text;
-                    font-size: root.font-size;
-                    font-weight: frag.bold ? 700 : 400;
-                    font-italic: frag.italic;
+                    HorizontalLayout {
+                        text-item := Text {
+                            text: frag.text;
+                            font-size: root.font-size;
+                            font-weight: frag.bold ? 700 : 400;
+                            font-italic: frag.italic;
+                            color: root.text-color;
+                        }
+                    }
+
+                    if frag.strikeout: Rectangle {
+                        y: parent.height / 2;
+                        width: text-item.preferred-width;
+                        height: 1px;
+                        background: root.text-color;
+                    }
                 }
 
                 if frag.is-element: ComponentContainer {
                     component-factory: frag.factory;
-                }
-
-                if !frag.is-element && frag.strikeout: Rectangle {
-                    y: parent.height / 2;
-                    width: text-item.preferred-width;
-                    height: 1px;
-                    background: text-item.color;
                 }
             }
         }

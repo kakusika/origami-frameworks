@@ -3066,6 +3066,7 @@ version = "0.1.0"
 dependencies = [
  "origami",
  "origami-build",
+ "origami-mobile",
  "origami-panes",
  "origami-theme",
  "origami-viewport",

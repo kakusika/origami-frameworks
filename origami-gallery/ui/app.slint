@@ -5,6 +5,7 @@ import { RegionsPage } from "regions_page.slint";
 import { PanePage } from "pane_page.slint";
 import { FoundationPage } from "foundation_page.slint";
 import { ViewportPage } from "viewport_page.slint";
+import { MobilePage } from "mobile_page.slint";
 import { PaneCell } from "@origami/pane_host.slint";
 import { PaneOutlineRow } from "@origami/pane_manager.slint";
 import { EditableListEntry } from "@origami/editable_list_view.slint";
@@ -241,6 +242,28 @@ export component AppWindow inherits Window {
                                 clicked => { root.current-tab = 4; }
                             }
                         }
+
+                        tab5 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 5 ? Tokens.accent : (tab5-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Mobile";
+                                color: root.current-tab == 5 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 5 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab5-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 5; }
+                            }
+                        }
                     }
                 }
             }
@@ -298,6 +321,10 @@ export component AppWindow inherits Window {
             toggle-pause => { root.viewport-toggle-pause(); }
             speed-changed(s) => { root.viewport-speed-changed(s); }
             viewport-resized(w, h) => { root.viewport-resized(w, h); }
+        }
+        if root.current-tab == 5: MobilePage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
         }
     }
 }

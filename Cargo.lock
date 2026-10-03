@@ -3041,9 +3041,6 @@ dependencies = [
 [[package]]
 name = "origami"
 version = "0.1.0"
-dependencies = [
- "origami-panes",
-]
 
 [[package]]
 name = "origami-build"
@@ -3069,6 +3066,7 @@ version = "0.1.0"
 dependencies = [
  "origami",
  "origami-build",
+ "origami-panes",
  "origami-theme",
  "origami-viewport",
  "serde_json",

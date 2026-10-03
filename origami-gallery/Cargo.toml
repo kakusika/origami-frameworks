@@ -9,6 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 origami = { workspace = true }
+origami-panes = { workspace = true }
 origami-theme = { workspace = true }
 origami-viewport = { workspace = true }
 

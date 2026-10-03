@@ -6,10 +6,10 @@ mod viewport_demo;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use origami::edit::DividerDragBaseline;
-use origami::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
-use origami::outline::{OutlineKind, OutlineRow, outline};
-use origami::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
+use origami_panes::edit::DividerDragBaseline;
+use origami_panes::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
+use origami_panes::outline::{OutlineKind, OutlineRow, outline};
+use origami_panes::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
 use serde_json::json;
 use slint::{Model, ModelRc, SharedString, VecModel};
 

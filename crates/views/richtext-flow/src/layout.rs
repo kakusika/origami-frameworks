@@ -16,7 +16,11 @@ pub trait Measure {
     fn element_width(&self, id: ElementId) -> f32;
 }
 
-/// A single positioned run within a laid-out line.
+/// A single positioned run within a laid-out line. `x` is this fragment's
+/// own line-relative offset, for the line-breaking decision below -- not a
+/// coordinate `origami-richtext`'s `FlowView` needs to consume, since a
+/// resolved line lays its fragments out with Slint's own `HorizontalLayout`
+/// (see that crate's `ui/flow_view.slint`).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Fragment {
     Text {
@@ -37,35 +41,82 @@ pub struct Line {
     pub fragments: Vec<Fragment>,
 }
 
-/// Breaks `block`'s inline content into lines that fit within `max_width`.
+/// Breaks `block`'s inline content into lines that fit within `max_width`,
+/// greedily: a line keeps taking the next word or element as long as it
+/// fits, and starts a new line as soon as it wouldn't. An `Inline::Element`
+/// never splits (see the module doc); an `Inline::Text` run splits at
+/// spaces, each word keeping its own trailing space ([`words`]) so that
+/// words placed on the same line still read with normal spacing between
+/// them.
 ///
-/// Only a single-line placeholder so far: every run is placed on one line
-/// regardless of `max_width`. Real greedy word-wrap (breaking
-/// `Inline::Text` runs at word boundaries, treating `Inline::Element` as an
-/// unbreakable unit) is tracked in
-/// `.agents/tasks/richtext-view-scaffold.md`.
+/// A single token (word or element) wider than `max_width` on its own
+/// still gets placed -- on an empty line, never split further -- rather
+/// than looping forever trying to make it fit. A line's leading token is
+/// never pure whitespace: starting a fresh line by first laying down an
+/// invisible space is never what a reader wants, even though nothing
+/// forces it either way.
 pub fn layout_block(block: &Block, max_width: f32, measure: &impl Measure) -> Vec<Line> {
-    let _ = max_width;
-    let mut x = 0.0;
-    let mut fragments = Vec::with_capacity(block.content.len());
+    let mut lines = Vec::new();
+    let mut current = Vec::new();
+    let mut x = 0.0f32;
+
     for inline in &block.content {
         match inline {
             Inline::Text { content, style } => {
-                fragments.push(Fragment::Text {
-                    x,
-                    content: content.clone(),
-                    style: *style,
-                });
-                x += measure.text_width(content, *style);
+                for word in words(content) {
+                    let width = measure.text_width(word, *style);
+                    if x > 0.0 && x + width > max_width {
+                        lines.push(Line {
+                            fragments: std::mem::take(&mut current),
+                        });
+                        x = 0.0;
+                    }
+                    // Checked *after* the wrap decision above, against
+                    // whatever line this token actually lands on: a
+                    // mid-line bare-space token (not at a line's start)
+                    // still gets placed normally.
+                    if x == 0.0 && word.trim().is_empty() {
+                        continue;
+                    }
+                    current.push(Fragment::Text {
+                        x,
+                        content: word.to_owned(),
+                        style: *style,
+                    });
+                    x += width;
+                }
             }
             Inline::Element { id } => {
                 let width = measure.element_width(*id);
-                fragments.push(Fragment::Element { x, id: *id, width });
+                if x > 0.0 && x + width > max_width {
+                    lines.push(Line {
+                        fragments: std::mem::take(&mut current),
+                    });
+                    x = 0.0;
+                }
+                current.push(Fragment::Element { x, id: *id, width });
                 x += width;
             }
         }
     }
-    vec![Line { fragments }]
+
+    if !current.is_empty() || lines.is_empty() {
+        lines.push(Line { fragments: current });
+    }
+    lines
+}
+
+/// Splits `content` into word tokens, each keeping its own trailing space
+/// (if any): `"hi there"` -> `["hi ", "there"]`, so concatenating tokens
+/// left to right reproduces the original spacing and only a line break,
+/// never a token boundary, ever drops one. Does not special-case tabs or
+/// runs of more than one space -- ordinary prose is the only input this
+/// sees today.
+fn words(content: &str) -> Vec<&str> {
+    if content.is_empty() {
+        return Vec::new();
+    }
+    content.split_inclusive(' ').collect()
 }
 
 #[cfg(test)]
@@ -84,49 +135,111 @@ mod tests {
         }
     }
 
+    fn text(content: &str) -> Inline {
+        Inline::Text {
+            content: content.to_owned(),
+            style: 0,
+        }
+    }
+
+    fn line_texts(line: &Line) -> Vec<&str> {
+        line.fragments
+            .iter()
+            .map(|f| match f {
+                Fragment::Text { content, .. } => content.as_str(),
+                Fragment::Element { .. } => "<element>",
+            })
+            .collect()
+    }
+
     #[test]
-    fn places_text_and_element_runs_left_to_right() {
+    fn a_wide_line_places_everything_on_one_line() {
         let block = Block {
             kind: "paragraph",
-            content: vec![
-                Inline::Text {
-                    content: "hi ".into(),
-                    style: 0,
-                },
-                Inline::Element { id: 1 },
-                Inline::Text {
-                    content: " there".into(),
-                    style: 0,
-                },
-            ],
+            content: vec![text("hi "), Inline::Element { id: 1 }, text(" there")],
         };
         let lines = layout_block(&block, 1000.0, &FixedWidths);
         assert_eq!(lines.len(), 1);
-        let fragments = &lines[0].fragments;
-        assert_eq!(fragments.len(), 3);
+        // " there" splits into a lone leading space and "there" (see
+        // `words`); the leading space isn't at a line start here, so it's
+        // kept, same as any other token.
         assert_eq!(
-            fragments[0],
-            Fragment::Text {
-                x: 0.0,
-                content: "hi ".into(),
-                style: 0
-            }
+            line_texts(&lines[0]),
+            vec!["hi ", "<element>", " ", "there"]
         );
-        assert_eq!(
-            fragments[1],
-            Fragment::Element {
-                x: 24.0,
-                id: 1,
-                width: 32.0
-            }
-        );
-        assert_eq!(
-            fragments[2],
-            Fragment::Text {
-                x: 56.0,
-                content: " there".into(),
-                style: 0
-            }
-        );
+    }
+
+    #[test]
+    fn a_long_paragraph_wraps_at_word_boundaries() {
+        let block = Block {
+            kind: "paragraph",
+            content: vec![text("aa bb cc dd")],
+        };
+        // "aa "/"bb "/"cc " are 3 chars (24px) each, "dd" (last, no
+        // trailing space) is 2 (16px). A 50px line fits "aa " + "bb "
+        // (48px) but not a third 24px word (72px).
+        let lines = layout_block(&block, 50.0, &FixedWidths);
+        assert_eq!(lines.len(), 2);
+        assert_eq!(line_texts(&lines[0]), vec!["aa ", "bb "]);
+        assert_eq!(line_texts(&lines[1]), vec!["cc ", "dd"]);
+    }
+
+    #[test]
+    fn an_element_that_does_not_fit_starts_a_new_line_instead_of_splitting() {
+        let block = Block {
+            kind: "paragraph",
+            content: vec![text("hi "), Inline::Element { id: 1 }],
+        };
+        // "hi " is 24px; the 32px element would make 56px, over a 40px
+        // line, so it moves to its own line rather than splitting (an
+        // element can't split) or overflowing the first line.
+        let lines = layout_block(&block, 40.0, &FixedWidths);
+        assert_eq!(lines.len(), 2);
+        assert_eq!(line_texts(&lines[0]), vec!["hi "]);
+        assert_eq!(line_texts(&lines[1]), vec!["<element>"]);
+    }
+
+    #[test]
+    fn a_token_wider_than_max_width_still_gets_placed_alone() {
+        let block = Block {
+            kind: "paragraph",
+            content: vec![text("extraordinarily long")],
+        };
+        // "extraordinarily " alone is 16 chars * 8px = 128px, already over
+        // a 50px line -- it still goes on its own (empty) line rather than
+        // looping forever trying to make it fit.
+        let lines = layout_block(&block, 50.0, &FixedWidths);
+        assert_eq!(lines.len(), 2);
+        assert_eq!(line_texts(&lines[0]), vec!["extraordinarily "]);
+        assert_eq!(line_texts(&lines[1]), vec!["long"]);
+    }
+
+    #[test]
+    fn a_leading_space_run_is_dropped_only_at_a_fresh_line_start() {
+        let block = Block {
+            kind: "paragraph",
+            // The second run starting with a space mirrors a real case:
+            // `classify_inline_seq`'s merged text after an inline element
+            // often starts with the space that followed it in the source.
+            content: vec![Inline::Element { id: 1 }, text(" over")],
+        };
+        // The element (32px) leaves no room for a leading " " (8px) on a
+        // 35px line, so "over" wraps -- and its own leading space token
+        // is dropped since it would otherwise open the new line.
+        let lines = layout_block(&block, 35.0, &FixedWidths);
+        assert_eq!(lines.len(), 2);
+        assert_eq!(line_texts(&lines[0]), vec!["<element>"]);
+        assert_eq!(line_texts(&lines[1]), vec!["over"]);
+    }
+
+    #[test]
+    fn empty_content_still_produces_one_empty_line() {
+        let block = Block {
+            kind: "paragraph",
+            content: vec![],
+        };
+        let lines = layout_block(&block, 100.0, &FixedWidths);
+        assert_eq!(lines.len(), 1);
+        assert!(lines[0].fragments.is_empty());
     }
 }

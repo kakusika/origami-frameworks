@@ -39,9 +39,11 @@ Confirmed consumers and their current state:
 - [x] `origami-frameworks`: `cargo build --workspace` and
       `cargo test --workspace` pass.
 - [x] `origami-frameworks`: commit and push to `origin/main` (split into
-      `b72f307` panes-decoupling + `be5e5e4` richtext fix; the latter was
-      accidentally bundled with the former by a concurrent session, then
-      `git reset` + re-split + `--force-with-lease` push, per user).
+      `d2eda20` panes-decoupling + `a0354dd` richtext fix; originally
+      bundled by a concurrent session, then `git reset` + re-split +
+      `--force-with-lease` push, per user. Re-pushed once more to drop
+      an unwanted Co-Authored-By trailer -- see
+      [[no-claude-coauthor-trailer]] memory.).
 - [x] `nidi`: add `origami-panes` to `[workspace.dependencies]` in
       `Cargo.toml` (git dep, same as `origami`).
 - [x] `nidi`: add `origami-panes = { workspace = true }` to

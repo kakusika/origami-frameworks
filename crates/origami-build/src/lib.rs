@@ -18,9 +18,10 @@ pub fn ui_dir() -> PathBuf {
     if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
         let manifest_path = PathBuf::from(manifest);
         for rel in &[
+            "../crates/origami/ui",
             "../origami/ui",
             "../../origami/ui",
-            "../../../origami-frameworks/origami/ui",
+            "../../../origami-frameworks/crates/origami/ui",
             "../origami-slint/ui",
             "../../origami-slint/ui",
             "../../../origami-frameworks/origami-slint/ui",

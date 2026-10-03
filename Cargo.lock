@@ -3066,6 +3066,7 @@ version = "0.1.0"
 dependencies = [
  "origami",
  "origami-build",
+ "origami-icons",
  "origami-mobile",
  "origami-panes",
  "origami-theme",
@@ -3075,6 +3076,10 @@ dependencies = [
  "slint-build",
  "wgpu",
 ]
+
+[[package]]
+name = "origami-icons"
+version = "0.1.0"
 
 [[package]]
 name = "origami-mobile"

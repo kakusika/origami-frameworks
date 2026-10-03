@@ -1,9 +1,9 @@
 import { Palette } from "std-widgets.slint";
 import { Metrics, Colors } from "tokens.slint";
-import { Icon, Shapes } from "icons.slint";
+import { Icon, Icons } from "@origami-icons/icons.slint";
 
 export component IconButton inherits Rectangle {
-    in property <string> shape;
+    in property <image> icon;
     in property <bool> enabled: true;
     in property <color> tint: Palette.foreground;
     callback clicked();
@@ -21,8 +21,8 @@ export component IconButton inherits Rectangle {
         background: touch.pressed && root.enabled ? Palette.foreground.with-alpha(0.14) : transparent;
 
         Icon {
-            shape: root.shape;
-            tint: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+            source: root.icon;
+            color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
         }
@@ -57,7 +57,7 @@ export component TopBar inherits Rectangle {
 
 // Circular bubble button for headers
 export component BubbleButton inherits Rectangle {
-    in property <string> shape;
+    in property <image> icon;
     in property <bool> enabled: true;
     in property <color> tint: Palette.foreground;
     in property <bool> spinning: false;
@@ -84,14 +84,14 @@ export component BubbleButton inherits Rectangle {
         }
 
         Icon {
-            shape: root.shape;
-            tint: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+            source: root.icon;
+            color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
             width: Metrics.icon-md;
             height: Metrics.icon-md;
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
             transform-rotation: root.spin-angle;
-            animate tint {
+            animate color {
                 duration: 120ms;
                 easing: ease-out;
             }
@@ -107,7 +107,7 @@ export component BubbleButton inherits Rectangle {
 // Pill-shaped bubble button with text (e.g. Vault switcher, actions)
 export component BubbleChip inherits Rectangle {
     in property <string> text;
-    in property <string> icon: "";
+    in property <image> icon;
     in property <bool> enabled: true;
     in property <color> tint: Palette.foreground;
     callback clicked();
@@ -132,9 +132,9 @@ export component BubbleChip inherits Rectangle {
             spacing: Metrics.spacing-xs + 2px * Metrics.ui-scale;
             alignment: center;
 
-            if root.icon != "": Icon {
-                shape: root.icon;
-                tint: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+            if root.icon.width > 0: Icon {
+                source: root.icon;
+                color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
                 width: Metrics.icon-sm;
                 height: Metrics.icon-sm;
                 y: (parent.height - self.height) / 2;
@@ -220,8 +220,8 @@ export component UndoRedoBubble inherits Rectangle {
                 background: undo-touch.pressed && root.can-undo ? Palette.foreground.with-alpha(0.14) : transparent;
 
                 Icon {
-                    shape: Shapes.undo;
-                    tint: root.can-undo ? Palette.foreground : Colors.muted.with-alpha(0.3);
+                    source: Icons.arrow-back-up;
+                    color: root.can-undo ? Palette.foreground : Colors.muted.with-alpha(0.3);
                     width: Metrics.icon-md;
                     height: Metrics.icon-md;
                     x: (parent.width - self.width) / 2;
@@ -250,8 +250,8 @@ export component UndoRedoBubble inherits Rectangle {
                 background: redo-touch.pressed && root.can-redo ? Palette.foreground.with-alpha(0.14) : transparent;
 
                 Icon {
-                    shape: Shapes.redo;
-                    tint: root.can-redo ? Palette.foreground : Colors.muted.with-alpha(0.3);
+                    source: Icons.arrow-forward-up;
+                    color: root.can-redo ? Palette.foreground : Colors.muted.with-alpha(0.3);
                     width: Metrics.icon-md;
                     height: Metrics.icon-md;
                     x: (parent.width - self.width) / 2;
@@ -348,8 +348,8 @@ export component Fab inherits Rectangle {
     drop-shadow-color: #00000055;
 
     Icon {
-        shape: Shapes.plus;
-        tint: Palette.accent-foreground;
+        source: Icons.plus;
+        color: Palette.accent-foreground;
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
     }

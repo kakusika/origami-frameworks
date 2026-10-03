@@ -5,6 +5,7 @@ members = [
   "crates/origami",
   "crates/origami-build",
   "crates/origami-config",
+  "crates/origami-icons",
   "crates/origami-mobile",
   "crates/origami-panes",
   "crates/origami-theme",
@@ -25,6 +26,7 @@ rust-version = "1.85"
 origami = { path = "crates/origami" }
 origami-build = { path = "crates/origami-build" }
 origami-config = { path = "crates/origami-config" }
+origami-icons = { path = "crates/origami-icons" }
 origami-mobile = { path = "crates/origami-mobile" }
 origami-panes = { path = "crates/origami-panes" }
 origami-richtext = { path = "crates/views/richtext" }

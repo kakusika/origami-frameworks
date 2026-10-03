@@ -1,5 +1,5 @@
 import { Tokens } from "tokens.slint";
-import { Icon, Icons } from "icons.slint";
+import { Icon, Icons } from "@origami-icons/icons.slint";
 
 // Text with a "primary"/"secondary" role, matching Origami.Label's
 // type: "secondary" convention from the QML settings screen.
@@ -144,7 +144,7 @@ export component DropdownButton inherits Rectangle {
 
             Icon {
                 y: (parent.height - self.height) / 2;
-                source: @image-url("icons/chevron-down.svg");
+                source: Icons.chevron-down;
                 color: Tokens.text-secondary-on-surface;
                 width: 14px;
                 height: 14px;
@@ -513,7 +513,7 @@ export component CheckBox inherits Rectangle {
             }
 
             if root.checked: Icon {
-                source: @image-url("icons/check.svg");
+                source: Icons.check;
                 color: root.enabled ? Tokens.text-on-accent : Tokens.text-primary;
                 width: touch.pressed ? 10px : 13px;
                 height: touch.pressed ? 10px : 13px;

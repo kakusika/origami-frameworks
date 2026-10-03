@@ -17,19 +17,41 @@ export component Icon inherits Image {
 // vendored icon as a plain `image` value instead, so a consumer just
 // writes `Icon { source: Icons.x; }` -- the literal (and therefore the
 // path resolution) stays inside this file.
+//
+// Shared between `origami` (desktop) and `origami-mobile` (touch) --
+// property names follow Tabler's own icon slugs, not either consumer's
+// semantic name for a use (e.g. `chevron-left`, not "back"; `refresh`,
+// not "sync"), so the vocabulary stays stable regardless of which
+// consumer uses an icon for what.
 export global Icons {
+    out property <image> alert-triangle: @image-url("icons/alert-triangle.svg");
+    out property <image> arrow-back-up: @image-url("icons/arrow-back-up.svg");
+    out property <image> arrow-forward-up: @image-url("icons/arrow-forward-up.svg");
     out property <image> check: @image-url("icons/check.svg");
     out property <image> chevron-down: @image-url("icons/chevron-down.svg");
+    out property <image> chevron-left: @image-url("icons/chevron-left.svg");
     out property <image> chevron-right: @image-url("icons/chevron-right.svg");
+    out property <image> chevron-up: @image-url("icons/chevron-up.svg");
+    out property <image> cloud: @image-url("icons/cloud.svg");
+    out property <image> copy: @image-url("icons/copy.svg");
     out property <image> external-link: @image-url("icons/external-link.svg");
     out property <image> file: @image-url("icons/file.svg");
+    out property <image> files: @image-url("icons/files.svg");
     out property <image> folder: @image-url("icons/folder.svg");
     out property <image> grip-vertical: @image-url("icons/grip-vertical.svg");
+    out property <image> history: @image-url("icons/history.svg");
+    out property <image> home: @image-url("icons/home.svg");
+    out property <image> info-circle: @image-url("icons/info-circle.svg");
+    out property <image> link: @image-url("icons/link.svg");
     out property <image> maximize: @image-url("icons/maximize.svg");
     out property <image> menu-2: @image-url("icons/menu-2.svg");
-    out property <image> minus: @image-url("icons/minus.svg");
     out property <image> minimize: @image-url("icons/minimize.svg");
+    out property <image> minus: @image-url("icons/minus.svg");
+    out property <image> note: @image-url("icons/note.svg");
     out property <image> plus: @image-url("icons/plus.svg");
+    out property <image> refresh: @image-url("icons/refresh.svg");
+    out property <image> search: @image-url("icons/search.svg");
+    out property <image> settings: @image-url("icons/settings.svg");
     out property <image> switch-horizontal: @image-url("icons/switch-horizontal.svg");
     out property <image> x: @image-url("icons/x.svg");
 }

@@ -1,0 +1,6 @@
+[package]
+name = "origami-icons"
+version.workspace = true
+edition.workspace = true
+links = "origami_icons"
+build = "build.rs"

@@ -17,6 +17,8 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 - **`origami-kit/theme` (`origami-theme`)**: Design tokens, color palettes, and theme mode resolvers.
 - **`origami-kit/config` (`origami-config`)**: Application settings, session state, and vault workspace persistence.
 - **`origami-kit/viewport` (`origami-viewport`)**: Hardware-accelerated offscreen Vulkan context and image rendering bridge for Slint viewports.
+- **`origami-kit/views/richtext-flow` (`origami-richtext-flow`)**: Pure-Rust document model (blocks of styled text runs and atomic embedded elements) and line-breaking engine for mixed text + element content.
+- **`origami-kit/views/richtext` (`origami-richtext`)**: `FlowView` Slint component embedding real widgets per element via `ComponentFactory`; ships `.slint` source only (see its README for why).
 
 ### Gallery
 - **`origami-gallery`**: Interactive component gallery showcasing all widgets, pane configurations, and viewport renderers.

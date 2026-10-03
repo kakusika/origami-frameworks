@@ -1,0 +1,53 @@
+// Generic renderer for lines of mixed text + embedded-element fragments,
+// as produced by `origami-richtext-flow::layout::layout_block`.
+//
+// Ships as `.slint` source only -- the importing app compiles this file
+// together with its own tree (see `src/lib.rs`'s doc comment for why).
+// `RichTextFragment`/`RichTextLine` here are placeholders the app's own
+// seam code (its `render.rs`-equivalent) must construct from
+// `origami-richtext-flow`'s `Fragment`/`Line` on every change.
+//
+// TODO: unverified against a real Slint compile -- this crate has no
+// `slint_build` step of its own, so the first real syntax check happens
+// when an app actually imports it (see
+// `.agents/tasks/richtext-view-scaffold.md`).
+
+export struct RichTextFragment {
+    // Position within the line, in the flow's own coordinate space.
+    x: length,
+    // Text fragments render `text`; element fragments instantiate `factory`.
+    // Slint has no tagged-union property type, so this flag picks the arm
+    // instead of e.g. an `enum` discriminant on the struct.
+    is-element: bool,
+    text: string,
+    factory: component-factory,
+}
+
+export struct RichTextLine {
+    y: length,
+    height: length,
+    fragments: [RichTextFragment],
+}
+
+export component FlowView {
+    in property <[RichTextLine]> lines;
+
+    for line in root.lines: Rectangle {
+        y: line.y;
+        height: line.height;
+
+        for frag in line.fragments: Rectangle {
+            x: frag.x;
+            height: parent.height;
+
+            if !frag.is-element: Text {
+                text: frag.text;
+                vertical-alignment: center;
+            }
+
+            if frag.is-element: ComponentContainer {
+                component-factory: frag.factory;
+            }
+        }
+    }
+}

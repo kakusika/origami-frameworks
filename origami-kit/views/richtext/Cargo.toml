@@ -1,0 +1,12 @@
+[package]
+name = "origami-richtext"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+# Exposes `ui/` to the consuming app's Slint build as
+# `DEP_ORIGAMI_RICHTEXT_UI_DIR` (same mechanism mumeum-text-editor uses).
+links = "origami_richtext"
+build = "build.rs"
+
+[dependencies]
+origami-richtext-flow = { workspace = true }

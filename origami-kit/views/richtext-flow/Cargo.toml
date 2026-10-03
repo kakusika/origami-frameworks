@@ -1,0 +1,7 @@
+[package]
+name = "origami-richtext-flow"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+
+[dependencies]

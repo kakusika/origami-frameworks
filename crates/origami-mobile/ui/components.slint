@@ -454,16 +454,20 @@ export component Section inherits VerticalLayout {
             letter-spacing: 0.5px;
         }
 
+        // The Rectangle only takes up the icon's own size, not a full
+        // touch target -- sized to Metrics.touch like every other tap
+        // target here, it would make *this* row the tallest thing in
+        // the HorizontalLayout (the title Text is much shorter), which
+        // balloons the header's own height and reads as an oversized
+        // gap before whatever content follows. The TouchArea below still
+        // gets the full touch-sized hit area by overflowing this
+        // Rectangle vertically instead of being sized by it.
         if root.action-icon.width > 0: VerticalLayout {
             alignment: center;
 
             Rectangle {
                 width: Metrics.touch;
-                height: Metrics.touch;
-
-                TouchArea {
-                    clicked => { root.action(); }
-                }
+                height: Metrics.icon-sm;
 
                 Icon {
                     source: root.action-icon;
@@ -472,6 +476,14 @@ export component Section inherits VerticalLayout {
                     color: Colors.muted;
                     x: (parent.width - self.width) / 2;
                     y: (parent.height - self.height) / 2;
+                }
+
+                TouchArea {
+                    x: 0px;
+                    y: (parent.height - Metrics.touch) / 2;
+                    width: Metrics.touch;
+                    height: Metrics.touch;
+                    clicked => { root.action(); }
                 }
             }
         }

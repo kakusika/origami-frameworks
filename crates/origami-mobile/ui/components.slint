@@ -498,6 +498,8 @@ export component Section inherits VerticalLayout {
 // non-highlighted state (e.g. an accent color for a primary action);
 // `enabled`/`highlighted` override it the same way across every caller
 // instead of each screen re-deriving its own muted/accent logic.
+// `label-text: ""` drops the label row entirely, for a bare icon-swatch
+// grid that has nothing to name.
 export component IconTile inherits Rectangle {
     in property <image> icon;
     in property <string> label-text;
@@ -545,7 +547,10 @@ export component IconTile inherits Rectangle {
             }
         }
 
-        HorizontalLayout {
+        // Icon-only callers (a bare swatch grid, no name underneath)
+        // pass an empty `label-text` -- skip the row entirely rather
+        // than reserving space for an empty `Text`'s line height.
+        if root.label-text != "": HorizontalLayout {
             alignment: center;
             spacing: Metrics.spacing-xs;
 

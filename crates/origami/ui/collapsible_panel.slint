@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 import { IconButton } from "action_button.slint";
 
 // Slint port of origami/qml/regions/panel/CollapsiblePanel.qml and
@@ -44,7 +44,7 @@ export component CollapsiblePanel inherits Rectangle {
         background: root.handle-color;
 
         IconButton {
-            icon: Icons.chevron-right;
+            icon: TablerIcons.chevron-right;
             icon-rotation: root.collapse-angle + 180deg;
             clicked => { root.expanded = true; }
         }
@@ -64,7 +64,7 @@ export component CollapsiblePanel inherits Rectangle {
                 alignment: root.docked-right ? end : start;
 
                 IconButton {
-                    icon: Icons.chevron-right;
+                    icon: TablerIcons.chevron-right;
                     icon-rotation: root.collapse-angle;
                     clicked => { root.expanded = false; }
                 }
@@ -102,7 +102,7 @@ export component BottomPanel inherits Rectangle {
         background: root.handle-color;
 
         IconButton {
-            icon: Icons.chevron-right;
+            icon: TablerIcons.chevron-right;
             icon-rotation: 270deg;
             clicked => { root.expanded = true; }
         }
@@ -118,7 +118,7 @@ export component BottomPanel inherits Rectangle {
         background: root.handle-color;
 
         IconButton {
-            icon: Icons.chevron-right;
+            icon: TablerIcons.chevron-right;
             icon-rotation: 90deg;
             clicked => { root.expanded = false; }
         }

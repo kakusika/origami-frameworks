@@ -6,7 +6,7 @@ import { DragHandle } from "@origami/drag_handle.slint";
 import { IconStack } from "@origami/icon_stack.slint";
 import { HamburgerButton } from "@origami/hamburger_button.slint";
 import { SideTitleBar, SideMenuEntry } from "@origami/side_title_bar.slint";
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 import {
     CollapsiblePanel,
     BottomPanel,
@@ -184,11 +184,11 @@ export component RegionsPage inherits Rectangle {
                     }
 
                     IconStack {
-                        icons: [Icons.file, Icons.folder, Icons.plus];
+                        icons: [TablerIcons.file, TablerIcons.folder, TablerIcons.plus];
                     }
 
                     IconStack {
-                        icons: [Icons.file, Icons.folder, Icons.plus, Icons.x, Icons.check, Icons.maximize];
+                        icons: [TablerIcons.file, TablerIcons.folder, TablerIcons.plus, TablerIcons.x, TablerIcons.check, TablerIcons.maximize];
                     }
 
                     ActionButton {
@@ -241,7 +241,7 @@ export component RegionsPage inherits Rectangle {
                 menus: [
                     {
                         text: "File",
-                        icon: Icons.file,
+                        icon: TablerIcons.file,
                         items: [
                             {
                                 kind: "item",
@@ -265,7 +265,7 @@ export component RegionsPage inherits Rectangle {
                     },
                     {
                         text: "Folders",
-                        icon: Icons.folder,
+                        icon: TablerIcons.folder,
                         items: [
                             {
                                 kind: "item",
@@ -280,7 +280,7 @@ export component RegionsPage inherits Rectangle {
                     },
                     {
                         text: "Add",
-                        icon: Icons.plus,
+                        icon: TablerIcons.plus,
                         items: [
                             {
                                 kind: "item",

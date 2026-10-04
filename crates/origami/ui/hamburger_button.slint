@@ -1,4 +1,4 @@
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 import { IconButton } from "action_button.slint";
 import { ThemedMenu, MenuItemEntry } from "themed_menu.slint";
 
@@ -8,7 +8,7 @@ import { ThemedMenu, MenuItemEntry } from "themed_menu.slint";
 // PopupWindow has no "closed" notification to reset such a state.
 export component HamburgerButton inherits Rectangle {
     in property <[MenuItemEntry]> items: [];
-    in property <image> icon: Icons.menu-2;
+    in property <image> icon: TablerIcons.menu-2;
     in property <length> icon-size: 16px;
     // Same signals as ThemedMenu.
     callback triggered(int);

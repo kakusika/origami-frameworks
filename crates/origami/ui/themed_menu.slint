@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 import { Separator } from "separator.slint";
 
 // Theme-styled context menu -- ported from origami/qml/widgets/menus/
@@ -120,7 +120,7 @@ export component ThemedMenu inherits PopupWindow {
                         }
 
                         if row.kind == "submenu": Icon {
-                            source: Icons.chevron-right;
+                            source: TablerIcons.chevron-right;
                             color: Tokens.text-secondary-on-raised;
                             width: 12px;
                             height: 12px;

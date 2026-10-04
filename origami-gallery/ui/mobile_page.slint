@@ -1,6 +1,6 @@
 import { Tokens } from "@origami/tokens.slint";
 import { Metrics, Colors as MobileColors } from "@origami-mobile/tokens.slint";
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 import {
     IconButton,
     TopBar,
@@ -80,7 +80,7 @@ export component MobilePage inherits Rectangle {
                     title: "Origami Mobile";
 
                     IconButton {
-                        icon: Icons.chevron-left;
+                        icon: TablerIcons.chevron-left;
                         clicked => { root.status = "IconButton: back"; }
                     }
 
@@ -94,7 +94,7 @@ export component MobilePage inherits Rectangle {
                     }
 
                     BubbleButton {
-                        icon: Icons.settings;
+                        icon: TablerIcons.settings;
                         clicked => { root.status = "BubbleButton: settings"; }
                     }
                 }
@@ -114,12 +114,12 @@ export component MobilePage inherits Rectangle {
                                 spacing: Metrics.spacing-sm;
                                 BubbleChip {
                                     text: "Vault";
-                                    icon: Icons.files;
+                                    icon: TablerIcons.files;
                                     clicked => { root.status = "BubbleChip: Vault"; }
                                 }
                                 BubbleChip {
                                     text: "Sync";
-                                    icon: Icons.refresh;
+                                    icon: TablerIcons.refresh;
                                     clicked => { root.status = "BubbleChip: Sync"; }
                                 }
                             }

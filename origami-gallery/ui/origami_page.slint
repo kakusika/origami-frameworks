@@ -26,7 +26,7 @@ import { RubberBandArea } from "@origami/rubber_band_area.slint";
 import { ViewTypePicker, PickerRow } from "@origami/view_type_picker.slint";
 import { FileGrid, FileGridCell } from "@origami/file_grid.slint";
 import { CollapsibleSection } from "@origami/collapsible_section.slint";
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 
 // Live, interactive showcase of every `origami-slint` widget grouped into collapsible sections.
 export component OrigamiPage inherits Rectangle {
@@ -178,18 +178,18 @@ export component OrigamiPage inherits Rectangle {
                             alignment: start;
 
                             RoundButton {
-                                icon: Icons.plus;
+                                icon: TablerIcons.plus;
                                 primary: true;
                                 clicked => { root.status = "RoundButton: Add (+) clicked"; }
                             }
 
                             RoundButton {
-                                icon: Icons.folder;
+                                icon: TablerIcons.folder;
                                 clicked => { root.status = "RoundButton: Folder clicked"; }
                             }
 
                             RoundButton {
-                                icon: Icons.maximize;
+                                icon: TablerIcons.maximize;
                                 active: true;
                                 clicked => { root.status = "RoundButton: Maximize clicked"; }
                             }
@@ -240,9 +240,9 @@ export component OrigamiPage inherits Rectangle {
 
                         ToggleGroup {
                             items: [
-                                { id: "grid", label: "Grid View", icon: Icons.folder, has-icon: false },
-                                { id: "list", label: "List View", icon: Icons.file, has-icon: false },
-                                { id: "tree", label: "Tree View", icon: Icons.grip-vertical, has-icon: false },
+                                { id: "grid", label: "Grid View", icon: TablerIcons.folder, has-icon: false },
+                                { id: "list", label: "List View", icon: TablerIcons.file, has-icon: false },
+                                { id: "tree", label: "Tree View", icon: TablerIcons.grip-vertical, has-icon: false },
                             ];
                             selected-index <=> root.toggle-group-idx;
                             selected(idx, id) => {

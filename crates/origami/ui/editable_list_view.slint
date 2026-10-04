@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 
 // Blender-UIList-style container: a list area + a side action column
 // (+/-/up/down) -- ported from origami/qml/views/EditableListView.qml.
@@ -14,7 +14,7 @@ import { Icon, Icons } from "@origami-icons/icons.slint";
 // `picker.slint`'s `PickerRow` already use.
 //
 // `origami-slint`'s icon set has no dedicated up/down-arrow icons -- the
-// up button reuses `Icons.chevron-down` rotated 180 degrees (a
+// up button reuses `TablerIcons.chevron-down` rotated 180 degrees (a
 // chevron-down flipped vertically reads as a chevron-up) rather than
 // adding new icon assets for this one widget.
 export struct EditableListEntry {
@@ -100,7 +100,7 @@ export component EditableListView inherits Rectangle {
                     animate background { duration: 80ms; }
 
                     Icon {
-                        source: Icons.plus;
+                        source: TablerIcons.plus;
                         color: Tokens.text-primary;
                         width: 14px;
                         height: 14px;
@@ -128,7 +128,7 @@ export component EditableListView inherits Rectangle {
                     animate background { duration: 80ms; }
 
                     Icon {
-                        source: Icons.x;
+                        source: TablerIcons.x;
                         color: remove-touch.enabled ? (remove-touch.has-hover ? Tokens.destructive : Tokens.text-primary) : Tokens.text-disabled-on-surface;
                         width: 14px;
                         height: 14px;
@@ -161,7 +161,7 @@ export component EditableListView inherits Rectangle {
                     animate background { duration: 80ms; }
 
                     Icon {
-                        source: Icons.chevron-down;
+                        source: TablerIcons.chevron-down;
                         transform-rotation: 180deg;
                         color: up-touch.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                         width: 14px;
@@ -190,7 +190,7 @@ export component EditableListView inherits Rectangle {
                     animate background { duration: 80ms; }
 
                     Icon {
-                        source: Icons.chevron-down;
+                        source: TablerIcons.chevron-down;
                         color: down-touch.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
                         width: 14px;
                         height: 14px;

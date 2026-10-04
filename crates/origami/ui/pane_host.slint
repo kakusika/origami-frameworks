@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 import { Bar, BarStart, BarEnd } from "bar.slint";
 import { MenuBar, MenuBarMenu, MenuEntry } from "menu_bar.slint";
 import { Separator } from "separator.slint";
@@ -157,7 +157,7 @@ export component PaneHost inherits Rectangle {
         return {
             id: "type",
             label: title,
-            icon: view-type == "file-grid" ? Icons.folder : Icons.file,
+            icon: view-type == "file-grid" ? TablerIcons.folder : TablerIcons.file,
             has-icon: true,
             chevron: true,
             bold: true,
@@ -290,7 +290,7 @@ export component PaneHost inherits Rectangle {
                         }
 
                         Icon {
-                            source: Icons.grip-vertical;
+                            source: TablerIcons.grip-vertical;
                             color: Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
@@ -327,7 +327,7 @@ export component PaneHost inherits Rectangle {
                         }
 
                         Icon {
-                            source: root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id) ? Icons.minimize : Icons.maximize;
+                            source: root.maximized-leaf-id == (cell.child-id >= 0 ? cell.child-id : cell.id) ? TablerIcons.minimize : TablerIcons.maximize;
                             color: maximize-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
@@ -341,7 +341,7 @@ export component PaneHost inherits Rectangle {
                         }
 
                         Icon {
-                            source: Icons.external-link;
+                            source: TablerIcons.external-link;
                             color: detach-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
@@ -355,7 +355,7 @@ export component PaneHost inherits Rectangle {
                         }
 
                         Icon {
-                            source: Icons.x;
+                            source: TablerIcons.x;
                             color: close-leaf-touch.has-hover ? Tokens.destructive : Tokens.text-secondary-on-surface;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
@@ -425,7 +425,7 @@ export component PaneHost inherits Rectangle {
                 background: close-touch.has-hover ? Tokens.destructive : transparent;
                 border-radius: 3px;
                 Icon {
-                    source: Icons.x;
+                    source: TablerIcons.x;
                     color: close-touch.has-hover ? Tokens.text-on-accent : Tokens.text-secondary-on-surface;
                     width: 10px;
                     height: 10px;
@@ -459,7 +459,7 @@ export component PaneHost inherits Rectangle {
                     {
                         id: "add-tab",
                         label: "",
-                        icon: Icons.plus,
+                        icon: TablerIcons.plus,
                         has-icon: true,
                         chevron: false,
                         bold: false,
@@ -476,7 +476,7 @@ export component PaneHost inherits Rectangle {
                 height: 12px;
                 clicked => { root.convert-group(cell.id); }
                 Icon {
-                    source: Icons.switch-horizontal;
+                    source: TablerIcons.switch-horizontal;
                     color: convert-drawer-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface;
                     width: 8px;
                     height: 8px;
@@ -537,7 +537,7 @@ export component PaneHost inherits Rectangle {
                 height: 12px;
                 clicked => { root.convert-group(cell.id); }
                 Icon {
-                    source: Icons.switch-horizontal;
+                    source: TablerIcons.switch-horizontal;
                     color: convert-tabs-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised;
                     width: 8px;
                     height: 8px;

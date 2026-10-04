@@ -1,6 +1,6 @@
 import { Palette } from "std-widgets.slint";
 import { Metrics, Colors } from "tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 
 export component IconButton inherits Rectangle {
     in property <image> icon;
@@ -220,7 +220,7 @@ export component UndoRedoBubble inherits Rectangle {
                 background: undo-touch.pressed && root.can-undo ? Palette.foreground.with-alpha(0.14) : transparent;
 
                 Icon {
-                    source: Icons.arrow-back-up;
+                    source: TablerIcons.arrow-back-up;
                     color: root.can-undo ? Palette.foreground : Colors.muted.with-alpha(0.3);
                     width: Metrics.icon-md;
                     height: Metrics.icon-md;
@@ -250,7 +250,7 @@ export component UndoRedoBubble inherits Rectangle {
                 background: redo-touch.pressed && root.can-redo ? Palette.foreground.with-alpha(0.14) : transparent;
 
                 Icon {
-                    source: Icons.arrow-forward-up;
+                    source: TablerIcons.arrow-forward-up;
                     color: root.can-redo ? Palette.foreground : Colors.muted.with-alpha(0.3);
                     width: Metrics.icon-md;
                     height: Metrics.icon-md;
@@ -348,7 +348,7 @@ export component Fab inherits Rectangle {
     drop-shadow-color: #00000055;
 
     Icon {
-        source: Icons.plus;
+        source: TablerIcons.plus;
         color: Palette.accent-foreground;
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;

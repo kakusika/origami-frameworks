@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 import { HamburgerButton } from "hamburger_button.slint";
 import { MenuItemEntry } from "themed_menu.slint";
 
@@ -81,7 +81,7 @@ export component PaneManager inherits Rectangle {
                     spacing: Tokens.spacing-small;
 
                     Icon {
-                        source: row.kind == "pane" ? Icons.file : (row.kind == "split" ? Icons.switch-horizontal : Icons.folder);
+                        source: row.kind == "pane" ? TablerIcons.file : (row.kind == "split" ? TablerIcons.switch-horizontal : TablerIcons.folder);
                         color: row.active ? Tokens.accent : Tokens.text-secondary;
                         width: 14px;
                         height: 14px;

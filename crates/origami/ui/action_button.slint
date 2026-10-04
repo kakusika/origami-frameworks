@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 
 // Slint port of origami/qml/widgets/buttons/IconButton.qml.
 // Compact icon-only button commonly used in toolbars, headers, and floating panes.
@@ -331,7 +331,7 @@ export component DetailToggleButton inherits Rectangle {
             background: root.checked ? Tokens.accent : transparent;
 
             if root.checked: Icon {
-                source: Icons.check;
+                source: TablerIcons.check;
                 color: Tokens.text-on-accent;
                 width: 10px;
                 height: 10px;

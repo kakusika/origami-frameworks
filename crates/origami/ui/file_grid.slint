@@ -1,6 +1,6 @@
 import { ListView } from "std-widgets.slint";
 import { Tokens } from "tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 import { RubberBandArea } from "rubber_band_area.slint";
 
 // Slint port of origami/qml/views/FileTile.qml and the catalogs grid view.
@@ -59,7 +59,7 @@ export component FileTile inherits Rectangle {
             }
 
             if !root.cell.has-thumbnail: Icon {
-                source: root.cell.is-dir ? Icons.folder : Icons.file;
+                source: root.cell.is-dir ? TablerIcons.folder : TablerIcons.file;
                 color: root.highlighted ? Tokens.accent : Tokens.text-secondary-on-raised;
                 width: min(48px, max(24px, parent.width * 0.38));
                 height: min(48px, max(24px, parent.height * 0.38));
@@ -78,7 +78,7 @@ export component FileTile inherits Rectangle {
                 background: root.cell.is-broken-symlink ? Tokens.destructive : Tokens.accent;
 
                 Icon {
-                    source: Icons.external-link;
+                    source: TablerIcons.external-link;
                     color: Tokens.text-on-accent;
                     width: 9px;
                     height: 9px;

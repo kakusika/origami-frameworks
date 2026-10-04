@@ -1,5 +1,5 @@
 import { Tokens } from "@origami/tokens.slint";
-import { Icon, Icons } from "@origami-icons/icons.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
 import { MenuState } from "@origami/menu_state.slint";
 import { Separator } from "@origami/separator.slint";
 
@@ -97,7 +97,7 @@ component MenuColumn inherits Rectangle {
                     if entry.has-submenu: Rectangle {
                         width: 10px;
                         Icon {
-                            source: Icons.chevron-right;
+                            source: TablerIcons.chevron-right;
                             color: Tokens.text-secondary-on-raised;
                             width: 10px;
                             height: 10px;
@@ -206,7 +206,7 @@ export component MenuBar inherits Rectangle {
                     width: 10px;
 
                     Icon {
-                        source: Icons.chevron-down;
+                        source: TablerIcons.chevron-down;
                         color: Tokens.text-secondary;
                         width: 10px;
                         height: 10px;

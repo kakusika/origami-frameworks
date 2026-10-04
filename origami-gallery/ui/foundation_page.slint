@@ -22,7 +22,7 @@ import {
     TabBar,
     TabItem,
 } from "@origami/components.slint";
-import { Icons } from "@origami-icons/icons.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 
 // Live showcase of every basic design-system component grouped into collapsible sections.
 export component FoundationPage inherits Rectangle {
@@ -138,9 +138,9 @@ export component FoundationPage inherits Rectangle {
 
                         ButtonGroup {
                             items: [
-                                { id: "left", text: "Left", icon: Icons.folder, has-icon: false },
-                                { id: "center", text: "Center", icon: Icons.file, has-icon: false },
-                                { id: "right", text: "Right", icon: Icons.maximize, has-icon: false },
+                                { id: "left", text: "Left", icon: TablerIcons.folder, has-icon: false },
+                                { id: "center", text: "Center", icon: TablerIcons.file, has-icon: false },
+                                { id: "right", text: "Right", icon: TablerIcons.maximize, has-icon: false },
                             ];
                             selected-index <=> root.demo-button-group;
                             selected(idx, id) => {
@@ -321,10 +321,10 @@ export component FoundationPage inherits Rectangle {
 
                         TabBar {
                             tabs: [
-                                { id: "overview", title: "Overview", icon: Icons.maximize, has-icon: false, badge: "" },
-                                { id: "metrics", title: "Metrics", icon: Icons.maximize, has-icon: false, badge: "LIVE" },
-                                { id: "logs", title: "Logs", icon: Icons.maximize, has-icon: false, badge: "9+" },
-                                { id: "settings", title: "Settings", icon: Icons.maximize, has-icon: false, badge: "" },
+                                { id: "overview", title: "Overview", icon: TablerIcons.maximize, has-icon: false, badge: "" },
+                                { id: "metrics", title: "Metrics", icon: TablerIcons.maximize, has-icon: false, badge: "LIVE" },
+                                { id: "logs", title: "Logs", icon: TablerIcons.maximize, has-icon: false, badge: "9+" },
+                                { id: "settings", title: "Settings", icon: TablerIcons.maximize, has-icon: false, badge: "" },
                             ];
                             current-index <=> root.demo-tab;
                             pill-style: true;
@@ -346,9 +346,9 @@ export component FoundationPage inherits Rectangle {
 
                         TabBar {
                             tabs: [
-                                { id: "t1", title: "Editor", icon: Icons.maximize, has-icon: false, badge: "" },
-                                { id: "t2", title: "Canvas", icon: Icons.maximize, has-icon: false, badge: "" },
-                                { id: "t3", title: "Terminal", icon: Icons.maximize, has-icon: false, badge: "" },
+                                { id: "t1", title: "Editor", icon: TablerIcons.maximize, has-icon: false, badge: "" },
+                                { id: "t2", title: "Canvas", icon: TablerIcons.maximize, has-icon: false, badge: "" },
+                                { id: "t3", title: "Terminal", icon: TablerIcons.maximize, has-icon: false, badge: "" },
                             ];
                             current-index: 0;
                             pill-style: false;

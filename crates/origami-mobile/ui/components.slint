@@ -499,14 +499,17 @@ export component Section inherits VerticalLayout {
 // `enabled`/`highlighted` override it the same way across every caller
 // instead of each screen re-deriving its own muted/accent logic.
 // `label-text: ""` drops the label row entirely, for a bare icon-swatch
-// grid that has nothing to name.
+// grid that has nothing to name. The top-right corner is a free
+// `@children` slot, anchored by `IconTile` but with its content (a
+// conflict-badge dot, or anything else a caller wants to flag the tile
+// with) entirely up to the caller -- what that marker *means* isn't
+// this generic library's concern.
 export component IconTile inherits Rectangle {
     in property <image> icon;
     in property <string> label-text;
     in property <color> tint: Palette.foreground;
     in property <bool> enabled: true;
     in property <bool> highlighted: false;
-    in property <bool> show-dot: false;
     in property <length> tile-height: 76px * Metrics.ui-scale;
     in property <bool> long-press-enabled: false;
     callback clicked();
@@ -562,14 +565,18 @@ export component IconTile inherits Rectangle {
                 horizontal-alignment: center;
                 overflow: elide;
             }
-
-            if root.show-dot: Rectangle {
-                width: Metrics.spacing-sm;
-                height: Metrics.spacing-sm;
-                border-radius: Metrics.spacing-sm / 2;
-                background: Colors.warning;
-            }
         }
+    }
+
+    // Corner slot: sized to whatever the caller puts in it (so a plain
+    // dot and a bigger marker both anchor correctly), pinned top-right
+    // regardless of the label row below -- it needs to read at a glance
+    // even when label-text is empty (an icon-only swatch has no label
+    // row to sit next to).
+    HorizontalLayout {
+        y: Metrics.spacing-xs;
+        x: root.width - self.width - Metrics.spacing-xs;
+        @children
     }
 
     property <bool> long-press-fired: false;

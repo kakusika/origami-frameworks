@@ -82,7 +82,15 @@ fn main() {
             ));
         }
         generated.push_str("        _ => None,\n    }\n}\n\n");
-        set_fns.push((set, fn_name));
+
+        let names_fn = format!("{set}_icon_names");
+        generated.push_str(&format!("fn {names_fn}() -> &'static [&'static str] {{\n    &[\n"));
+        for slug in &slugs {
+            generated.push_str(&format!("        {slug:?},\n"));
+        }
+        generated.push_str("    ]\n}\n\n");
+
+        set_fns.push((set, fn_name, names_fn));
     }
 
     generated.push_str(
@@ -91,10 +99,21 @@ fn main() {
          /// which decompresses this.\n\
          fn icon_svg_gz(pkg: &str, slug: &str) -> Option<&'static [u8]> {\n    match pkg {\n",
     );
-    for (set, fn_name) in &set_fns {
+    for (set, fn_name, _) in &set_fns {
         generated.push_str(&format!("        {set:?} => {fn_name}(slug),\n"));
     }
-    generated.push_str("        _ => None,\n    }\n}\n");
+    generated.push_str("        _ => None,\n    }\n}\n\n");
+
+    generated.push_str(
+        "/// Every slug `pkg` vendors (e.g. for an icon picker), or `&[]` if `pkg`\n\
+         /// isn't vendored at all. Private: callers go through `icon_names`\n\
+         /// (`src/lib.rs`).\n\
+         fn icon_names_for(pkg: &str) -> &'static [&'static str] {\n    match pkg {\n",
+    );
+    for (set, _, names_fn) in &set_fns {
+        generated.push_str(&format!("        {set:?} => {names_fn}(),\n"));
+    }
+    generated.push_str("        _ => &[],\n    }\n}\n");
 
     let out_path = Path::new(&out_dir).join("icon_lookup.rs");
     fs::write(&out_path, generated).expect("write generated icon_lookup.rs");

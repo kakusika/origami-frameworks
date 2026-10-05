@@ -1,0 +1,42 @@
+import { Tokens } from "@origami/tokens.slint";
+
+export component AppButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> destructive: false;
+    in property <bool> primary: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: 30px;
+    width: max(64px, label.preferred-width + Tokens.spacing-large * 1.5);
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border-on-surface : root.destructive ? (area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.has-hover ? Tokens.accent : Tokens.border-on-surface;
+    background: !root.enabled ? Tokens.surface : root.destructive ? (area.pressed ? Tokens.destructive-pressed : area.has-hover ? Tokens.destructive-hover : Tokens.destructive) : root.primary ? (area.pressed ? Tokens.accent-pressed : area.has-hover ? Tokens.accent-hover : Tokens.accent) : area.pressed ? Tokens.pressed-on-surface : area.has-hover ? Tokens.hover-on-surface : Tokens.surface;
+
+    animate background {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+
+    label := Text {
+        width: 100%;
+        height: 100%;
+        text: root.text;
+        color: !root.enabled ? Tokens.text-disabled-on-surface : root.destructive ? Tokens.text-on-destructive : root.primary ? Tokens.text-on-accent : Tokens.text-primary;
+        font-size: Tokens.font-size-normal;
+        font-weight: (root.primary || root.destructive) ? 600 : 400;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    area := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}

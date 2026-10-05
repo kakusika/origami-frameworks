@@ -1,0 +1,66 @@
+// Public widget barrel: every component this library exports for consumers to use,
+// re-exported from its own file under widgets/. Mirrors Slint's own
+// std-widgets.slint pattern -- consumers can import everything from this one
+// path, or import a single component directly from widgets/<name>.slint.
+//
+// Internal cross-file helpers (exported only because Slint requires it to
+// share them across files, not meant to be picked by consumers) live under
+// impl/ and are deliberately NOT re-exported here.
+
+export { ActionButton } from "widgets/action_button.slint";
+export { AppButton } from "widgets/app_button.slint";
+export { AppTextArea } from "widgets/app_text_area.slint";
+export { AppTextField } from "widgets/app_text_field.slint";
+export { Badge } from "widgets/badge.slint";
+export { Bar, BarStart, BarCenter, BarEnd } from "widgets/bar.slint";
+export { BottomPanel } from "widgets/bottom_panel.slint";
+export { BreadcrumbSegment, Breadcrumb } from "widgets/breadcrumb.slint";
+export { ButtonGroupItem, ButtonGroup } from "widgets/button_group.slint";
+export { Card } from "widgets/card.slint";
+export { CheckBox } from "widgets/check_box.slint";
+export { CollapsiblePanel } from "widgets/collapsible_panel.slint";
+export { CollapsibleSection } from "widgets/collapsible_section.slint";
+export { CollapsibleTextField } from "widgets/collapsible_text_field.slint";
+export { ColorPickerPopup } from "widgets/color_picker_popup.slint";
+export { ColorSwatchRow } from "widgets/color_swatch_row.slint";
+export { ConfirmDialog } from "widgets/confirm_dialog.slint";
+export { DetailToggleButton } from "widgets/detail_toggle_button.slint";
+export { Divider } from "widgets/divider.slint";
+export { DragHandle } from "widgets/drag_handle.slint";
+export { DropdownButton } from "widgets/dropdown_button.slint";
+export { EditableListEntry, EditableListView } from "widgets/editable_list_view.slint";
+export { FileGridCell, FileTile, FileGrid } from "widgets/file_grid.slint";
+export { FloatingWindow } from "widgets/floating_window.slint";
+export { HamburgerButton } from "widgets/hamburger_button.slint";
+export { HeaderMenuItem, HeaderMenuBar } from "widgets/header_menu_bar.slint";
+export { IconButton } from "widgets/icon_button.slint";
+export { IconStack } from "widgets/icon_stack.slint";
+export { IoErrorBanner } from "widgets/io_error_banner.slint";
+export { MenuEntry, MenuBarMenu, MenuBar } from "widgets/menu_bar.slint";
+export { ModalDialog } from "widgets/modal_dialog.slint";
+export { Notifications, ToastHost } from "widgets/notifications.slint";
+export { NumberInput } from "widgets/number_input.slint";
+export { OptionSlider } from "widgets/option_slider.slint";
+export { PaneCell, PaneHost } from "widgets/pane_host.slint";
+export { PaneOutlineRow, PaneManager } from "widgets/pane_manager.slint";
+export { ProgressBar } from "widgets/progress_bar.slint";
+export { RadioButton } from "widgets/radio_button.slint";
+export { RoundButton } from "widgets/round_button.slint";
+export { RubberBandArea } from "widgets/rubber_band_area.slint";
+export { SectionLabel } from "widgets/section_label.slint";
+export { Separator } from "widgets/separator.slint";
+export { SideMenuEntry, SideTitleBar } from "widgets/side_title_bar.slint";
+export { SidebarCategoryList } from "widgets/sidebar_category_list.slint";
+export { StatusBar } from "widgets/status_bar.slint";
+export { TabItem, TabBar } from "widgets/tab_bar.slint";
+export { SubmenuEntry, MenuItemEntry, ThemedMenu } from "widgets/themed_menu.slint";
+export { ToastNotification } from "widgets/toast_notification.slint";
+export { ToggleButton } from "widgets/toggle_button.slint";
+export { ToggleItem, ToggleGroup } from "widgets/toggle_group.slint";
+export { ToggleSwitch } from "widgets/toggle_switch.slint";
+export { ToolBar } from "widgets/tool_bar.slint";
+export { ToolBarSeparator } from "widgets/tool_bar_separator.slint";
+export { ToolTip } from "widgets/tool_tip.slint";
+export { ValueSlider } from "widgets/value_slider.slint";
+export { VerticalSeparator } from "widgets/vertical_separator.slint";
+export { PickerRow, ViewTypePicker } from "widgets/view_type_picker.slint";

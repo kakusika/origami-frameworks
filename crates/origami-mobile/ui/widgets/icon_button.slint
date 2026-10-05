@@ -1,0 +1,35 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics, Colors } from "@origami-mobile/tokens.slint";
+import { Icon } from "@origami-icons/icons.slint";
+
+export component IconButton inherits Rectangle {
+    in property <image> icon;
+    in property <bool> enabled: true;
+    in property <color> tint: Palette.foreground;
+    callback clicked();
+
+    width: Metrics.touch;
+    height: 100%;
+    min-height: Metrics.touch;
+
+    circle := Rectangle {
+        width: Metrics.touch;
+        height: Metrics.touch;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: self.width / 2;
+        background: touch.pressed && root.enabled ? Palette.foreground.with-alpha(0.14) : transparent;
+
+        Icon {
+            source: root.icon;
+            color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+}

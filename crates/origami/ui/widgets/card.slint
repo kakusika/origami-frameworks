@@ -1,0 +1,16 @@
+import { Tokens } from "@origami/tokens.slint";
+
+export component Card inherits Rectangle {
+    in property <bool> raised: false;
+
+    background: root.raised ? Tokens.surface-raised : Tokens.surface;
+    border-radius: Tokens.corner-radius + 2px;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-raised;
+
+    VerticalLayout {
+        padding: Tokens.spacing-large;
+        spacing: Tokens.spacing-medium;
+        @children
+    }
+}

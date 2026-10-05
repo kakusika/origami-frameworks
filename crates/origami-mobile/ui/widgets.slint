@@ -1,0 +1,27 @@
+// Public widget barrel: every component this library exports for consumers to use,
+// re-exported from its own file under widgets/. Mirrors Slint's own
+// std-widgets.slint pattern -- consumers can import everything from this one
+// path, or import a single component directly from widgets/<name>.slint.
+//
+// Internal cross-file helpers (exported only because Slint requires it to
+// share them across files, not meant to be picked by consumers) live under
+// impl/ and are deliberately NOT re-exported here.
+
+export { ActionRow } from "widgets/action_row.slint";
+export { ActionSheet } from "widgets/action_sheet.slint";
+export { BubbleButton } from "widgets/bubble_button.slint";
+export { BubbleChip } from "widgets/bubble_chip.slint";
+export { Card } from "widgets/card.slint";
+export { ConfirmDialog } from "widgets/confirm_dialog.slint";
+export { Divider } from "widgets/divider.slint";
+export { Fab } from "widgets/fab.slint";
+export { IconButton } from "widgets/icon_button.slint";
+export { IconTile } from "widgets/icon_tile.slint";
+export { PillButton } from "widgets/pill_button.slint";
+export { AppScrollView } from "widgets/scroll_view.slint";
+export { Section } from "widgets/section.slint";
+export { SegmentedControl } from "widgets/segmented_control.slint";
+export { SelectableRow } from "widgets/selectable_row.slint";
+export { TextInputDialog } from "widgets/text_input_dialog.slint";
+export { TopBar } from "widgets/top_bar.slint";
+export { UndoRedoBubble } from "widgets/undo_redo_bubble.slint";

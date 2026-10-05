@@ -1,0 +1,55 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics, Colors } from "@origami-mobile/tokens.slint";
+import { Icon } from "@origami-icons/icons.slint";
+
+// Pill-shaped bubble button with text (e.g. Vault switcher, actions)
+export component BubbleChip inherits Rectangle {
+    in property <string> text;
+    in property <image> icon;
+    in property <bool> enabled: true;
+    in property <color> tint: Palette.foreground;
+    callback clicked();
+
+    preferred-height: Metrics.touch;
+
+    chip := Rectangle {
+        height: Metrics.bubble-chip-height;
+        y: (parent.height - self.height) / 2;
+        border-radius: self.height / 2;
+        background: touch.pressed && root.enabled
+            ? Palette.foreground.with-alpha(0.16)
+            : Palette.foreground.with-alpha(0.08);
+        animate background {
+            duration: 120ms;
+            easing: ease-out;
+        }
+
+        HorizontalLayout {
+            padding-left: Metrics.spacing-md;
+            padding-right: Metrics.spacing-md;
+            spacing: Metrics.spacing-xs + 2px * Metrics.ui-scale;
+            alignment: center;
+
+            if root.icon.width > 0: Icon {
+                source: root.icon;
+                color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+                width: Metrics.icon-sm;
+                height: Metrics.icon-sm;
+                y: (parent.height - self.height) / 2;
+            }
+
+            Text {
+                text: root.text;
+                font-size: Metrics.font-md;
+                font-weight: 600;
+                color: root.enabled ? root.tint : Colors.muted.with-alpha(0.35);
+                vertical-alignment: center;
+            }
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+}

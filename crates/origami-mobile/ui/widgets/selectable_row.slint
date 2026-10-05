@@ -1,0 +1,109 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics, Colors } from "@origami-mobile/tokens.slint";
+import { Icon, TablerIcons } from "@origami-icons/icons.slint";
+
+// A tappable row inside a scrollable list -- an inset rounded highlight
+// so it reads as "selectable" without the row owning its own card chrome
+// (a `Directory` browser's folder/note rows, or any future flat list of
+// icon+label entries). `leading-icon` is optional (omit it, or pass a
+// zero-size `image`, for a title-only row); `show-chevron` marks a row
+// that drills into something else rather than acting directly (a folder,
+// a settings category) the same way `show-dot` marks one that needs
+// attention (a sync conflict).
+export component SelectableRow inherits Rectangle {
+    in property <image> leading-icon;
+    in property <string> label-text;
+    in property <bool> bold: false;
+    in property <bool> highlighted: false;
+    in property <bool> show-dot: false;
+    in property <bool> show-chevron: false;
+    in property <bool> long-press-enabled: false;
+    callback clicked();
+    callback long-pressed();
+
+    height: Metrics.row-height;
+
+    Rectangle {
+        x: Metrics.spacing-sm;
+        y: Metrics.spacing-xs / 2;
+        width: parent.width - Metrics.spacing-lg;
+        height: parent.height - Metrics.spacing-xs;
+        border-radius: Metrics.radius-lg;
+        background: root.highlighted
+            ? Palette.accent-background.with-alpha(0.20)
+            : (touch.pressed ? Palette.foreground.with-alpha(0.08) : transparent);
+        animate background {
+            duration: 150ms;
+            easing: ease-out;
+        }
+
+        HorizontalLayout {
+            padding-left: Metrics.spacing-lg;
+            padding-right: Metrics.spacing-lg;
+            spacing: Metrics.spacing-sm;
+
+            if root.leading-icon.width > 0: VerticalLayout {
+                alignment: center;
+                Icon {
+                    source: root.leading-icon;
+                    width: Metrics.icon-sm;
+                    height: Metrics.icon-sm;
+                    color: Colors.muted;
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+
+                Text {
+                    text: root.label-text;
+                    font-size: Metrics.font-body;
+                    font-weight: (root.bold || root.highlighted) ? 600 : 400;
+                    color: root.highlighted ? Palette.accent-background : Palette.foreground;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+
+            if root.show-dot: Rectangle {
+                width: Metrics.spacing-sm;
+                height: Metrics.spacing-sm;
+                y: (parent.height - self.height) / 2;
+                border-radius: Metrics.spacing-sm / 2;
+                background: Colors.warning;
+            }
+
+            if root.show-chevron: VerticalLayout {
+                alignment: center;
+                Icon {
+                    source: TablerIcons.chevron-right;
+                    width: Metrics.icon-sm;
+                    height: Metrics.icon-sm;
+                    color: Colors.muted;
+                }
+            }
+        }
+    }
+
+    property <bool> long-press-fired: false;
+
+    touch := TouchArea {
+        clicked => {
+            if (root.long-press-fired) {
+                root.long-press-fired = false;
+            } else {
+                root.clicked();
+            }
+        }
+    }
+
+    Timer {
+        interval: 400ms;
+        running: touch.pressed && root.long-press-enabled && !root.long-press-fired;
+        triggered => {
+            root.long-press-fired = true;
+            root.long-pressed();
+        }
+    }
+}

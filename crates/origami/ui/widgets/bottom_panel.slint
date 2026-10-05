@@ -1,0 +1,72 @@
+import { Tokens } from "@origami/tokens.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
+import { IconButton } from "icon_button.slint";
+
+// Slint port of origami/qml/regions/panel/BottomPanel.qml.
+//
+// Panel docked to the bottom of its parent: the toggle button sits outside
+// the body, above its left corner; collapsed, only a handle remains at the
+// bottom left.
+export component BottomPanel inherits Rectangle {
+    in-out property <bool> expanded: true;
+    in property <length> panel-width: 340px;
+    in property <brush> panel-color: Tokens.background;
+    in property <brush> handle-color: root.panel-color;
+
+    width: root.expanded ? root.panel-width : 30px;
+    height: root.expanded ? body.preferred-height + 30px + 4px : 30px;
+
+    animate width {
+        duration: 120ms;
+        easing: ease-out;
+    }
+
+    // Collapsed handle, bottom left.
+    Rectangle {
+        visible: !root.expanded;
+        y: parent.height - self.height;
+        width: 30px;
+        height: 30px;
+        border-radius: Tokens.corner-radius;
+        background: root.handle-color;
+
+        IconButton {
+            icon: TablerIcons.chevron-right;
+            icon-rotation: 270deg;
+            clicked => { root.expanded = true; }
+        }
+    }
+
+    // Expanded: toggle chip above the body's left corner.
+    Rectangle {
+        visible: root.expanded;
+        y: 0px;
+        width: 30px;
+        height: 30px;
+        border-radius: Tokens.corner-radius;
+        background: root.handle-color;
+
+        IconButton {
+            icon: TablerIcons.chevron-right;
+            icon-rotation: 90deg;
+            clicked => { root.expanded = false; }
+        }
+    }
+
+    Rectangle {
+        visible: root.expanded;
+        y: 30px + 4px;
+        height: parent.height - self.y;
+        background: root.panel-color;
+        border-radius: Tokens.corner-radius;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border;
+
+        body := VerticalLayout {
+            padding: Tokens.spacing-small;
+            spacing: Tokens.spacing-small;
+
+            @children
+        }
+    }
+}

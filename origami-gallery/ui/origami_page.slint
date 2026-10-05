@@ -1,32 +1,30 @@
 import { Tokens } from "@origami/tokens.slint";
-import { AppButton } from "@origami/components.slint";
-import { ThemedMenu, MenuItemEntry } from "@origami/themed_menu.slint";
-import { ModalDialog } from "@origami/modal_dialog.slint";
-import { ConfirmDialog } from "@origami/confirm_dialog.slint";
-import { IoErrorBanner } from "@origami/io_error_banner.slint";
-import { Notifications, ToastHost } from "@origami/notifications.slint";
-import { ColorPickerPopup } from "@origami/color_picker_popup.slint";
-import { Breadcrumb, BreadcrumbSegment } from "@origami/breadcrumb.slint";
-import { CollapsibleTextField } from "@origami/collapsible_text_field.slint";
+import { TablerIcons } from "@origami-icons/icons.slint";
 import {
+    AppButton,
+    ThemedMenu, MenuItemEntry,
+    ModalDialog,
+    ConfirmDialog,
+    IoErrorBanner,
+    Notifications, ToastHost,
+    ColorPickerPopup,
+    Breadcrumb, BreadcrumbSegment,
+    CollapsibleTextField,
     EditableListView,
     EditableListEntry,
-} from "@origami/editable_list_view.slint";
-import {
     ActionButton,
     IconButton,
     RoundButton,
     ToggleButton,
     DetailToggleButton,
-} from "@origami/action_button.slint";
-import { ToggleGroup, ToggleItem } from "@origami/toggle_group.slint";
-import { NumberInput } from "@origami/number_input.slint";
-import { ValueSlider } from "@origami/value_slider.slint";
-import { RubberBandArea } from "@origami/rubber_band_area.slint";
-import { ViewTypePicker, PickerRow } from "@origami/view_type_picker.slint";
-import { FileGrid, FileGridCell } from "@origami/file_grid.slint";
-import { CollapsibleSection } from "@origami/collapsible_section.slint";
-import { TablerIcons } from "@origami-icons/icons.slint";
+    ToggleGroup, ToggleItem,
+    NumberInput,
+    ValueSlider,
+    RubberBandArea,
+    ViewTypePicker, PickerRow,
+    FileGrid, FileGridCell,
+    CollapsibleSection,
+} from "@origami/widgets.slint";
 
 // Live, interactive showcase of every `origami-slint` widget grouped into collapsible sections.
 export component OrigamiPage inherits Rectangle {

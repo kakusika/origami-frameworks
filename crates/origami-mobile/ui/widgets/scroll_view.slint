@@ -1,0 +1,42 @@
+import { Palette } from "std-widgets.slint";
+
+// Clean mobile scroll view with a modern floating translucent pill scroll indicator,
+// replacing the wireframe outline scrollbar in standard widgets.
+export component AppScrollView inherits Rectangle {
+    in property <bool> enabled: true;
+    out property <length> visible-width <=> flickable.width;
+    out property <length> visible-height <=> flickable.height;
+    in-out property <length> content-width <=> flickable.content-width;
+    in-out property <length> content-height <=> flickable.content-height;
+    in-out property <length> content-x <=> flickable.content-x;
+    in-out property <length> content-y <=> flickable.content-y;
+    callback scrolled <=> flickable.flicked;
+
+    clip: true;
+
+    flickable := Flickable {
+        width: 100%;
+        height: 100%;
+        content-width: flickable.width;
+        interactive: root.enabled;
+        mouse-drag-pan-enabled: true;
+
+        @children
+    }
+
+    // Modern mobile floating pill scrollbar (solid semi-transparent, no wireframe box)
+    property <bool> show-scrollbar: flickable.content-height > flickable.height + 2px;
+    property <length> track-height: flickable.height;
+    property <length> thumb-height: max(28px, flickable.height * min(1.0, flickable.height / max(1px, flickable.content-height)));
+    property <length> max-scroll: max(1px, flickable.content-height - flickable.height);
+    property <length> thumb-y: (-flickable.content-y / root.max-scroll) * (root.track-height - root.thumb-height);
+
+    if root.show-scrollbar: Rectangle {
+        x: parent.width - 5px;
+        y: min(max(2px, root.thumb-y), root.track-height - root.thumb-height - 2px);
+        width: 3px;
+        height: root.thumb-height;
+        border-radius: 1.5px;
+        background: Palette.foreground.with-alpha(0.28);
+    }
+}

@@ -1,0 +1,112 @@
+import { Tokens } from "@origami/tokens.slint";
+import { Icon } from "@origami-icons/icons.slint";
+
+export struct TabItem {
+    id: string,
+    title: string,
+    icon: image,
+    has-icon: bool,
+    badge: string,
+}
+
+export component TabBar inherits Rectangle {
+    in property <[TabItem]> tabs: [];
+    in-out property <int> current-index: 0;
+    in property <bool> pill-style: true;
+    callback tab-selected(int, string);
+
+    height: 36px;
+    background: root.pill-style ? Tokens.surface-raised : transparent;
+    border-radius: root.pill-style ? Tokens.corner-radius + 2px : 0px;
+    border-width: root.pill-style ? Tokens.border-width : 0px;
+    border-color: Tokens.border-on-raised;
+
+    property <length> item-width: root.tabs.length > 0 ? (self.width - (root.pill-style ? 6px : 0px)) / root.tabs.length : 0px;
+
+    // Single continuous sliding indicator
+    if root.current-index >= 0 && root.current-index < root.tabs.length: indicator := Rectangle {
+        x: (root.pill-style ? 3px : 0px) + root.current-index * root.item-width;
+        y: root.pill-style ? 3px : parent.height - 2px;
+        width: root.item-width;
+        height: root.pill-style ? parent.height - 6px : 2px;
+        border-radius: root.pill-style ? Tokens.corner-radius : 1px;
+        background: Tokens.accent;
+
+        animate x {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
+        animate width { duration: Tokens.anim-very-short * 1ms; }
+    }
+
+    HorizontalLayout {
+        padding: root.pill-style ? 3px : 0px;
+        spacing: 0px;
+
+        for tab[i] in root.tabs: Rectangle {
+            width: root.item-width;
+            height: parent.height;
+            border-radius: Tokens.corner-radius;
+            background: (i != root.current-index && tab-touch.has-hover) ? Tokens.hover-on-raised : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            HorizontalLayout {
+                width: 100%;
+                height: 100%;
+                alignment: center;
+                spacing: Tokens.spacing-small;
+
+                if tab.has-icon: Rectangle {
+                    width: 16px;
+                    height: 100%;
+
+                    Icon {
+                        y: (parent.height - self.height) / 2;
+                        source: tab.icon;
+                        color: i == root.current-index ? (root.pill-style ? Tokens.text-on-accent : Tokens.accent) : Tokens.text-secondary-on-raised;
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+
+                Text {
+                    height: 100%;
+                    text: tab.title;
+                    color: i == root.current-index ? (root.pill-style ? Tokens.text-on-accent : Tokens.accent) : (tab-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
+                    font-size: Tokens.font-size-normal;
+                    font-weight: i == root.current-index ? 600 : 400;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                    animate color { duration: Tokens.anim-very-short * 1ms; }
+                }
+
+                if tab.badge != "": Rectangle {
+                    y: (parent.height - self.height) / 2;
+                    background: i == root.current-index ? (root.pill-style ? Tokens.accent-pressed : Tokens.accent) : Tokens.surface-raised;
+                    border-radius: 6px;
+                    height: 16px;
+                    width: max(16px, badge-text.preferred-width + 6px);
+
+                    badge-text := Text {
+                        width: 100%;
+                        height: 100%;
+                        text: tab.badge;
+                        color: i == root.current-index ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                        font-size: 10px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            tab-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.current-index = i;
+                    root.tab-selected(i, tab.id);
+                }
+            }
+        }
+    }
+}

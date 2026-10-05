@@ -1,0 +1,31 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics } from "@origami-mobile/tokens.slint";
+
+// A tappable text row for an action sheet or menu -- not a list row (no
+// separator, no selection highlight of its own).
+export component ActionRow inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Palette.foreground;
+    callback clicked();
+
+    height: Metrics.touch;
+    border-radius: Metrics.radius-sm + 2px * Metrics.ui-scale;
+    background: touch.pressed ? Palette.foreground.with-alpha(0.08) : transparent;
+    animate background {
+        duration: 150ms;
+        easing: ease-out;
+    }
+
+    Text {
+        x: Metrics.gutter;
+        text: root.text;
+        color: root.tint;
+        font-size: Metrics.font-body + 1px * Metrics.ui-scale;
+        vertical-alignment: center;
+        height: 100%;
+    }
+
+    touch := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}

@@ -1,0 +1,10 @@
+import { Tokens } from "@origami/tokens.slint";
+
+// Text with a "primary"/"secondary" role, matching Origami.Label's
+// type: "secondary" convention from the QML settings screen.
+export component SectionLabel inherits Text {
+    in property <bool> secondary: false;
+    color: root.secondary ? Tokens.text-secondary : Tokens.text-primary;
+    font-size: root.secondary ? Tokens.font-size-small : Tokens.font-size-normal;
+    wrap: word-wrap;
+}

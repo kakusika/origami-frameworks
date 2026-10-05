@@ -1,0 +1,61 @@
+import { Tokens } from "@origami/tokens.slint";
+
+export component SidebarCategoryList inherits Rectangle {
+    in property <[string]> categories: [];
+    in-out property <int> current-index: 0;
+    callback selected(int);
+    callback category-selected(int, string);
+
+    width: 160px;
+    background: Tokens.surface;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-surface;
+    border-radius: Tokens.corner-radius;
+
+    // Single continuous sliding indicator
+    if root.current-index >= 0 && root.current-index < root.categories.length: pill := Rectangle {
+        x: Tokens.spacing-small;
+        y: Tokens.spacing-small + root.current-index * (32px + 2px);
+        width: parent.width - Tokens.spacing-small * 2;
+        height: 32px;
+        border-radius: Tokens.corner-radius;
+        background: Tokens.accent;
+        animate y {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
+    }
+
+    VerticalLayout {
+        padding: Tokens.spacing-small;
+        spacing: 2px;
+
+        for cat[i] in root.categories: Rectangle {
+            height: 32px;
+            background: (i != root.current-index && itemArea.has-hover) ? Tokens.hover-on-surface : transparent;
+            border-radius: Tokens.corner-radius;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            Text {
+                text: cat;
+                color: i == root.current-index ? Tokens.text-on-accent : (itemArea.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-surface);
+                font-size: Tokens.font-size-normal;
+                font-weight: i == root.current-index ? 600 : 400;
+                vertical-alignment: center;
+                x: Tokens.spacing-medium;
+                animate color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            itemArea := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.current-index = i;
+                    root.selected(i);
+                    root.category-selected(i, cat);
+                }
+            }
+        }
+
+        Rectangle { }
+    }
+}

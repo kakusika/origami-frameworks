@@ -1,0 +1,129 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics, Colors } from "@origami-mobile/tokens.slint";
+import { Icon } from "@origami-icons/icons.slint";
+
+// Square icon-over-label tile for a grid of actions/sections/entries
+// (Home's Quick Actions, the Library hub's section picker, a Directory
+// grid tile). `tint` is the caller's base color for the enabled/
+// non-highlighted state (e.g. an accent color for a primary action);
+// `enabled`/`highlighted` override it the same way across every caller
+// instead of each screen re-deriving its own muted/accent logic.
+// `label-text: ""` drops the label row entirely, for a bare icon-swatch
+// grid that has nothing to name. The top-right corner is a free
+// `@children` slot, anchored by `IconTile` but with its content (a
+// conflict-badge dot, or anything else a caller wants to flag the tile
+// with) entirely up to the caller -- what that marker *means* isn't
+// this generic library's concern.
+export component IconTile inherits Rectangle {
+    in property <image> icon;
+    in property <string> label-text;
+    in property <color> tint: Palette.foreground;
+    in property <bool> enabled: true;
+    in property <bool> highlighted: false;
+    in property <length> tile-height: 76px * Metrics.ui-scale;
+    in property <bool> long-press-enabled: false;
+    callback clicked();
+    callback long-pressed();
+
+    property <color> effective-tint: !root.enabled
+        ? Colors.muted
+        : (root.highlighted ? Palette.accent-background : root.tint);
+
+    horizontal-stretch: 1;
+    // Zeroing both min/preferred-width makes equal-column grids split
+    // purely by stretch instead of by each tile's own label width (see
+    // the `LibrarySectionTile` comment this was ported from).
+    min-width: 0px;
+    preferred-width: 0px;
+    height: root.tile-height;
+    border-radius: Metrics.radius-md;
+    opacity: root.enabled ? 1.0 : 0.5;
+    background: touch.pressed && root.enabled
+        ? Palette.foreground.with-alpha(0.12)
+        : (root.highlighted ? Palette.accent-background.with-alpha(0.20) : Colors.surface-elevated);
+    animate background {
+        duration: 150ms;
+        easing: ease-out;
+    }
+
+    VerticalLayout {
+        alignment: center;
+        spacing: Metrics.spacing-xs;
+
+        HorizontalLayout {
+            alignment: center;
+            Icon {
+                source: root.icon;
+                width: Metrics.icon-lg;
+                height: Metrics.icon-lg;
+                color: root.effective-tint;
+            }
+        }
+
+        // Icon-only callers (a bare swatch grid, no name underneath)
+        // pass an empty `label-text` -- skip the row entirely rather
+        // than reserving space for an empty `Text`'s line height.
+        if root.label-text != "": HorizontalLayout {
+            alignment: center;
+            spacing: Metrics.spacing-xs;
+
+            Text {
+                text: root.label-text;
+                font-size: Metrics.font-sm;
+                font-weight: 600;
+                color: root.effective-tint;
+                horizontal-alignment: center;
+                overflow: elide;
+            }
+        }
+    }
+
+    // Corner slot: sized to whatever the caller puts in it (so a plain
+    // dot and a bigger marker both anchor correctly), pinned top-right
+    // regardless of the label row below -- it needs to read at a glance
+    // even when label-text is empty (an icon-only swatch has no label
+    // row to sit next to).
+    //
+    // The outer `Rectangle` (not a `Layout`) is what's actually
+    // positioned: a `HorizontalLayout` placed directly here, with no
+    // explicit width of its own, defaults to filling `root` just like
+    // this tile's icon/label `VerticalLayout` above does -- so `x:
+    // root.width - self.width - ...` degenerated to a small *negative*
+    // x (self.width == root.width), landing the badge at the top-left
+    // instead. Binding the outer box's width/height to the inner
+    // layout's own `preferred-width`/`-height` (same idiom as
+    // `toggle_switch.slint`/`check_box.slint`) sizes it to its actual
+    // content instead, so the right-edge math is correct again.
+    Rectangle {
+        y: Metrics.spacing-xs;
+        width: corner-layout.preferred-width;
+        height: corner-layout.preferred-height;
+        x: root.width - self.width - Metrics.spacing-xs;
+
+        corner-layout := HorizontalLayout {
+            @children
+        }
+    }
+
+    property <bool> long-press-fired: false;
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => {
+            if (root.long-press-fired) {
+                root.long-press-fired = false;
+            } else {
+                root.clicked();
+            }
+        }
+    }
+
+    Timer {
+        interval: 400ms;
+        running: touch.pressed && root.long-press-enabled && !root.long-press-fired;
+        triggered => {
+            root.long-press-fired = true;
+            root.long-pressed();
+        }
+    }
+}

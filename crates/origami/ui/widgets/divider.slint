@@ -1,0 +1,13 @@
+import { Tokens } from "@origami/tokens.slint";
+
+export component Divider inherits Rectangle {
+    in property <bool> vertical: false;
+
+    horizontal-stretch: root.vertical ? 0 : 1;
+    vertical-stretch: root.vertical ? 1 : 0;
+    min-height: 1px;
+    max-height: root.vertical ? 100000px : 1px;
+    min-width: 1px;
+    max-width: root.vertical ? 1px : 100000px;
+    background: Tokens.divider;
+}

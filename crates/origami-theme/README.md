@@ -28,3 +28,4 @@ license terms:
 | TokyoNight | [folke/tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | Apache License 2.0 |
 | Catppuccin | [catppuccin/catppuccin](https://github.com/catppuccin/catppuccin) | MIT License |
 | Flexoki | [kepano/flexoki](https://github.com/kepano/flexoki) ([stephango.com/flexoki](https://stephango.com/flexoki)) | MIT License |
+| Blender | [Blender](https://www.blender.org) | GPL-2.0-or-later |

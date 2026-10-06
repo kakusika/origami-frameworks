@@ -10,8 +10,50 @@ use origami_panes::edit::DividerDragBaseline;
 use origami_panes::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
 use origami_panes::outline::{OutlineKind, OutlineRow, outline};
 use origami_panes::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
+use origami_theme::palette::RgbColor;
+use origami_theme::{AnimationSpeed, BorderWidth, CornerRadius, ThemeSettings};
 use serde_json::json;
 use slint::{Model, ModelRc, SharedString, VecModel};
+
+fn resolve_variant(scheme: &str, is_dark: bool) -> &'static str {
+    match scheme {
+        "blender" => {
+            if is_dark {
+                "blender-dark"
+            } else {
+                "blender-light"
+            }
+        }
+        "tokyonight" => {
+            if is_dark {
+                "tokyonight-night"
+            } else {
+                "tokyonight-day"
+            }
+        }
+        "catppuccin" => {
+            if is_dark {
+                "catppuccin-mocha"
+            } else {
+                "catppuccin-latte"
+            }
+        }
+        "flexoki" => {
+            if is_dark {
+                "flexoki-dark"
+            } else {
+                "flexoki-light"
+            }
+        }
+        _ => {
+            if is_dark {
+                "dark"
+            } else {
+                "light"
+            }
+        }
+    }
+}
 
 fn create_demo_tree() -> PaneNode {
     PaneNode::Split {
@@ -470,6 +512,176 @@ fn main() -> Result<(), slint::PlatformError> {
                 }
             },
         );
+    }
+
+    // Settings page handlers
+    let theme_settings = Rc::new(RefCell::new(ThemeSettings::default()));
+    let current_scheme = Rc::new(RefCell::new("origami".to_string()));
+    let current_is_dark = Rc::new(RefCell::new(true));
+
+    let apply_theme_fn = {
+        let theme_settings = theme_settings.clone();
+        let app_weak = app.as_weak();
+        Rc::new(move || {
+            if let Some(app) = app_weak.upgrade() {
+                let st = theme_settings.borrow();
+                theme::apply_settings(&app, &st);
+            }
+        })
+    };
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_scheme(move |scheme| {
+            *current_scheme.borrow_mut() = scheme.to_string();
+            let var = resolve_variant(&scheme, *current_is_dark.borrow());
+            theme_settings.borrow_mut().variant = var.to_string();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_scheme(scheme);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_variant(move |variant_type| {
+            let is_dark = variant_type == "dark";
+            *current_is_dark.borrow_mut() = is_dark;
+            let var = resolve_variant(&current_scheme.borrow(), is_dark);
+            theme_settings.borrow_mut().variant = var.to_string();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_variant(variant_type);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_accent(move |hex| {
+            let hex_str = hex.as_str();
+            let accent = if hex_str.is_empty() {
+                None
+            } else {
+                RgbColor::from_hex(hex_str)
+            };
+            theme_settings.borrow_mut().accent = accent;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_accent(hex);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_corner_radius(move |radius| {
+            let r = match radius.as_str() {
+                "none" => CornerRadius::Disabled,
+                "small" => CornerRadius::Small,
+                "medium" => CornerRadius::Medium,
+                "large" => CornerRadius::Large,
+                "full" => CornerRadius::Circle,
+                _ => CornerRadius::Small,
+            };
+            theme_settings.borrow_mut().corner_radius = r;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_corner_radius(radius);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_border_width(move |width| {
+            let w = match width.as_str() {
+                "thin" => BorderWidth::Thin,
+                "default" => BorderWidth::Default,
+                "thick" => BorderWidth::Thick,
+                _ => BorderWidth::Default,
+            };
+            theme_settings.borrow_mut().border_width = w;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_border_width(width);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_ui_scale(move |scale| {
+            theme_settings.borrow_mut().ui_scale = scale;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_ui_scale(scale);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_anim_speed(move |speed| {
+            let (speed_enum, enabled) = match speed.as_str() {
+                "none" => (AnimationSpeed::Normal, false),
+                "fast" => (AnimationSpeed::Fast, true),
+                "normal" => (AnimationSpeed::Normal, true),
+                "slow" => (AnimationSpeed::Slow, true),
+                _ => (AnimationSpeed::Normal, true),
+            };
+            {
+                let mut st = theme_settings.borrow_mut();
+                st.animation_speed = speed_enum;
+                st.animations_enabled = enabled;
+            }
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_anim_speed(speed);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_reset_settings_defaults(move || {
+            *current_scheme.borrow_mut() = "origami".to_string();
+            *current_is_dark.borrow_mut() = true;
+            *theme_settings.borrow_mut() = ThemeSettings::default();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_scheme("origami".into());
+                app.set_settings_variant("dark".into());
+                app.set_settings_accent("".into());
+                app.set_settings_corner_radius("small".into());
+                app.set_settings_border_width("default".into());
+                app.set_settings_ui_scale(1.0);
+                app.set_settings_anim_speed("normal".into());
+            }
+            apply_fn();
+        });
     }
 
     app.run()

@@ -30,7 +30,11 @@ fn apply(app: &AppWindow, theme: &ResolvedTheme) {
     tokens.set_anim_very_long(theme.animation.very_long_ms);
 }
 
-/// The gallery has no settings of its own: it shows the default theme.
+pub fn apply_settings(app: &AppWindow, settings: &ThemeSettings) {
+    apply(app, &origami_theme::resolve(settings));
+}
+
+/// The gallery default theme.
 pub fn apply_default(app: &AppWindow) {
-    apply(app, &origami_theme::resolve(&ThemeSettings::default()));
+    apply_settings(app, &ThemeSettings::default());
 }

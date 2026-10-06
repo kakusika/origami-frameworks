@@ -1,11 +1,12 @@
 import { Tokens } from "@origami/tokens.slint";
 import { AppButton, PaneCell, PaneOutlineRow, EditableListEntry } from "@origami/widgets.slint";
-import { OrigamiPage } from "origami_page.slint";
-import { RegionsPage } from "regions_page.slint";
-import { PanePage } from "pane_page.slint";
-import { FoundationPage } from "foundation_page.slint";
-import { ViewportPage } from "viewport_page.slint";
-import { MobilePage } from "mobile_page.slint";
+import { OrigamiPage } from "pages/origami.slint";
+import { RegionsPage } from "pages/regions.slint";
+import { PanePage } from "pages/pane.slint";
+import { FoundationPage } from "pages/foundation.slint";
+import { ViewportPage } from "pages/viewport.slint";
+import { MobilePage } from "pages/mobile.slint";
+import { SettingsPage } from "pages/settings.slint";
 
 export {
     Tokens,
@@ -67,6 +68,24 @@ export component AppWindow inherits Window {
     callback viewport-toggle-pause();
     callback viewport-speed-changed(float);
     callback viewport-resized(length, length);
+
+    // SettingsPage property forwardings
+    in-out property <string> settings-scheme: "origami";
+    in-out property <string> settings-variant: "dark";
+    in-out property <string> settings-accent: "";
+    in-out property <string> settings-corner-radius: "small";
+    in-out property <string> settings-border-width: "default";
+    in-out property <float> settings-ui-scale: 1.0;
+    in-out property <string> settings-anim-speed: "normal";
+
+    callback set-scheme(string);
+    callback set-variant(string);
+    callback set-accent(string);
+    callback set-corner-radius(string);
+    callback set-border-width(string);
+    callback set-ui-scale(float);
+    callback set-anim-speed(string);
+    callback reset-settings-defaults();
 
     VerticalLayout {
         // Top navigation bar
@@ -261,6 +280,28 @@ export component AppWindow inherits Window {
                                 clicked => { root.current-tab = 5; }
                             }
                         }
+
+                        tab6 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 6 ? Tokens.accent : (tab6-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Settings";
+                                color: root.current-tab == 6 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 6 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab6-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 6; }
+                            }
+                        }
                     }
                 }
             }
@@ -322,6 +363,25 @@ export component AppWindow inherits Window {
         if root.current-tab == 5: MobilePage {
             horizontal-stretch: 1;
             vertical-stretch: 1;
+        }
+        if root.current-tab == 6: SettingsPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            current-scheme: root.settings-scheme;
+            current-variant: root.settings-variant;
+            current-accent: root.settings-accent;
+            current-corner-radius: root.settings-corner-radius;
+            current-border-width: root.settings-border-width;
+            current-ui-scale: root.settings-ui-scale;
+            current-anim-speed: root.settings-anim-speed;
+            set-scheme(s) => { root.set-scheme(s); }
+            set-variant(v) => { root.set-variant(v); }
+            set-accent(a) => { root.set-accent(a); }
+            set-corner-radius(r) => { root.set-corner-radius(r); }
+            set-border-width(b) => { root.set-border-width(b); }
+            set-ui-scale(u) => { root.set-ui-scale(u); }
+            set-anim-speed(a) => { root.set-anim-speed(a); }
+            reset-defaults => { root.reset-settings-defaults(); }
         }
     }
 }

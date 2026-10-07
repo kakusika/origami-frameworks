@@ -71,7 +71,8 @@ impl ViewportBridge {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::Rgba8Unorm,
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT
-                    | wgpu::TextureUsages::TEXTURE_BINDING,
+                    | wgpu::TextureUsages::TEXTURE_BINDING
+                    | wgpu::TextureUsages::COPY_SRC,
                 view_formats: &[],
             });
             self.texture = Some(texture);
@@ -85,6 +86,7 @@ impl ViewportBridge {
     }
 
     /// Converts the current texture into a `slint::Image`.
+    /// Note: This only works with hardware-accelerated Slint backends (wgpu renderer).
     pub fn to_slint_image(&self) -> Result<slint::Image> {
         let texture = self
             .texture
@@ -92,6 +94,94 @@ impl ViewportBridge {
             .context("texture has not been initialized yet")?;
         slint::Image::try_from(texture.clone())
             .map_err(|e| anyhow::anyhow!("failed to import texture into Slint Image: {e:?}"))
+    }
+
+    /// Reads back the rendered texture into a CPU-backed Slint `Image`.
+    /// This is compatible with Slint's `software_renderer` and headless/Wayland SHM buffers.
+    pub fn read_to_image(&self, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<slint::Image> {
+        let texture = self
+            .texture
+            .as_ref()
+            .context("texture has not been initialized yet")?;
+
+        let bytes_per_pixel = 4u32;
+        let unpadded_bytes_per_row = self.width * bytes_per_pixel;
+        let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+        let padded_bytes_per_row = ((unpadded_bytes_per_row + align - 1) / align) * align;
+        let buffer_size = (padded_bytes_per_row * self.height) as u64;
+
+        let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("origami_viewport_staging_buffer"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+
+        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("origami_viewport_readback_encoder"),
+        });
+
+        encoder.copy_texture_to_buffer(
+            wgpu::TexelCopyTextureInfo {
+                texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::TexelCopyBufferInfo {
+                buffer: &staging_buffer,
+                layout: wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(padded_bytes_per_row),
+                    rows_per_image: Some(self.height),
+                },
+            },
+            wgpu::Extent3d {
+                width: self.width,
+                height: self.height,
+                depth_or_array_layers: 1,
+            },
+        );
+
+        queue.submit(std::iter::once(encoder.finish()));
+
+        let buffer_slice = staging_buffer.slice(..);
+        let (tx, rx) = std::sync::mpsc::channel();
+        buffer_slice.map_async(wgpu::MapMode::Read, move |res| {
+            let _ = tx.send(res);
+        });
+
+        device.poll(wgpu::PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        })
+        .map_err(|e| anyhow::anyhow!("device poll failed: {e:?}"))?;
+
+        rx.recv()
+            .map_err(|e| anyhow::anyhow!("failed to wait for staging buffer mapping: {e}"))?
+            .map_err(|e| anyhow::anyhow!("staging buffer mapping error: {e}"))?;
+
+        let data = buffer_slice
+            .get_mapped_range()
+            .map_err(|e| anyhow::anyhow!("failed to get mapped range: {e:?}"))?;
+        let mut pixels = Vec::with_capacity((self.width * self.height * bytes_per_pixel) as usize);
+
+        for row in 0..self.height {
+            let start = (row * padded_bytes_per_row) as usize;
+            let end = start + unpadded_bytes_per_row as usize;
+            pixels.extend_from_slice(&data[start..end]);
+        }
+
+        drop(data);
+        staging_buffer.unmap();
+
+        let mut pixel_buffer =
+            slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(self.width, self.height);
+        pixel_buffer
+            .make_mut_bytes()
+            .copy_from_slice(&pixels);
+
+        Ok(slint::Image::from_rgba8_premultiplied(pixel_buffer))
     }
 }
 

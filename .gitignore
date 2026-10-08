@@ -35,3 +35,6 @@ target/
 .DS_Store
 Desktop.ini
 Thumbs.db
+
+# Agent workspaces
+.agents/workspaces/

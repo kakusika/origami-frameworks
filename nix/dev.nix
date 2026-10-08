@@ -28,6 +28,7 @@ mkShell rec {
     tomet-lsp
     tmtbook
     twrit
+    deno
     just
     #== Slint
     slint-lsp

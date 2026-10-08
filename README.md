@@ -1,3 +1,5 @@
+<!-- Generated from tmtroot/readme.tmt. Edit that, then `tomet export .`. -->
+
 # Origami Frameworks
 
 Modular UI framework and component library built on Rust and Slint.
@@ -19,21 +21,26 @@ Origami Frameworks provides a composable, high-performance UI foundation designe
 - **`crates/views/richtext` (`origami-richtext`)**: `FlowView` Slint component embedding real widgets per element via `ComponentFactory`; ships `.slint` source only (see its README for why).
 
 ### Gallery
+
 - **`origami-gallery`**: Interactive component gallery showcasing all widgets, pane configurations, and viewport renderers.
 
 ## Building and Running
 
 ### Prerequisites
+
 - Rust stable (2024 edition)
 - Wayland / X11 graphics libraries (Vulkan loader, libxkbcommon, fontconfig)
 - Or use Nix: `nix develop`
 
 ### Run Gallery
+
 ```bash
 cargo run -p origami-gallery
 ```
 
 ### Run Tests
+
 ```bash
 cargo test --workspace
 ```
+

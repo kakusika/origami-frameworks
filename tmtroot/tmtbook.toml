@@ -1,0 +1,8 @@
+[book]
+title = "Origami Frameworks docs"
+lang = "en"
+dest = "dist"
+
+[build]
+base = "/origami-frameworks"
+kinds = ["*", "!config", "!index"]

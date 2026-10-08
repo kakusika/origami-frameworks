@@ -212,26 +212,42 @@ export component PaneHost inherits Rectangle {
                 }
             }
 
-            // Hover / drag: the line.
+            // Hover / drag: the line. Fills the full gap (no margin), so it
+            // reads as one continuous line rather than the resting dots'
+            // inset look -- at `split_gap`'s floor (the default grid unit)
+            // that's exactly 1px/2px/1px.
             Rectangle {
                 visible: parent.active;
-                x: parent.vertical ? (parent.width - self.width) / 2 : 0px;
-                y: parent.vertical ? 0px : (parent.height - self.height) / 2;
-                width: parent.vertical ? 2px : parent.width;
-                height: parent.vertical ? parent.height : 2px;
+                x: 0px;
+                y: 0px;
+                width: 100%;
+                height: 100%;
                 border-radius: 1px;
                 background: Tokens.accent;
             }
 
-            // At rest: three dots along the divider, centered.
+            // At rest: three dots along the divider, centered. The dot
+            // stays a fixed, crisp 2px regardless of `split_gap`; when the
+            // gap grows past its 4px floor (a larger grid unit), the extra
+            // room becomes margin on either side rather than a bigger dot.
+            // Along the divider's length, dot and gap are both 2px (so
+            // span = 5 * 2px, step = 2 * 2px); `floor` keeps that cluster's
+            // start pixel-aligned even when the divider's length (the
+            // sibling panes' size) is odd, so the dots don't end up
+            // sitting on a half-pixel and blurring.
+            //
+            // Square, not round: a circle's corner coverage is ~78.5% of
+            // its box no matter the size, so at 2px that softening eats
+            // most of the dot and it reads as half-transparent. A flat
+            // square has no anti-aliased edge to fade, so it stays fully
+            // opaque at this size.
             for i in 3: Rectangle {
                 visible: !parent.active;
-                width: 3px;
-                height: 3px;
-                border-radius: 1.5px;
+                width: 2px;
+                height: 2px;
                 background: Tokens.text-disabled;
-                x: parent.vertical ? (parent.width - self.width) / 2 : (parent.width - 15px) / 2 + i * 6px;
-                y: parent.vertical ? (parent.height - 15px) / 2 + i * 6px : (parent.height - self.height) / 2;
+                x: parent.vertical ? (parent.width - self.width) / 2 : floor((parent.width - 10px) / 2 / 1px) * 1px + i * 4px;
+                y: parent.vertical ? floor((parent.height - 10px) / 2 / 1px) * 1px + i * 4px : (parent.height - self.height) / 2;
             }
         }
 

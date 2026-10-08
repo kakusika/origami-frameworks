@@ -61,8 +61,15 @@ impl LayoutMetrics {
     /// Space between two siblings of a split, in which the divider sits.
     /// Each sibling's rect is pulled back by half of it on the shared edge,
     /// so neighbouring frames do not touch.
+    ///
+    /// Scales with `grid_unit` like the rest of this struct's spacing, but
+    /// floored at 4px (a 1px margin, a 2px dot/hover-line, a 1px margin)
+    /// so the divider never shrinks below a grabbable, visible size at a
+    /// small `grid_unit`. 4px is also exactly what this resolves to at
+    /// `DEFAULT_GRID_UNIT`, so the floor is the normal case, not an edge
+    /// case: the divider only grows past it when the UI is scaled up.
     pub fn split_gap(&self) -> f32 {
-        (self.grid_unit * 0.4).round()
+        (self.grid_unit * 0.2).round().max(4.0)
     }
 
     // PaneDrawer.qml: `railSize: StyleKit.Units.collapsedDrawerSize`, and
@@ -642,6 +649,17 @@ mod tests {
         assert_eq!(m.group_content_margin(), 2.0);
         assert_eq!(m.collapsed_drawer_size(), 36.0);
         assert_eq!(m.tab_bar_height(), 32.0);
+        // 4px at the default grid unit -- the floor, not an edge case.
+        assert_eq!(m.split_gap(), 4.0);
+    }
+
+    #[test]
+    fn split_gap_grows_with_grid_unit_but_never_below_4px() {
+        assert_eq!(LayoutMetrics::new(20.0).split_gap(), 4.0);
+        assert_eq!(LayoutMetrics::new(40.0).split_gap(), 8.0);
+        // Below the default grid unit, the formula alone would go under
+        // 4px; the floor keeps the divider grabbable and visible.
+        assert_eq!(LayoutMetrics::new(10.0).split_gap(), 4.0);
     }
 
     fn pane(id: i32, view_type: &str) -> PaneNode {
@@ -684,18 +702,18 @@ mod tests {
         assert_eq!(content.len(), 2);
         // Below each bare pane's own 32px PaneHeader row (see
         // `metrics.header_height()`), inside its frame's 2px margin. Each
-        // pane is also pulled back 4px (half the 8px split gap) from the
+        // pane is also pulled back 2px (half the 4px split gap) from the
         // boundary at x=100.
-        assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 92.0, 64.0));
-        assert_eq!(content[1].rect, Rect::new(106.0, 34.0, 92.0, 64.0));
+        assert_eq!(content[0].rect, Rect::new(2.0, 34.0, 94.0, 64.0));
+        assert_eq!(content[1].rect, Rect::new(104.0, 34.0, 94.0, 64.0));
 
         let dividers: Vec<_> = rects
             .iter()
             .filter(|r| r.kind == CellKind::Divider)
             .collect();
         assert_eq!(dividers.len(), 1);
-        // The divider fills the 8px gap centered on the boundary at x=100.
-        assert_eq!(dividers[0].rect, Rect::new(96.0, 0.0, 8.0, 100.0));
+        // The divider fills the 4px gap centered on the boundary at x=100.
+        assert_eq!(dividers[0].rect, Rect::new(98.0, 0.0, 4.0, 100.0));
         assert_eq!(dividers[0].id, 9);
         assert_eq!(dividers[0].index, 0);
         assert!((dividers[0].extra - 200.0).abs() < 1e-6);
@@ -748,9 +766,9 @@ mod tests {
             .collect();
         assert_eq!(content.len(), 1);
         assert_eq!(content[0].id, 2);
-        // The rail is 36px; the pane pulls back 4px (half the 8px split gap)
+        // The rail is 36px; the pane pulls back 2px (half the 4px split gap)
         // from it, then insets by its own 2px frame margin.
-        assert_eq!(content[0].rect, Rect::new(42.0, 34.0, 156.0, 64.0));
+        assert_eq!(content[0].rect, Rect::new(40.0, 34.0, 158.0, 64.0));
     }
 
     #[test]
@@ -815,11 +833,11 @@ mod tests {
                 .rect;
             let (a, b) = (frame(1), frame(2));
             if orientation == "horizontal" {
-                assert_eq!(b.x - (a.x + a.w), 8.0, "gap between frames");
-                assert_eq!((div.x, div.w), (a.x + a.w, 8.0), "divider fills the gap");
+                assert_eq!(b.x - (a.x + a.w), 4.0, "gap between frames");
+                assert_eq!((div.x, div.w), (a.x + a.w, 4.0), "divider fills the gap");
             } else {
-                assert_eq!(b.y - (a.y + a.h), 8.0, "gap between frames");
-                assert_eq!((div.y, div.h), (a.y + a.h, 8.0), "divider fills the gap");
+                assert_eq!(b.y - (a.y + a.h), 4.0, "gap between frames");
+                assert_eq!((div.y, div.h), (a.y + a.h, 4.0), "divider fills the gap");
             }
             // Outer edges are untouched.
             assert_eq!((a.x, a.y), (0.0, 0.0));

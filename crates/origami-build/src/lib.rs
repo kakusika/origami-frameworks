@@ -63,7 +63,9 @@ pub fn icons_ui_dir() -> PathBuf {
             }
         }
     }
-    panic!("origami-icons UI directory not found. Ensure `origami-icons` is a dependency in Cargo.toml.");
+    panic!(
+        "origami-icons UI directory not found. Ensure `origami-icons` is a dependency in Cargo.toml."
+    );
 }
 
 /// Returns the path to the `@origami-mobile` Slint UI library directory,

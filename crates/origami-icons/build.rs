@@ -67,8 +67,8 @@ fn main() {
         ));
         for slug in &slugs {
             let svg_path = set_dir.join(format!("{slug}.svg"));
-            let raw = fs::read(&svg_path)
-                .unwrap_or_else(|e| panic!("read {}: {e}", svg_path.display()));
+            let raw =
+                fs::read(&svg_path).unwrap_or_else(|e| panic!("read {}: {e}", svg_path.display()));
             let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
             encoder.write_all(&raw).expect("gzip icon svg");
             let compressed = encoder.finish().expect("finish gzip stream");
@@ -84,7 +84,9 @@ fn main() {
         generated.push_str("        _ => None,\n    }\n}\n\n");
 
         let names_fn = format!("{set}_icon_names");
-        generated.push_str(&format!("fn {names_fn}() -> &'static [&'static str] {{\n    &[\n"));
+        generated.push_str(&format!(
+            "fn {names_fn}() -> &'static [&'static str] {{\n    &[\n"
+        ));
         for slug in &slugs {
             generated.push_str(&format!("        {slug:?},\n"));
         }

@@ -4,17 +4,23 @@ import {
     AppButton,
     HeaderMenuBar,
     HeaderMenuItem,
-    Bar, BarStart, BarCenter, BarEnd,
+    Bar,
+    BarStart,
+    BarCenter,
+    BarEnd,
     DragHandle,
     IconStack,
     HamburgerButton,
-    SideTitleBar, SideMenuEntry,
+    SideTitleBar,
+    SideMenuEntry,
     CollapsiblePanel,
     BottomPanel,
-    ToolBar, ToolBarSeparator,
+    ToolBar,
+    ToolBarSeparator,
     StatusBar,
     FloatingWindow,
-    ActionButton, IconButton,
+    ActionButton,
+    IconButton,
     ThemedMenu,
 } from "@origami/widgets.slint";
 
@@ -189,7 +195,14 @@ export component RegionsPage inherits Rectangle {
                     }
 
                     IconStack {
-                        icons: [TablerIcons.file, TablerIcons.folder, TablerIcons.plus, TablerIcons.x, TablerIcons.check, TablerIcons.maximize];
+                        icons: [
+                            TablerIcons.file,
+                            TablerIcons.folder,
+                            TablerIcons.plus,
+                            TablerIcons.x,
+                            TablerIcons.check,
+                            TablerIcons.maximize
+                        ];
                     }
 
                     ActionButton {

@@ -84,7 +84,9 @@ export component MobilePage inherits Rectangle {
                         clicked => { root.status = "IconButton: back"; }
                     }
 
-                    Rectangle { horizontal-stretch: 1; }
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
 
                     UndoRedoBubble {
                         can-undo: root.can-undo;
@@ -117,6 +119,7 @@ export component MobilePage inherits Rectangle {
                                     icon: TablerIcons.files;
                                     clicked => { root.status = "BubbleChip: Vault"; }
                                 }
+
                                 BubbleChip {
                                     text: "Sync";
                                     icon: TablerIcons.refresh;
@@ -133,6 +136,7 @@ export component MobilePage inherits Rectangle {
                                     bold: true;
                                     clicked => { root.status = "PillButton: Keep Mine"; }
                                 }
+
                                 PillButton {
                                     text: "Next";
                                     clicked => { root.status = "PillButton: Next"; }
@@ -153,10 +157,12 @@ export component MobilePage inherits Rectangle {
                                     text: "Settings";
                                     clicked => { root.status = "ActionRow: Settings"; }
                                 }
+
                                 ActionRow {
                                     text: "History";
                                     clicked => { root.status = "ActionRow: History"; }
                                 }
+
                                 ActionRow {
                                     text: "Delete";
                                     tint: MobileColors.danger;

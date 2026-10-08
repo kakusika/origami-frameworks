@@ -17,9 +17,11 @@ import {
     Badge,
     Divider,
     Card,
-    ButtonGroup, ButtonGroupItem,
+    ButtonGroup,
+    ButtonGroupItem,
     ToolTip,
-    TabBar, TabItem,
+    TabBar,
+    TabItem,
 } from "@origami/widgets.slint";
 
 // Live showcase of every basic design-system component grouped into collapsible sections.
@@ -319,10 +321,28 @@ export component FoundationPage inherits Rectangle {
 
                         TabBar {
                             tabs: [
-                                { id: "overview", title: "Overview", icon: TablerIcons.maximize, has-icon: false, badge: "" },
-                                { id: "metrics", title: "Metrics", icon: TablerIcons.maximize, has-icon: false, badge: "LIVE" },
+                                {
+                                    id: "overview",
+                                    title: "Overview",
+                                    icon: TablerIcons.maximize,
+                                    has-icon: false,
+                                    badge: ""
+                                },
+                                {
+                                    id: "metrics",
+                                    title: "Metrics",
+                                    icon: TablerIcons.maximize,
+                                    has-icon: false,
+                                    badge: "LIVE"
+                                },
                                 { id: "logs", title: "Logs", icon: TablerIcons.maximize, has-icon: false, badge: "9+" },
-                                { id: "settings", title: "Settings", icon: TablerIcons.maximize, has-icon: false, badge: "" },
+                                {
+                                    id: "settings",
+                                    title: "Settings",
+                                    icon: TablerIcons.maximize,
+                                    has-icon: false,
+                                    badge: ""
+                                },
                             ];
                             current-index <=> root.demo-tab;
                             pill-style: true;

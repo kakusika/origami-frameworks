@@ -27,7 +27,7 @@ find "$ICONS_DIR" -maxdepth 1 -name '*.svg' -delete
 
 for src in "$TMP_DIR/repo/icons/outline"/*.svg; do
   name="$(basename "$src")"
-  sed 's/stroke="currentColor"/stroke="#000000"/' "$src" > "$ICONS_DIR/$name"
+  sed 's/stroke="currentColor"/stroke="#000000"/' "$src" >"$ICONS_DIR/$name"
 done
 
 count="$(find "$ICONS_DIR" -maxdepth 1 -name '*.svg' | wc -l)"

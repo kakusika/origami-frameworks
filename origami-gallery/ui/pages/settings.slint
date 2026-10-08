@@ -86,7 +86,9 @@ export component SettingsPage inherits Rectangle {
                     padding: Tokens.spacing-large;
                     spacing: Tokens.spacing-medium;
 
-                    SectionLabel { text: "1. カラーテーマ (Scheme)"; }
+                    SectionLabel {
+                        text: "1. カラーテーマ (Scheme)";
+                    }
 
                     HorizontalLayout {
                         spacing: Tokens.spacing-small;
@@ -96,21 +98,25 @@ export component SettingsPage inherits Rectangle {
                             primary: root.current-scheme == "origami";
                             clicked => { root.set-scheme("origami"); }
                         }
+
                         AppButton {
                             text: "Blender";
                             primary: root.current-scheme == "blender";
                             clicked => { root.set-scheme("blender"); }
                         }
+
                         AppButton {
                             text: "TokyoNight";
                             primary: root.current-scheme == "tokyonight";
                             clicked => { root.set-scheme("tokyonight"); }
                         }
+
                         AppButton {
                             text: "Catppuccin";
                             primary: root.current-scheme == "catppuccin";
                             clicked => { root.set-scheme("catppuccin"); }
                         }
+
                         AppButton {
                             text: "Flexoki";
                             primary: root.current-scheme == "flexoki";
@@ -147,7 +153,9 @@ export component SettingsPage inherits Rectangle {
                     padding: Tokens.spacing-large;
                     spacing: Tokens.spacing-medium;
 
-                    SectionLabel { text: "2. バリエーション (Variant)"; }
+                    SectionLabel {
+                        text: "2. バリエーション (Variant)";
+                    }
 
                     HorizontalLayout {
                         spacing: Tokens.spacing-small;
@@ -157,6 +165,7 @@ export component SettingsPage inherits Rectangle {
                             primary: root.current-variant == "dark";
                             clicked => { root.set-variant("dark"); }
                         }
+
                         AppButton {
                             text: "ライト (Light)";
                             primary: root.current-variant == "light";
@@ -177,7 +186,9 @@ export component SettingsPage inherits Rectangle {
                     padding: Tokens.spacing-large;
                     spacing: Tokens.spacing-medium;
 
-                    SectionLabel { text: "3. アクセントカラー (Accent Color)"; }
+                    SectionLabel {
+                        text: "3. アクセントカラー (Accent Color)";
+                    }
 
                     HorizontalLayout {
                         spacing: Tokens.spacing-medium;
@@ -189,21 +200,25 @@ export component SettingsPage inherits Rectangle {
                             primary: root.current-accent == "";
                             clicked => { root.set-accent(""); }
                         }
+
                         AppButton {
                             text: "Blender Blue (#4772b3)";
                             primary: root.current-accent == "#4772b3";
                             clicked => { root.set-accent("#4772b3"); }
                         }
+
                         AppButton {
                             text: "Blender Orange (#ed8e26)";
                             primary: root.current-accent == "#ed8e26";
                             clicked => { root.set-accent("#ed8e26"); }
                         }
+
                         AppButton {
                             text: "Origami Crimson (#d12a55)";
                             primary: root.current-accent == "#d12a55";
                             clicked => { root.set-accent("#d12a55"); }
                         }
+
                         AppButton {
                             text: "Emerald (#10b981)";
                             primary: root.current-accent == "#10b981";
@@ -226,7 +241,10 @@ export component SettingsPage inherits Rectangle {
 
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        SectionLabel { text: "4. コーナー半径 (Corner Radius)"; }
+                        SectionLabel {
+                            text: "4. コーナー半径 (Corner Radius)";
+                        }
+
                         Text {
                             text: "※ Blenderらしさを出すには「なし (0px)」または「小 (4px)」が最適です。";
                             color: Tokens.text-secondary-on-surface;
@@ -241,21 +259,25 @@ export component SettingsPage inherits Rectangle {
                                 primary: root.current-corner-radius == "none";
                                 clicked => { root.set-corner-radius("none"); }
                             }
+
                             AppButton {
                                 text: "小 (4px)";
                                 primary: root.current-corner-radius == "small";
                                 clicked => { root.set-corner-radius("small"); }
                             }
+
                             AppButton {
                                 text: "中 (8px)";
                                 primary: root.current-corner-radius == "medium";
                                 clicked => { root.set-corner-radius("medium"); }
                             }
+
                             AppButton {
                                 text: "大 (12px)";
                                 primary: root.current-corner-radius == "large";
                                 clicked => { root.set-corner-radius("large"); }
                             }
+
                             AppButton {
                                 text: "円 (Full)";
                                 primary: root.current-corner-radius == "full";
@@ -266,7 +288,10 @@ export component SettingsPage inherits Rectangle {
 
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        SectionLabel { text: "5. ボーダー幅 (Border Width)"; }
+                        SectionLabel {
+                            text: "5. ボーダー幅 (Border Width)";
+                        }
+
                         Text {
                             text: "※ Blenderらしさを出すには「細 (0.5px)」または「標準 (1px)」が最適です。";
                             color: Tokens.text-secondary-on-surface;
@@ -281,11 +306,13 @@ export component SettingsPage inherits Rectangle {
                                 primary: root.current-border-width == "thin";
                                 clicked => { root.set-border-width("thin"); }
                             }
+
                             AppButton {
                                 text: "標準 (1px)";
                                 primary: root.current-border-width == "default";
                                 clicked => { root.set-border-width("default"); }
                             }
+
                             AppButton {
                                 text: "太 (2px)";
                                 primary: root.current-border-width == "thick";
@@ -309,7 +336,9 @@ export component SettingsPage inherits Rectangle {
 
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        SectionLabel { text: "6. UI スケール (余白・サイズ)"; }
+                        SectionLabel {
+                            text: "6. UI スケール (余白・サイズ)";
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-small;
@@ -319,16 +348,19 @@ export component SettingsPage inherits Rectangle {
                                 primary: root.current-ui-scale == 0.8;
                                 clicked => { root.set-ui-scale(0.8); }
                             }
+
                             AppButton {
                                 text: "1.0x (Standard)";
                                 primary: root.current-ui-scale == 1.0;
                                 clicked => { root.set-ui-scale(1.0); }
                             }
+
                             AppButton {
                                 text: "1.2x (Spacious)";
                                 primary: root.current-ui-scale == 1.2;
                                 clicked => { root.set-ui-scale(1.2); }
                             }
+
                             AppButton {
                                 text: "1.5x (Large)";
                                 primary: root.current-ui-scale == 1.5;
@@ -339,7 +371,9 @@ export component SettingsPage inherits Rectangle {
 
                     VerticalLayout {
                         spacing: Tokens.spacing-small;
-                        SectionLabel { text: "7. アニメーション速度"; }
+                        SectionLabel {
+                            text: "7. アニメーション速度";
+                        }
 
                         HorizontalLayout {
                             spacing: Tokens.spacing-small;
@@ -349,16 +383,19 @@ export component SettingsPage inherits Rectangle {
                                 primary: root.current-anim-speed == "none";
                                 clicked => { root.set-anim-speed("none"); }
                             }
+
                             AppButton {
                                 text: "速い (Fast)";
                                 primary: root.current-anim-speed == "fast";
                                 clicked => { root.set-anim-speed("fast"); }
                             }
+
                             AppButton {
                                 text: "標準 (Normal)";
                                 primary: root.current-anim-speed == "normal";
                                 clicked => { root.set-anim-speed("normal"); }
                             }
+
                             AppButton {
                                 text: "遅い (Slow)";
                                 primary: root.current-anim-speed == "slow";
@@ -380,15 +417,27 @@ export component SettingsPage inherits Rectangle {
                     padding: Tokens.spacing-large;
                     spacing: Tokens.spacing-medium;
 
-                    SectionLabel { text: "ライブプレビュー (Current Theme Preview)"; }
+                    SectionLabel {
+                        text: "ライブプレビュー (Current Theme Preview)";
+                    }
 
                     HorizontalLayout {
                         spacing: Tokens.spacing-medium;
                         alignment: start;
 
-                        AppButton { text: "Primary Button"; primary: true; }
-                        AppButton { text: "Secondary Button"; }
-                        AppButton { text: "Destructive Button"; destructive: true; }
+                        AppButton {
+                            text: "Primary Button";
+                            primary: true;
+                        }
+
+                        AppButton {
+                            text: "Secondary Button";
+                        }
+
+                        AppButton {
+                            text: "Destructive Button";
+                            destructive: true;
+                        }
 
                         Rectangle {
                             width: 120px;
@@ -414,5 +463,3 @@ export component SettingsPage inherits Rectangle {
         }
     }
 }
-
-

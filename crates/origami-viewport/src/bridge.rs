@@ -98,7 +98,11 @@ impl ViewportBridge {
 
     /// Reads back the rendered texture into a CPU-backed Slint `Image`.
     /// This is compatible with Slint's `software_renderer` and headless/Wayland SHM buffers.
-    pub fn read_to_image(&self, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<slint::Image> {
+    pub fn read_to_image(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> Result<slint::Image> {
         let texture = self
             .texture
             .as_ref()
@@ -151,11 +155,12 @@ impl ViewportBridge {
             let _ = tx.send(res);
         });
 
-        device.poll(wgpu::PollType::Wait {
-            submission_index: None,
-            timeout: None,
-        })
-        .map_err(|e| anyhow::anyhow!("device poll failed: {e:?}"))?;
+        device
+            .poll(wgpu::PollType::Wait {
+                submission_index: None,
+                timeout: None,
+            })
+            .map_err(|e| anyhow::anyhow!("device poll failed: {e:?}"))?;
 
         rx.recv()
             .map_err(|e| anyhow::anyhow!("failed to wait for staging buffer mapping: {e}"))?
@@ -177,9 +182,7 @@ impl ViewportBridge {
 
         let mut pixel_buffer =
             slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(self.width, self.height);
-        pixel_buffer
-            .make_mut_bytes()
-            .copy_from_slice(&pixels);
+        pixel_buffer.make_mut_bytes().copy_from_slice(&pixels);
 
         Ok(slint::Image::from_rgba8_premultiplied(pixel_buffer))
     }

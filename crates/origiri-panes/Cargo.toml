@@ -1,0 +1,10 @@
+[package]
+name = "origiri-panes"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+
+[dependencies]
+#= Crates.io
+serde = { workspace = true }
+serde_json = { workspace = true }

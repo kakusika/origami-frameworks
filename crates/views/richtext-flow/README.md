@@ -1,7 +1,7 @@
-# origami-richtext-flow
+# origiri-richtext-flow
 
-Pure Rust, no UI-toolkit dependency, same convention as `origami-theme`/
-`origami-panes`: a document model for text mixed with embedded elements
+Pure Rust, no UI-toolkit dependency, same convention as `origiri-theme`/
+`origiri-panes`: a document model for text mixed with embedded elements
 (block + inline), and the line-breaking engine that lays it out.
 
 ## Background
@@ -38,7 +38,7 @@ all three have punted on.
   vocabulary differs (e.g. immermemo's `@mobile.conflict` is not something
   mumeum needs to know about).
 - Implementing `Measure` against real font metrics and real widget
-  intrinsic sizes is the caller's job; see `origami-richtext`'s README for
+  intrinsic sizes is the caller's job; see `origiri-richtext`'s README for
   how the Slint-facing half does this.
 - No edit-operation API yet (insert/split/delete on the tree) -- only the
   static tree and the `Position` type to address into it.

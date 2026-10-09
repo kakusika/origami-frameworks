@@ -1,0 +1,6 @@
+[package]
+name = "origiri"
+version.workspace = true
+edition.workspace = true
+links = "origiri"
+build = "build.rs"

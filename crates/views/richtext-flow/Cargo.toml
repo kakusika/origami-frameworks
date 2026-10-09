@@ -1,5 +1,5 @@
 [package]
-name = "origami-richtext-flow"
+name = "origiri-richtext-flow"
 version.workspace = true
 edition.workspace = true
 readme = "README.md"

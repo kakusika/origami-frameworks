@@ -1,0 +1,8 @@
+[package]
+name = "origiri-build"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+#= Crates.io
+slint-build = { workspace = true }

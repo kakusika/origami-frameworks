@@ -1,0 +1,216 @@
+import { Tokens } from "@origiri/tokens.slint";
+import { Metrics, Colors as MobileColors } from "@origiri-mobile/tokens.slint";
+import { TablerIcons } from "@origiri-icons/icons.slint";
+import {
+    IconButton,
+    BubbleButton,
+    BubbleChip,
+    PillButton,
+    UndoRedoBubble,
+    Fab,
+    ActionRow,
+    TopBar,
+    SegmentedControl,
+    AppScrollView,
+} from "@origiri-mobile/widgets.slint";
+
+// Live showcase of origiri-mobile's touch-first widgets, framed as a phone
+// screen so their 48px touch targets and scaling read at their intended
+// size rather than stretched across the desktop gallery window.
+export component MobilePage inherits Rectangle {
+    property <string> status: "Interact with a widget below to see its callback fire here.";
+
+    property <bool> can-undo: true;
+    property <bool> can-redo: false;
+    property <int> segment-selected: 0;
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height - 34px;
+        content-height: max(self.height, phone.y + phone.height + Tokens.spacing-large);
+
+        // Page header card, in the desktop gallery's own style -- only the
+        // phone frame below switches to origiri-mobile's tokens.
+        Rectangle {
+            x: Tokens.spacing-large;
+            y: Tokens.spacing-large;
+            width: parent.width - 2 * Tokens.spacing-large;
+            background: Tokens.surface;
+            border-radius: Tokens.corner-radius + 2px;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border-on-surface;
+
+            VerticalLayout {
+                padding: Tokens.spacing-large;
+                spacing: Tokens.spacing-small;
+
+                Text {
+                    text: "Mobile Components";
+                    font-weight: 700;
+                    font-size: Tokens.font-size-large + 2px;
+                    color: Tokens.text-primary;
+                }
+
+                Text {
+                    text: "origiri-mobile's touch-first widgets (IconButton, TopBar, BubbleButton/Chip, PillButton, UndoRedoBubble, ActionRow, SegmentedControl, Fab, AppScrollView), framed at phone width. Colors here follow the OS palette (Theme.use-custom: false) unless pushed from origiri-theme.";
+                    color: Tokens.text-secondary-on-surface;
+                    font-size: Tokens.font-size-normal;
+                    wrap: word-wrap;
+                }
+            }
+        }
+
+        phone := Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: 128px;
+            width: 380px;
+            height: 680px;
+            clip: true;
+            border-radius: 24px;
+            border-width: 1px;
+            border-color: MobileColors.card-border;
+            background: MobileColors.page-background;
+            drop-shadow-blur: 16px;
+            drop-shadow-color: #00000055;
+
+            VerticalLayout {
+                TopBar {
+                    title: "Origiri Mobile";
+
+                    IconButton {
+                        icon: TablerIcons.chevron-left;
+                        clicked => { root.status = "IconButton: back"; }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    UndoRedoBubble {
+                        can-undo: root.can-undo;
+                        can-redo: root.can-redo;
+                        undo => { root.status = "UndoRedoBubble: undo"; }
+                        redo => { root.status = "UndoRedoBubble: redo"; }
+                    }
+
+                    BubbleButton {
+                        icon: TablerIcons.settings;
+                        clicked => { root.status = "BubbleButton: settings"; }
+                    }
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+
+                    AppScrollView {
+                        width: 100%;
+                        height: 100%;
+
+                        VerticalLayout {
+                            padding: Metrics.gutter;
+                            spacing: Metrics.spacing-lg;
+
+                            HorizontalLayout {
+                                spacing: Metrics.spacing-sm;
+                                BubbleChip {
+                                    text: "Vault";
+                                    icon: TablerIcons.files;
+                                    clicked => { root.status = "BubbleChip: Vault"; }
+                                }
+
+                                BubbleChip {
+                                    text: "Sync";
+                                    icon: TablerIcons.refresh;
+                                    clicked => { root.status = "BubbleChip: Sync"; }
+                                }
+                            }
+
+                            HorizontalLayout {
+                                spacing: Metrics.spacing-sm;
+                                PillButton {
+                                    text: "Keep Mine";
+                                    fill: MobileColors.warning.with-alpha(0.18);
+                                    text-color: MobileColors.warning;
+                                    bold: true;
+                                    clicked => { root.status = "PillButton: Keep Mine"; }
+                                }
+
+                                PillButton {
+                                    text: "Next";
+                                    clicked => { root.status = "PillButton: Next"; }
+                                }
+                            }
+
+                            SegmentedControl {
+                                options: ["Light", "Dark", "System"];
+                                selected: root.segment-selected;
+                                changed(i) => {
+                                    root.segment-selected = i;
+                                    root.status = "SegmentedControl: selected(" + i + ")";
+                                }
+                            }
+
+                            VerticalLayout {
+                                ActionRow {
+                                    text: "Settings";
+                                    clicked => { root.status = "ActionRow: Settings"; }
+                                }
+
+                                ActionRow {
+                                    text: "History";
+                                    clicked => { root.status = "ActionRow: History"; }
+                                }
+
+                                ActionRow {
+                                    text: "Delete";
+                                    tint: MobileColors.danger;
+                                    clicked => { root.status = "ActionRow: Delete"; }
+                                }
+                            }
+                        }
+                    }
+
+                    Fab {
+                        x: parent.width - self.width - Metrics.gutter;
+                        y: parent.height - self.height - Metrics.gutter;
+                        clicked => { root.status = "Fab: clicked"; }
+                    }
+                }
+            }
+        }
+    }
+
+    // Status bar at bottom, matching the other gallery pages.
+    Rectangle {
+        y: parent.height - 34px;
+        width: parent.width;
+        height: 34px;
+        background: Tokens.surface-raised;
+        border-width: Tokens.border-width;
+        border-color: Tokens.border-on-raised;
+
+        HorizontalLayout {
+            padding-left: Tokens.spacing-large;
+            padding-right: Tokens.spacing-large;
+            spacing: Tokens.spacing-medium;
+            alignment: center;
+
+            Rectangle {
+                width: 8px;
+                height: 8px;
+                border-radius: 4px;
+                background: Tokens.accent;
+            }
+
+            Text {
+                text: root.status;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+    }
+}

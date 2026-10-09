@@ -1,0 +1,689 @@
+slint::include_modules!();
+
+mod theme;
+mod viewport_demo;
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use origiri_panes::edit::DividerDragBaseline;
+use origiri_panes::layout::{CellKind, LayoutMetrics, PaneRect, Rect, layout_tree};
+use origiri_panes::outline::{OutlineKind, OutlineRow, outline};
+use origiri_panes::pane_tree::{GroupChild, PaneNode, PaneTree, SplitChild};
+use origiri_theme::palette::RgbColor;
+use origiri_theme::{AnimationSpeed, BorderWidth, CornerRadius, ThemeSettings};
+use serde_json::json;
+use slint::{Model, ModelRc, SharedString, VecModel};
+
+fn resolve_variant(scheme: &str, is_dark: bool) -> &'static str {
+    match scheme {
+        "blender" => {
+            if is_dark {
+                "blender-dark"
+            } else {
+                "blender-light"
+            }
+        }
+        "tokyonight" => {
+            if is_dark {
+                "tokyonight-night"
+            } else {
+                "tokyonight-day"
+            }
+        }
+        "catppuccin" => {
+            if is_dark {
+                "catppuccin-mocha"
+            } else {
+                "catppuccin-latte"
+            }
+        }
+        "flexoki" => {
+            if is_dark {
+                "flexoki-dark"
+            } else {
+                "flexoki-light"
+            }
+        }
+        _ => {
+            if is_dark {
+                "dark"
+            } else {
+                "light"
+            }
+        }
+    }
+}
+
+fn create_demo_tree() -> PaneNode {
+    PaneNode::Split {
+        id: Some(0),
+        orientation: "horizontal".into(),
+        children: vec![
+            SplitChild {
+                size: 0.25,
+                node: PaneNode::Drawer {
+                    id: 1,
+                    current_index: 0,
+                    expanded: true,
+                    children: vec![GroupChild {
+                        node: PaneNode::Pane {
+                            id: 2,
+                            title: "Explorer".into(),
+                            view_type: "notes".into(),
+                            props: json!({}),
+                        },
+                    }],
+                },
+            },
+            SplitChild {
+                size: 0.45,
+                node: PaneNode::Tabs {
+                    id: 3,
+                    current_index: 0,
+                    children: vec![
+                        GroupChild {
+                            node: PaneNode::Pane {
+                                id: 4,
+                                title: "Kanban Board".into(),
+                                view_type: "board".into(),
+                                props: json!({}),
+                            },
+                        },
+                        GroupChild {
+                            node: PaneNode::Pane {
+                                id: 5,
+                                title: "Schedule".into(),
+                                view_type: "calendar".into(),
+                                props: json!({}),
+                            },
+                        },
+                    ],
+                },
+            },
+            SplitChild {
+                size: 0.30,
+                node: PaneNode::Pane {
+                    id: 6,
+                    title: "Notes".into(),
+                    view_type: "notes".into(),
+                    props: json!({}),
+                },
+            },
+        ],
+    }
+}
+
+fn kind_str(kind: CellKind) -> &'static str {
+    match kind {
+        CellKind::Content => "content",
+        CellKind::TabLabel => "tab-label",
+        CellKind::TabAdd => "tab-add",
+        CellKind::DrawerRail => "drawer-rail",
+        CellKind::Divider => "divider",
+        CellKind::GroupFrame => "group-frame",
+        CellKind::Leaf => "leaf",
+        CellKind::Header => "header",
+    }
+}
+
+fn to_cell(r: &PaneRect) -> PaneCell {
+    PaneCell {
+        x: r.rect.x,
+        y: r.rect.y,
+        width: r.rect.w,
+        height: r.rect.h,
+        z: r.z,
+        kind: SharedString::from(kind_str(r.kind)),
+        id: r.id,
+        child_id: r.child_id,
+        index: r.index,
+        extra: r.extra,
+        view_type: SharedString::from(r.view_type.as_str()),
+        title: SharedString::from(r.title.as_str()),
+        active: r.active,
+        menus: slint::ModelRc::default(),
+    }
+}
+
+fn to_outline_row(r: &OutlineRow) -> PaneOutlineRow {
+    PaneOutlineRow {
+        depth: r.depth as i32,
+        kind: SharedString::from(match r.kind {
+            OutlineKind::Pane => "pane",
+            OutlineKind::Tabs => "tabs",
+            OutlineKind::Drawer => "drawer",
+            OutlineKind::Split => "split",
+        }),
+        node_id: r.node_id.unwrap_or(-1),
+        leaf_id: r.enclosing_leaf_id.unwrap_or(-1),
+        title: SharedString::from(r.title.as_str()),
+        view_type: SharedString::from(r.view_type.as_str()),
+        child_count: r.child_count as i32,
+        horizontal: r.horizontal,
+        expanded: r.expanded,
+        is_current_tab: r.is_current_tab,
+        // The gallery keeps no active-leaf state of its own.
+        active: false,
+    }
+}
+
+struct AppState {
+    tree: PaneTree,
+    viewport: Rect,
+    metrics: LayoutMetrics,
+    maximized_leaf_id: Option<i32>,
+    cells_model: Rc<VecModel<PaneCell>>,
+    divider_drag: Option<DividerDragBaseline>,
+}
+
+fn relayout(state: &Rc<RefCell<AppState>>, app: &AppWindow) {
+    let st = state.borrow();
+    let rects = match &st.tree.root {
+        Some(root) => layout_tree(root, st.viewport, &st.metrics, None, st.maximized_leaf_id),
+        None => Vec::new(),
+    };
+    let cells: Vec<PaneCell> = rects.iter().map(to_cell).collect();
+    let model = st.cells_model.clone();
+    app.set_maximized_leaf_id(st.maximized_leaf_id.unwrap_or(-1));
+    let outline_rows: Vec<PaneOutlineRow> = outline(st.tree.root.as_ref())
+        .iter()
+        .map(to_outline_row)
+        .collect();
+    drop(st);
+    app.set_pane_outline(ModelRc::from(Rc::new(VecModel::from(outline_rows))));
+
+    let new_len = cells.len();
+    for (i, cell) in cells.into_iter().enumerate() {
+        if i < model.row_count() {
+            model.set_row_data(i, cell);
+        } else {
+            model.push(cell);
+        }
+    }
+    while model.row_count() > new_len {
+        model.remove(model.row_count() - 1);
+    }
+}
+
+fn main() -> Result<(), slint::PlatformError> {
+    let settings = origiri_viewport::recommended_wgpu_settings();
+    let _ = slint::BackendSelector::new()
+        .require_wgpu_30(slint::wgpu_30::WGPUConfiguration::Automatic(settings))
+        .select();
+
+    let app = AppWindow::new()?;
+    theme::apply_default(&app);
+
+    let cells_model = Rc::new(VecModel::default());
+    let state = Rc::new(RefCell::new(AppState {
+        tree: PaneTree::new(Some(create_demo_tree())),
+        viewport: Rect::new(0.0, 0.0, 1040.0, 660.0),
+        metrics: LayoutMetrics::default(),
+        maximized_leaf_id: None,
+        cells_model: cells_model.clone(),
+        divider_drag: None,
+    }));
+
+    app.set_pane_cells(ModelRc::from(cells_model));
+
+    // Initial layout
+    relayout(&state, &app);
+
+    // Relayout on size change
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_relayout(move |w, h| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    let mut st = state.borrow_mut();
+                    st.viewport = Rect::new(0.0, 0.0, w, h);
+                }
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Tab selection
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_select_tab(move |group_id, index| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    let mut st = state.borrow_mut();
+                    if let Some(root) = st.tree.root.as_mut() {
+                        if let Some(PaneNode::Tabs { current_index, .. }) =
+                            root.find_node_mut(group_id)
+                        {
+                            *current_index = index as usize;
+                        }
+                    }
+                }
+                app.set_pane_status(
+                    format!("Switched to tab index {} in group {}", index, group_id).into(),
+                );
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Toggle drawer
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_toggle_drawer(move |drawer_id| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    state.borrow_mut().tree.toggle_drawer_expanded(drawer_id);
+                }
+                app.set_pane_status(format!("Toggled drawer {}", drawer_id).into());
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Structure viewer actions, applied with origiri-panes' own tree edits.
+    // "activate" only reports: the gallery keeps no active-leaf state.
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_manager_action(move |node_id, leaf_id, name| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    let mut st = state.borrow_mut();
+                    let tree = &mut st.tree;
+                    match name.as_str() {
+                        "toggle-expanded" => {
+                            tree.toggle_drawer_expanded(node_id);
+                        }
+                        "convert-to-drawer" | "convert-to-tabs" => {
+                            tree.convert_group(node_id);
+                        }
+                        "close-all-tabs" => {
+                            tree.close_all_tabs(node_id);
+                        }
+                        "close-group" => {
+                            tree.close_group(node_id);
+                        }
+                        "close" => {
+                            // A pane inside a group closes as a tab; a
+                            // standalone pane is its own leaf.
+                            if leaf_id == node_id {
+                                tree.remove_standalone(node_id);
+                            } else {
+                                tree.close_tab(leaf_id, node_id);
+                            }
+                        }
+                        _ => {}
+                    }
+                    tree.prune_empty_groups(&[]);
+                }
+                app.set_pane_status(
+                    format!("Manager: {} (node {}, leaf {})", name, node_id, leaf_id).into(),
+                );
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Resize divider start
+    {
+        let state = state.clone();
+        app.on_resize_divider_start(move |split_id, index| {
+            let mut st = state.borrow_mut();
+            st.divider_drag = st.tree.divider_baseline(split_id, index as usize);
+        });
+    }
+
+    // Resize divider moving
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_resize_divider(move |split_id, _index, pair_px, total_delta_px| {
+            if let Some(app) = app_weak.upgrade() {
+                let mut st = state.borrow_mut();
+                let baseline = st.divider_drag.filter(|b| b.split_id == split_id);
+                if let Some(baseline) = baseline {
+                    st.tree.resize_pair(baseline, pair_px, total_delta_px);
+                }
+                drop(st);
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // Resize divider end
+    {
+        let state = state.clone();
+        app.on_resize_divider_end(move || {
+            let mut st = state.borrow_mut();
+            st.divider_drag = None;
+        });
+    }
+
+    // Toggle maximize
+    {
+        let state = state.clone();
+        let app_weak = app.as_weak();
+        app.on_toggle_maximize(move |leaf_id| {
+            if let Some(app) = app_weak.upgrade() {
+                {
+                    let mut st = state.borrow_mut();
+                    st.maximized_leaf_id = if st.maximized_leaf_id == Some(leaf_id) {
+                        None
+                    } else {
+                        Some(leaf_id)
+                    };
+                }
+                relayout(&state, &app);
+            }
+        });
+    }
+
+    // EditableListView interactive handlers
+    let list_model = Rc::new(VecModel::from(vec![
+        EditableListEntry {
+            label: "Layer 1 (Background)".into(),
+        },
+        EditableListEntry {
+            label: "Layer 2 (Main Art)".into(),
+        },
+        EditableListEntry {
+            label: "Layer 3 (Overlay)".into(),
+        },
+    ]));
+    app.set_editable_items(ModelRc::from(list_model.clone()));
+
+    {
+        let list_model = list_model.clone();
+        app.on_list_add_requested(move || {
+            let next_num = list_model.row_count() + 1;
+            list_model.push(EditableListEntry {
+                label: format!("Layer {} (New)", next_num).into(),
+            });
+        });
+    }
+
+    {
+        let list_model = list_model.clone();
+        app.on_list_remove_requested(move |index| {
+            let idx = index as usize;
+            if idx < list_model.row_count() {
+                list_model.remove(idx);
+            }
+        });
+    }
+
+    {
+        let list_model = list_model.clone();
+        app.on_list_move_up_requested(move |index| {
+            let idx = index as usize;
+            if idx > 0 && idx < list_model.row_count() {
+                let a = list_model.row_data(idx).unwrap();
+                let b = list_model.row_data(idx - 1).unwrap();
+                list_model.set_row_data(idx - 1, a);
+                list_model.set_row_data(idx, b);
+            }
+        });
+    }
+
+    {
+        let list_model = list_model.clone();
+        app.on_list_move_down_requested(move |index| {
+            let idx = index as usize;
+            if idx + 1 < list_model.row_count() {
+                let a = list_model.row_data(idx).unwrap();
+                let b = list_model.row_data(idx + 1).unwrap();
+                list_model.set_row_data(idx + 1, a);
+                list_model.set_row_data(idx, b);
+            }
+        });
+    }
+
+    // Viewport Integration Demo
+    let viewport_demo = Rc::new(RefCell::new(viewport_demo::ViewportDemo::new()));
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        app.on_viewport_resized(move |w, h| {
+            viewport_demo
+                .borrow_mut()
+                .resize(w.max(1.0) as u32, h.max(1.0) as u32);
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        let app_weak = app.as_weak();
+        app.on_viewport_toggle_pause(move || {
+            let paused = viewport_demo.borrow_mut().toggle_pause();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_viewport_paused(paused);
+            }
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        app.on_viewport_speed_changed(move |speed| {
+            viewport_demo.borrow_mut().set_speed(speed);
+        });
+    }
+
+    {
+        let viewport_demo = viewport_demo.clone();
+        let app_weak = app.as_weak();
+        let _ = app.window().set_rendering_notifier(move |state, api| {
+            let slint::GraphicsAPI::WGPU30 { device, queue, .. } = api else {
+                return;
+            };
+            let Some(app) = app_weak.upgrade() else {
+                return;
+            };
+
+            if matches!(state, slint::RenderingState::BeforeRendering) {
+                if let Some((img, w, h, fps_opt)) = viewport_demo.borrow_mut().render(device, queue)
+                {
+                    app.set_viewport_image(img);
+                    app.set_viewport_width(w as i32);
+                    app.set_viewport_height(h as i32);
+                    if let Some(fps) = fps_opt {
+                        app.set_viewport_fps(fps);
+                    }
+                }
+            }
+        });
+    }
+
+    // Continuous redraw timer for viewport animation
+    let redraw_timer = slint::Timer::default();
+    {
+        let app_weak = app.as_weak();
+        redraw_timer.start(
+            slint::TimerMode::Repeated,
+            std::time::Duration::from_millis(16),
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.get_current_tab() == 4 && !app.get_viewport_paused() {
+                        app.window().request_redraw();
+                    }
+                }
+            },
+        );
+    }
+
+    // Settings page handlers
+    let theme_settings = Rc::new(RefCell::new(ThemeSettings::default()));
+    let current_scheme = Rc::new(RefCell::new("origiri".to_string()));
+    let current_is_dark = Rc::new(RefCell::new(true));
+
+    let apply_theme_fn = {
+        let theme_settings = theme_settings.clone();
+        let app_weak = app.as_weak();
+        Rc::new(move || {
+            if let Some(app) = app_weak.upgrade() {
+                let st = theme_settings.borrow();
+                theme::apply_settings(&app, &st);
+            }
+        })
+    };
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_scheme(move |scheme| {
+            *current_scheme.borrow_mut() = scheme.to_string();
+            let var = resolve_variant(&scheme, *current_is_dark.borrow());
+            theme_settings.borrow_mut().variant = var.to_string();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_scheme(scheme);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_variant(move |variant_type| {
+            let is_dark = variant_type == "dark";
+            *current_is_dark.borrow_mut() = is_dark;
+            let var = resolve_variant(&current_scheme.borrow(), is_dark);
+            theme_settings.borrow_mut().variant = var.to_string();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_variant(variant_type);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_accent(move |hex| {
+            let hex_str = hex.as_str();
+            let accent = if hex_str.is_empty() {
+                None
+            } else {
+                RgbColor::from_hex(hex_str)
+            };
+            theme_settings.borrow_mut().accent = accent;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_accent(hex);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_corner_radius(move |radius| {
+            let r = match radius.as_str() {
+                "none" => CornerRadius::Disabled,
+                "small" => CornerRadius::Small,
+                "medium" => CornerRadius::Medium,
+                "large" => CornerRadius::Large,
+                "full" => CornerRadius::Circle,
+                _ => CornerRadius::Small,
+            };
+            theme_settings.borrow_mut().corner_radius = r;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_corner_radius(radius);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_border_width(move |width| {
+            let w = match width.as_str() {
+                "none" => BorderWidth::Disabled,
+                "thin" => BorderWidth::Thin,
+                "default" => BorderWidth::Default,
+                "thick" => BorderWidth::Thick,
+                _ => BorderWidth::Default,
+            };
+            theme_settings.borrow_mut().border_width = w;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_border_width(width);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_ui_scale(move |scale| {
+            theme_settings.borrow_mut().ui_scale = scale;
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_ui_scale(scale);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_anim_speed(move |speed| {
+            let (speed_enum, enabled) = match speed.as_str() {
+                "none" => (AnimationSpeed::Normal, false),
+                "fast" => (AnimationSpeed::Fast, true),
+                "normal" => (AnimationSpeed::Normal, true),
+                "slow" => (AnimationSpeed::Slow, true),
+                _ => (AnimationSpeed::Normal, true),
+            };
+            {
+                let mut st = theme_settings.borrow_mut();
+                st.animation_speed = speed_enum;
+                st.animations_enabled = enabled;
+            }
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_anim_speed(speed);
+            }
+            apply_fn();
+        });
+    }
+
+    {
+        let current_scheme = current_scheme.clone();
+        let current_is_dark = current_is_dark.clone();
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_reset_settings_defaults(move || {
+            *current_scheme.borrow_mut() = "origiri".to_string();
+            *current_is_dark.borrow_mut() = true;
+            *theme_settings.borrow_mut() = ThemeSettings::default();
+            if let Some(app) = app_weak.upgrade() {
+                app.set_settings_scheme("origiri".into());
+                app.set_settings_variant("dark".into());
+                app.set_settings_accent("".into());
+                app.set_settings_corner_radius("small".into());
+                app.set_settings_border_width("default".into());
+                app.set_settings_ui_scale(1.0);
+                app.set_settings_anim_speed("normal".into());
+            }
+            apply_fn();
+        });
+    }
+
+    app.run()
+}

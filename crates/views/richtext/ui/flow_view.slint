@@ -1,15 +1,15 @@
 // Generic renderer for lines of mixed text + embedded-element fragments,
-// as produced by `origami-richtext-flow::layout::layout_block`.
+// as produced by `origiri-richtext-flow::layout::layout_block`.
 //
 // Ships as `.slint` source only -- the importing app compiles this file
 // together with its own tree (see `src/lib.rs`'s doc comment for why).
 // `RichTextFragment`/`RichTextLine` here are placeholders the app's own
 // seam code (its `render.rs`-equivalent) must construct from
-// `origami-richtext-flow`'s `Fragment`/`Line` on every change.
+// `origiri-richtext-flow`'s `Fragment`/`Line` on every change.
 //
 // A resolved line's fragments are positioned by Slint's own
 // `HorizontalLayout`, not by any coordinate carried on `RichTextFragment`:
-// `origami-richtext-flow::layout::Fragment`'s `x` is bookkeeping for the
+// `origiri-richtext-flow::layout::Fragment`'s `x` is bookkeeping for the
 // Rust-side line-breaking *decision* (which fragments end up on which
 // line), not a pixel position this component needs to consume -- a line,
 // once resolved, lays its fragments out left to right exactly like any
@@ -22,7 +22,7 @@ export struct RichTextFragment {
     is-element: bool,
     text: string,
     factory: component-factory,
-    // `origami-richtext-flow::TextStyle`, pre-decoded by the caller's own
+    // `origiri-richtext-flow::TextStyle`, pre-decoded by the caller's own
     // seam: Slint's expression language has no bitwise operators to
     // decode a packed `StyleId` here, so the unpacked booleans travel
     // instead. Unused when `is-element` is true.
@@ -39,7 +39,7 @@ export struct RichTextLine {
 export component FlowView {
     in property <[RichTextLine]> lines;
     // No default: the caller's text fragments must render at the same
-    // size the caller measured them at (see `origami-richtext-flow`'s
+    // size the caller measured them at (see `origiri-richtext-flow`'s
     // `Measure` trait) -- a silent mismatched default would make wrap
     // decisions subtly wrong rather than obviously unset.
     in property <length> font-size;

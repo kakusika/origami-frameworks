@@ -1,6 +1,6 @@
 <!-- Generated from tmtroot/contributing.tmt. Edit that, then `tomet export .`. -->
 
-# Contributing to Origami Frameworks
+# Contributing to Origiri Frameworks
 
 ## Documentation Policy
 
@@ -27,7 +27,7 @@ All commits must follow the Conventional Commits format: `type(scope): descripti
 
 Use the affected crate or subsystem as the scope:
 
-- **Widgets & UI**: `origami`, `mobile`, `gallery`
+- **Widgets & UI**: `origiri`, `mobile`, `gallery`
 - **Panes & Layout**: `panes`
 - **Styling & Theme**: `theme`
 - **Config & State**: `config`

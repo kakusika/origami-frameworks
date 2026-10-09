@@ -1,0 +1,36 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+// A row of clickable color swatches (theme accent-color picker) -- plain
+// `TouchArea`-on-`Rectangle` idiom, same as every other control in this
+// file. Index-based selection (`picked(int)`), not a `color`-typed
+// callback, so the Rust side doesn't need a Slint-color-to-hex round trip:
+// it already knows which `Rgba` each index corresponds to (the same list
+// it built `swatches` from).
+export component ColorSwatchRow inherits Rectangle {
+    in property <[color]> swatches: [];
+    in property <int> selected-index: -1;
+    callback picked(int);
+
+    height: 26px;
+
+    HorizontalLayout {
+        spacing: Tokens.spacing-small + 2px;
+
+        for c[i] in root.swatches: Rectangle {
+            width: 26px;
+            height: 26px;
+            border-radius: self.height / 2;
+            background: c;
+            border-width: i == root.selected-index ? 2.5px : (swatch-touch.has-hover ? 2px : Tokens.border-width);
+            border-color: i == root.selected-index ? Tokens.text-primary : (swatch-touch.has-hover ? Tokens.text-secondary : Tokens.border);
+
+            animate border-width { duration: 100ms; }
+            animate border-color { duration: 100ms; }
+
+            swatch-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.picked(i); }
+            }
+        }
+    }
+}

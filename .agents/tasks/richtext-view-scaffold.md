@@ -1,4 +1,4 @@
-# Scaffold `origami-richtext` / `origami-richtext-flow`
+# Scaffold `origiri-richtext` / `origiri-richtext-flow`
 
 Generic Slint view for rendering text mixed with embedded elements
 (block + inline, editable), for immermemo and mumeum to build their Tomet
@@ -6,15 +6,15 @@ editors on. Design discussed and agreed with the user before this task
 started; this file only tracks the scaffolding step, not the full design
 rationale.
 
-Crate split (mirrors the `origami-theme`/`origami-panes` pure-Rust
+Crate split (mirrors the `origiri-theme`/`origiri-panes` pure-Rust
 convention, plus the `links` + `DEP_*_UI_DIR` pattern `mumeum-text-editor`
 already uses for shipping `.slint` source without a `slint_build` step in
 the library crate itself):
 
-- `origami-kit/views/richtext-flow` (`origami-richtext-flow`): pure Rust,
+- `origiri-kit/views/richtext-flow` (`origiri-richtext-flow`): pure Rust,
   no `slint` dependency. Document model (`Block`/`Inline`/atomic
   `Element`/structured `Position`) and the line-breaking engine.
-- `origami-kit/views/richtext` (`origami-richtext`): ships `ui/flow_view.slint`
+- `origiri-kit/views/richtext` (`origiri-richtext`): ships `ui/flow_view.slint`
   only (no `slint_build` call in this crate -- Slint's generated struct
   types only exist inside whichever crate's own `slint_build::compile()`
   call processes a tree that imports them, so this crate's Rust side stays
@@ -23,15 +23,15 @@ the library crate itself):
 
 ## Steps
 
-- [x] Create `origami-kit/views/richtext-flow`: `Cargo.toml`, `src/lib.rs`,
+- [x] Create `origiri-kit/views/richtext-flow`: `Cargo.toml`, `src/lib.rs`,
       `src/model.rs`, `src/layout.rs`, `README.md`.
-- [x] Create `origami-kit/views/richtext`: `Cargo.toml` (`links =
-      "origami_richtext"`), `build.rs`, `ui/flow_view.slint`, `src/lib.rs`,
+- [x] Create `origiri-kit/views/richtext`: `Cargo.toml` (`links =
+      "origiri_richtext"`), `build.rs`, `ui/flow_view.slint`, `src/lib.rs`,
       `README.md`.
 - [x] Register both as workspace members + `[workspace.dependencies]` in
       the root `Cargo.toml`.
 - [x] Add both to the root `README.md`'s crate list.
-- [x] `cargo check -p origami-richtext-flow -p origami-richtext` passes.
+- [x] `cargo check -p origiri-richtext-flow -p origiri-richtext` passes.
 
 ## Known gaps left for follow-up (not part of this scaffold)
 

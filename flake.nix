@@ -1,5 +1,5 @@
 {
-  description = "Origami Frameworks - Cross-platform UI toolkit and components for Cettila";
+  description = "Origiri Frameworks - Cross-platform UI toolkit and components for Cettila";
 
   nixConfig = {
     extra-substituters = [ "https://tomet.cachix.org" ];

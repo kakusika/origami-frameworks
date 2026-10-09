@@ -1,0 +1,81 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics, Colors } from "@origiri-mobile/tokens.slint";
+import { Icon, TablerIcons } from "@origiri-icons/icons.slint";
+
+// Capsule-grouped undo/redo bubble
+export component UndoRedoBubble inherits Rectangle {
+    in property <bool> can-undo: false;
+    in property <bool> can-redo: false;
+    callback undo();
+    callback redo();
+
+    width: Metrics.bubble-button-size * 2 + 2px * Metrics.ui-scale;
+    height: 100%;
+    min-height: Metrics.touch;
+
+    capsule := Rectangle {
+        width: Metrics.bubble-button-size * 2 + 2px * Metrics.ui-scale;
+        height: Metrics.bubble-button-size;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: self.height / 2;
+        background: Palette.foreground.with-alpha(0.08);
+
+        HorizontalLayout {
+            padding: 0px;
+            spacing: 0px;
+
+            undo-box := Rectangle {
+                width: (parent.width - 1px) / 2;
+                height: Metrics.bubble-button-size;
+                border-top-left-radius: self.height / 2;
+                border-bottom-left-radius: self.height / 2;
+                background: undo-touch.pressed && root.can-undo ? Palette.foreground.with-alpha(0.14) : transparent;
+
+                Icon {
+                    source: TablerIcons.arrow-back-up;
+                    color: root.can-undo ? Palette.foreground : Colors.muted.with-alpha(0.3);
+                    width: Metrics.icon-md;
+                    height: Metrics.icon-md;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+
+                undo-touch := TouchArea {
+                    enabled: root.can-undo;
+                    clicked => { root.undo(); }
+                }
+            }
+
+            // Divider line between undo and redo
+            Rectangle {
+                width: 1px;
+                height: Metrics.icon-md;
+                y: (parent.height - self.height) / 2;
+                background: Colors.separator;
+            }
+
+            redo-box := Rectangle {
+                width: (parent.width - 1px) / 2;
+                height: Metrics.bubble-button-size;
+                border-top-right-radius: self.height / 2;
+                border-bottom-right-radius: self.height / 2;
+                background: redo-touch.pressed && root.can-redo ? Palette.foreground.with-alpha(0.14) : transparent;
+
+                Icon {
+                    source: TablerIcons.arrow-forward-up;
+                    color: root.can-redo ? Palette.foreground : Colors.muted.with-alpha(0.3);
+                    width: Metrics.icon-md;
+                    height: Metrics.icon-md;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+
+                redo-touch := TouchArea {
+                    enabled: root.can-redo;
+                    clicked => { root.redo(); }
+                }
+            }
+        }
+    }
+}

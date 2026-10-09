@@ -1,0 +1,105 @@
+import { Tokens } from "@origiri/tokens.slint";
+import { Icon } from "@origiri-icons/icons.slint";
+
+export struct ButtonGroupItem {
+    id: string,
+    text: string,
+    icon: image,
+    has-icon: bool,
+}
+
+export component ButtonGroup inherits Rectangle {
+    in property <[ButtonGroupItem]> items: [];
+    in-out property <int> selected-index: 0;
+    in property <bool> enabled: true;
+    callback selected(int, string);
+
+    height: 32px;
+    property <length> btn-width: 80px;
+    width: root.items.length * root.btn-width + 6px;
+    background: Tokens.surface-raised;
+    border-radius: Tokens.corner-radius + 1px;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-raised;
+
+    // Single continuous sliding indicator
+    if root.selected-index >= 0 && root.selected-index < root.items.length: pill := Rectangle {
+        x: 3px + root.selected-index * root.btn-width;
+        y: 3px;
+        width: root.btn-width;
+        height: parent.height - 6px;
+        border-radius: Tokens.corner-radius;
+        background: root.enabled ? Tokens.accent : Tokens.border-hover;
+
+        animate x {
+            duration: Tokens.anim-short * 1ms;
+            easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+        }
+        animate width { duration: Tokens.anim-very-short * 1ms; }
+    }
+
+    HorizontalLayout {
+        padding: 3px;
+        spacing: 0px;
+
+        for item[i] in root.items: Rectangle {
+            width: root.btn-width;
+            height: parent.height;
+            border-radius: Tokens.corner-radius;
+            background: (i != root.selected-index && item-touch.has-hover) ? Tokens.hover-on-raised : transparent;
+            animate background { duration: Tokens.anim-very-short * 1ms; }
+
+            if !item.has-icon: Text {
+                width: 100%;
+                height: 100%;
+                text: item.text;
+                color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
+                font-size: Tokens.font-size-normal;
+                font-weight: i == root.selected-index ? 600 : 400;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+                animate color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            if item.has-icon: HorizontalLayout {
+                width: 100%;
+                height: 100%;
+                spacing: Tokens.spacing-small;
+                alignment: center;
+
+                Rectangle {
+                    width: 14px;
+                    height: 100%;
+
+                    Icon {
+                        y: (parent.height - self.height) / 2;
+                        source: item.icon;
+                        color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
+                        width: 14px;
+                        height: 14px;
+                    }
+                }
+
+                if item.text != "": Text {
+                    height: 100%;
+                    text: item.text;
+                    color: i == root.selected-index ? Tokens.text-on-accent : (item-touch.has-hover ? Tokens.text-primary : Tokens.text-secondary-on-raised);
+                    font-size: Tokens.font-size-normal;
+                    font-weight: i == root.selected-index ? 600 : 400;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                    animate color { duration: Tokens.anim-very-short * 1ms; }
+                }
+            }
+
+            item-touch := TouchArea {
+                enabled: root.enabled;
+                mouse-cursor: root.enabled ? pointer : default;
+                clicked => {
+                    root.selected-index = i;
+                    root.selected(i, item.id);
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,59 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component ToggleSwitch inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked: false;
+    callback toggled(bool);
+
+    height: max(22px, layout.preferred-height);
+    width: layout.preferred-width;
+
+    layout := HorizontalLayout {
+        spacing: Tokens.spacing-medium;
+
+        if root.text != "": Text {
+            height: 100%;
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+        }
+
+        track := Rectangle {
+            width: 38px;
+            height: 22px;
+            border-radius: self.height / 2;
+            background: root.checked ? (switch-touch.has-hover ? Tokens.accent-hover : Tokens.accent) : (switch-touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised);
+            border-width: Tokens.border-width;
+            border-color: root.checked ? Tokens.accent : (switch-touch.has-hover ? Tokens.border-hover-on-raised : Tokens.border-on-raised);
+
+            animate background { duration: Tokens.anim-short * 1ms; }
+            animate border-color { duration: Tokens.anim-short * 1ms; }
+
+            knob := Rectangle {
+                width: switch-touch.pressed ? 20px : 16px;
+                height: 16px;
+                y: (parent.height - self.height) / 2;
+                x: root.checked ? parent.width - self.width - 3px : 3px;
+                border-radius: self.height / 2;
+                background: white;
+                animate x {
+                    duration: Tokens.anim-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.0);
+                }
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: ease-out;
+                }
+            }
+        }
+    }
+
+    switch-touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}

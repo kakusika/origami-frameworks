@@ -1,0 +1,35 @@
+import { Palette } from "std-widgets.slint";
+import { Metrics } from "@origiri-mobile/tokens.slint";
+
+// A small text-only pill button with a caller-chosen color (the editor's
+// conflict bar needs "Keep Mine" in warning-orange next to "Next" in a
+// neutral tone, which BubbleChip's fixed neutral background can't do).
+export component PillButton inherits Rectangle {
+    in property <string> text;
+    in property <color> fill: Palette.foreground.with-alpha(0.08);
+    in property <color> pressed-fill: Palette.foreground.with-alpha(0.18);
+    in property <color> text-color: Palette.foreground;
+    in property <bool> bold: false;
+    callback clicked();
+
+    height: 28px * Metrics.ui-scale;
+    width: label.preferred-width + 16px * Metrics.ui-scale;
+    border-radius: self.height / 2;
+    background: touch.pressed ? root.pressed-fill : root.fill;
+
+    label := HorizontalLayout {
+        padding-left: 8px * Metrics.ui-scale;
+        padding-right: 8px * Metrics.ui-scale;
+        Text {
+            text: root.text;
+            font-size: Metrics.font-sm;
+            font-weight: root.bold ? 700 : 600;
+            color: root.text-color;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}

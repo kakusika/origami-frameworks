@@ -1,0 +1,7 @@
+[package]
+name = "origiri-theme"
+version.workspace = true
+edition.workspace = true
+readme = "README.md"
+
+[dependencies]

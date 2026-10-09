@@ -1,0 +1,55 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component AppTextArea inherits Rectangle {
+    in-out property <string> text <=> input.text;
+    in property <string> placeholder-text;
+    in property <bool> enabled: true;
+    in property <bool> read-only: false;
+    in property <TextWrap> wrap: word-wrap;
+    out property <bool> has-focus: input.has-focus;
+    callback edited(string);
+
+    min-height: 72px;
+    border-radius: Tokens.corner-radius;
+    border-width: input.has-focus ? 1.5px : Tokens.border-width;
+    border-color: !root.enabled ? Tokens.border-on-surface : input.has-focus ? Tokens.accent : (touch.has-hover ? Tokens.border-hover-on-surface : Tokens.border-on-surface);
+    background: !root.enabled ? Tokens.background : Tokens.surface;
+
+    animate border-color {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate border-width {
+        duration: Tokens.anim-very-short * 1ms;
+        easing: ease-out;
+    }
+    animate background { duration: Tokens.anim-very-short * 1ms; }
+
+    HorizontalLayout {
+        padding: Tokens.spacing-medium;
+
+        input := TextInput {
+            enabled: root.enabled;
+            read-only: root.read-only;
+            wrap: root.wrap;
+            color: root.enabled ? Tokens.text-primary : Tokens.text-disabled-on-surface;
+            font-size: Tokens.font-size-normal;
+            single-line: false;
+            edited => { root.edited(self.text); }
+        }
+    }
+
+    if root.text == "" && root.placeholder-text != "" && !input.has-focus: Text {
+        x: Tokens.spacing-medium;
+        y: Tokens.spacing-medium;
+        text: root.placeholder-text;
+        color: Tokens.text-disabled-on-surface;
+        font-size: Tokens.font-size-normal;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.text;
+        clicked => { input.focus(); }
+    }
+}

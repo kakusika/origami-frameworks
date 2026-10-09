@@ -1,0 +1,6 @@
+[package]
+name = "origiri-mobile"
+version.workspace = true
+edition.workspace = true
+links = "origiri_mobile"
+build = "build.rs"

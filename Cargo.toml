@@ -2,20 +2,20 @@
 resolver = "3"
 
 members = [
-  "crates/origami",
-  "crates/origami-build",
-  "crates/origami-config",
-  "crates/origami-icons",
-  "crates/origami-mobile",
-  "crates/origami-panes",
-  "crates/origami-theme",
-  "crates/origami-viewport",
+  "crates/origiri",
+  "crates/origiri-build",
+  "crates/origiri-config",
+  "crates/origiri-icons",
+  "crates/origiri-mobile",
+  "crates/origiri-panes",
+  "crates/origiri-theme",
+  "crates/origiri-viewport",
   "crates/views/richtext",
   "crates/views/richtext-flow",
-  "origami-gallery",
+  "origiri-gallery",
 ]
 
-default-members = ["origami-gallery"]
+default-members = ["origiri-gallery"]
 
 [workspace.package]
 version = "0.1.0"
@@ -23,16 +23,16 @@ edition = "2024"
 rust-version = "1.85"
 
 [workspace.dependencies]
-origami = { path = "crates/origami" }
-origami-build = { path = "crates/origami-build" }
-origami-config = { path = "crates/origami-config" }
-origami-icons = { path = "crates/origami-icons" }
-origami-mobile = { path = "crates/origami-mobile" }
-origami-panes = { path = "crates/origami-panes" }
-origami-richtext = { path = "crates/views/richtext" }
-origami-richtext-flow = { path = "crates/views/richtext-flow" }
-origami-theme = { path = "crates/origami-theme" }
-origami-viewport = { path = "crates/origami-viewport" }
+origiri = { path = "crates/origiri" }
+origiri-build = { path = "crates/origiri-build" }
+origiri-config = { path = "crates/origiri-config" }
+origiri-icons = { path = "crates/origiri-icons" }
+origiri-mobile = { path = "crates/origiri-mobile" }
+origiri-panes = { path = "crates/origiri-panes" }
+origiri-richtext = { path = "crates/views/richtext" }
+origiri-richtext-flow = { path = "crates/views/richtext-flow" }
+origiri-theme = { path = "crates/origiri-theme" }
+origiri-viewport = { path = "crates/origiri-viewport" }
 
 #= Crates.io
 anyhow = "1"

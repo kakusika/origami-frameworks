@@ -1,0 +1,31 @@
+// Thin wrapper around `Image` for a vendored icon set's svgs (see each
+// set's own icons/<set>/LICENSE.md) -- `colorize` re-tints the whole
+// (monochrome, stroke-only) icon per call site, since Slint has no way to
+// pick an `@image-url` path at runtime, only a fixed literal per call site.
+export component Icon inherits Image {
+    in property <brush> color: black;
+    width: 16px;
+    height: 16px;
+    colorize: root.color;
+}
+
+// `@image-url()` literals are always resolved relative to the `.slint`
+// file they appear in -- a consumer crate writing `Icon { source:
+// @image-url("icons/tabler/x.svg") }` in its *own* file would resolve
+// against its *own* `icons/` directory, not this crate's vendored one,
+// even though `Icon` itself was imported from here. Each set's generated
+// global (icons/<set>.slint, scripts/gen-icons-slint.js) exposes its
+// icons as plain `image` values instead, so a consumer just writes
+// `Icon { source: TablerIcons.x; }` -- the literal (and therefore the
+// path resolution) stays inside that generated file.
+//
+// Shared between `origiri` (desktop) and `origiri-mobile` (touch) --
+// property names follow each set's own icon slugs, not a consumer's
+// semantic name for a use (e.g. `chevron-left`, not "back"; `refresh`,
+// not "sync"), so the vocabulary stays stable regardless of which
+// consumer uses an icon for what.
+//
+// One `export { ... } from "icons/<set>.slint";` line per vendored icon
+// set -- added by hand when a set is added, not worth automating for
+// something this rare.
+export { TablerIcons } from "icons/tabler.slint";

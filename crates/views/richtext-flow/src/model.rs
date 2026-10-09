@@ -18,19 +18,19 @@ pub type BlockKind = &'static str;
 /// Opaque identifier for an embedded element's kind, carried by
 /// [`Inline::Element`]. The caller maps this to whatever its own element
 /// registry resolves it to -- a widget's `ComponentFactory`, on the
-/// Slint-facing side (`origami-richtext`).
+/// Slint-facing side (`origiri-richtext`).
 pub type ElementId = u64;
 
 /// A packed [`TextStyle`] (see that type's own doc for the bit layout).
 /// Kept as a plain integer, not `TextStyle` itself, in [`Inline::Text`]
-/// and on the wire to `origami-richtext`'s `RichTextFragment` -- bits 4
+/// and on the wire to `origiri-richtext`'s `RichTextFragment` -- bits 4
 /// and up are reserved for a caller's own extensions beyond the four this
 /// crate defines, which a `TextStyle` value (only ever these four) can't
 /// carry. Round-trips through [`TextStyle::to_style_id`]/
 /// [`TextStyle::from_style_id`] losslessly for the bits it knows about.
 pub type StyleId = u32;
 
-/// The four character-level text styles `origami-richtext`'s `FlowView`
+/// The four character-level text styles `origiri-richtext`'s `FlowView`
 /// renders natively (bold/italic as real font properties, mark/strikeout
 /// as a drawn background/line -- Slint's builtin `Text` has no property
 /// for either). More than one can be active on the same run; they compose

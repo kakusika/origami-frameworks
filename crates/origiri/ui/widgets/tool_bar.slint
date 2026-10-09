@@ -1,0 +1,19 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+// Slint port of origiri/qml/regions/bar/Bar.qml.
+// Toolbar container for hosting action buttons, view switchers, search fields, and separators.
+export component ToolBar inherits Rectangle {
+    height: 40px;
+    background: Tokens.surface;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-surface;
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+        alignment: center;
+
+        @children
+    }
+}

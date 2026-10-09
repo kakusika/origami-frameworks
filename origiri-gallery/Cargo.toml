@@ -1,0 +1,27 @@
+[package]
+name = "origiri-gallery"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "origiri-gallery"
+path = "src/main.rs"
+
+[dependencies]
+origiri = { workspace = true }
+origiri-icons = { workspace = true }
+origiri-mobile = { workspace = true }
+origiri-panes = { workspace = true }
+origiri-theme = { workspace = true }
+origiri-viewport = { workspace = true }
+
+#= Crates.io
+serde_json = { workspace = true }
+slint = { workspace = true }
+wgpu = { workspace = true }
+
+[build-dependencies]
+origiri-build = { workspace = true }
+
+#= Crates.io
+slint-build = { workspace = true }

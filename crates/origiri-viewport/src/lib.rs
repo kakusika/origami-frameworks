@@ -1,0 +1,12 @@
+//! `origiri-viewport`: Viewport integration bridge for Slint applications.
+//!
+//! Provides lifecycle management for offscreen wgpu rendering into Slint UI,
+//! along with optional low-level Vulkan / Ash interop utilities.
+
+pub mod bridge;
+pub mod vulkan;
+
+pub use bridge::{ViewportBridge, recommended_wgpu_settings};
+pub use vulkan::{
+    OffscreenPass, VulkanContext, VulkanDeviceContext, buffer::find_memory_type_index,
+};

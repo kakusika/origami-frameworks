@@ -1,6 +1,6 @@
 <!-- Generated from tmtroot/agents.tmt. Edit that, then `tomet export .`. -->
 
-# Origami
+# Origiri
 
 ## Core Philosophy & Principles
 

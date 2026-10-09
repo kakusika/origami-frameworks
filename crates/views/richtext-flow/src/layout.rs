@@ -18,7 +18,7 @@ pub trait Measure {
 
 /// A single positioned run within a laid-out line. `x` is this fragment's
 /// own line-relative offset, for the line-breaking decision below -- not a
-/// coordinate `origami-richtext`'s `FlowView` needs to consume, since a
+/// coordinate `origiri-richtext`'s `FlowView` needs to consume, since a
 /// resolved line lays its fragments out with Slint's own `HorizontalLayout`
 /// (see that crate's `ui/flow_view.slint`).
 #[derive(Debug, Clone, PartialEq)]

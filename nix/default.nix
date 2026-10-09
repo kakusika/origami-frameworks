@@ -19,8 +19,8 @@ flake-parts.lib.mkFlake { inherit inputs; } {
     in
     {
       packages = rec {
-        default = origami-gallery;
-        origami-gallery = pkgs.callPackage ./pkgs/origami-gallery.nix { inherit craneLib; };
+        default = origiri-gallery;
+        origiri-gallery = pkgs.callPackage ./pkgs/origiri-gallery.nix { inherit craneLib; };
       };
 
       devShells.default = pkgs.callPackage ./dev.nix {

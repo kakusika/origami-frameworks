@@ -1,0 +1,24 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component ToolTip inherits Rectangle {
+    in property <string> text;
+    in property <bool> showing: false;
+
+    visible: root.showing && root.text != "";
+    background: Tokens.surface-raised;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-raised;
+    height: label.preferred-height + Tokens.spacing-small * 2;
+    width: label.preferred-width + Tokens.spacing-medium * 2;
+    opacity: root.showing ? 1.0 : 0.0;
+    animate opacity { duration: 120ms; }
+
+    label := Text {
+        text: root.text;
+        color: Tokens.text-primary;
+        font-size: Tokens.font-size-small;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

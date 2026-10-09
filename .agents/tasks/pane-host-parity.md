@@ -1,11 +1,11 @@
-# Pane system parity: QML PaneView/PaneDrawer vs origami-panes + pane_host.slint
+# Pane system parity: QML PaneView/PaneDrawer vs origiri-panes + pane_host.slint
 
-Goal: find what the old QML pane system (`origami/qml/pane/core/PaneView.qml`,
+Goal: find what the old QML pane system (`origiri/qml/pane/core/PaneView.qml`,
 `groups/PaneDrawer.qml`, 2,760 lines) did that the Slint side
-(`origami-kit/panes` + `origami-slint/ui/pane_host.slint`) does not yet.
+(`origiri-kit/panes` + `origiri-slint/ui/pane_host.slint`) does not yet.
 
 Method: listed every function/signal/property of the two QML files and
-looked for the counterpart by name and behavior in `origami-panes`
+looked for the counterpart by name and behavior in `origiri-panes`
 (`pane_tree.rs`, `drop.rs`, `layout.rs`, `outline.rs`), in `pane_host.slint`,
 and in mumeum's `apps/desktop/src/panes.rs` (the only real consumer).
 "Present" means the code exists; NONE of the interactive parts (drag/drop,
@@ -15,7 +15,7 @@ drawer overlay, maximize, detach) have been exercised by hand yet.
 
 - [x] Inventory of QML functions/properties
 - [x] Match against Rust lib / pane_host / mumeum
-- [x] G1 part 1: `origami-panes::edit` (`PaneTree::{set,toggle}_drawer_expanded`,
+- [x] G1 part 1: `origiri-panes::edit` (`PaneTree::{set,toggle}_drawer_expanded`,
       `can_convert_drawer_to_tabs`, `convert_group`, `close_all_tabs`,
       `close_group`, `prune_empty_groups(keep)`, `divider_baseline`,
       `resize_pair`) + `PaneNode::{find, tab_index}`, 15 new tests; gallery
@@ -28,7 +28,7 @@ drawer overlay, maximize, detach) have been exercised by hand yet.
 - [ ] Decide which gaps to close and in what order (see "Gaps")
 - [ ] Manual pass over the present-but-unexercised interactions
 
-## Present in origami-panes
+## Present in origiri-panes
 
 | QML (PaneView) | Rust |
 |---|---|
@@ -53,7 +53,7 @@ button, view-type picker hook (`request-picker`).
 
 ## Gaps
 
-### G1. Logic that lives in consumers instead of origami-panes (duplicated)
+### G1. Logic that lives in consumers instead of origiri-panes (duplicated)
 
 mumeum `apps/desktop/src/panes.rs` and the gallery's `main.rs` each carry
 their own copy of tree operations the QML `PaneView` owned:
@@ -67,7 +67,7 @@ their own copy of tree operations the QML `PaneView` owned:
 | find by id / tab index | `find_node`, `find_tab_index` | (uses `find_node_mut`) |
 | closeTab / closeAllTabs / closeGroup / detachPane | `close_leaf`, `detach_leaf` in app_state | (not handled) |
 
-Fix: move these into `origami-panes` (with the tests mumeum already has for
+Fix: move these into `origiri-panes` (with the tests mumeum already has for
 `convert_group`, `prune_empty_groups`) and make both consumers call them.
 `closeAllTabs` and `closeGroup` have no Rust counterpart anywhere yet
 (`remove_standalone` may cover `closeGroup` for a group id; verify).
@@ -94,7 +94,7 @@ Fix: move these into `origami-panes` (with the tests mumeum already has for
   layout while dragging / when a host wants it frozen).
 - Icon registry / component registry / `viewTypeRegistry` +
   `viewTypeCategories` (picker contents): the picker is an inert
-  placeholder in mumeum; origami's `view_type_picker.slint` takes rows but
+  placeholder in mumeum; origiri's `view_type_picker.slint` takes rows but
   nothing supplies categories.
 
 ### G3. Intentionally not applicable

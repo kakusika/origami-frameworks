@@ -1,6 +1,0 @@
-[package]
-name = "origami"
-version.workspace = true
-edition.workspace = true
-links = "origami"
-build = "build.rs"

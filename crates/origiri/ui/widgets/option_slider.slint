@@ -1,0 +1,96 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component OptionSlider inherits Rectangle {
+    in property <string> label;
+    in property <float> minimum: 0;
+    in property <float> maximum: 1;
+    in-out property <float> value: 0;
+    callback value-changed(float);
+
+    height: (root.label == "" ? 0px : 18px) + 24px;
+
+    VerticalLayout {
+        spacing: Tokens.spacing-small;
+
+        if root.label != "": HorizontalLayout {
+            Text {
+                text: root.label;
+                color: Tokens.text-primary;
+                font-size: Tokens.font-size-small;
+                font-weight: 600;
+                horizontal-stretch: 1;
+            }
+
+            Text {
+                text: Math.round(root.value * 100) / 100;
+                color: Tokens.text-secondary;
+                font-size: Tokens.font-size-small;
+            }
+        }
+
+        track := Rectangle {
+            height: 24px;
+
+            property <float> progress: root.maximum > root.minimum ? max(0.0, min(1.0, (root.value - root.minimum) / (root.maximum - root.minimum))) : 0.0;
+
+            // Background track
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 6px;
+                width: parent.width;
+                border-radius: 3px;
+                background: Tokens.surface-raised;
+                border-width: Tokens.border-width;
+                border-color: Tokens.border-on-raised;
+            }
+
+            // Filled active track from left edge to handle center
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 6px;
+                x: 0px;
+                width: handle.x + handle.width / 2;
+                border-radius: 3px;
+                background: Tokens.accent;
+            }
+
+            // Draggable handle knob
+            handle := Rectangle {
+                width: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
+                height: slider-touch.pressed ? 20px : (slider-touch.has-hover ? 18px : 16px);
+                border-radius: self.height / 2;
+                background: slider-touch.pressed ? Tokens.accent-hover : white;
+                border-width: slider-touch.pressed ? 3px : (slider-touch.has-hover ? 2px : 1px);
+                border-color: slider-touch.pressed ? Tokens.accent : Tokens.border;
+                y: (parent.height - self.height) / 2;
+                x: (parent.width - self.width) * track.progress;
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate height {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate background { duration: Tokens.anim-very-short * 1ms; }
+                animate border-color { duration: Tokens.anim-very-short * 1ms; }
+            }
+
+            slider-touch := TouchArea {
+                mouse-cursor: pointer;
+                moved => {
+                    if (self.pressed && track.width > 0px) {
+                        root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
+                        root.value-changed(root.value);
+                    }
+                }
+                clicked => {
+                    if (track.width > 0px) {
+                        root.value = max(root.minimum, min(root.maximum, root.minimum + (self.mouse-x / track.width) * (root.maximum - root.minimum)));
+                        root.value-changed(root.value);
+                    }
+                }
+            }
+        }
+    }
+}

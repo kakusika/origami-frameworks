@@ -1,6 +1,0 @@
-[package]
-name = "origami-mobile"
-version.workspace = true
-edition.workspace = true
-links = "origami_mobile"
-build = "build.rs"

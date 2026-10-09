@@ -1,7 +1,0 @@
-[package]
-name = "origami-theme"
-version.workspace = true
-edition.workspace = true
-readme = "README.md"
-
-[dependencies]

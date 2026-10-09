@@ -1,0 +1,16 @@
+[package]
+name = "origiri-icons"
+version.workspace = true
+edition.workspace = true
+links = "origiri_icons"
+build = "build.rs"
+
+[dependencies]
+# Decompresses what build.rs gzip-compresses -- default features (no
+# "zlib"/"zlib-ng") keep this pure Rust, no system zlib to link against,
+# same requirement cross-compiling for Android has everywhere else in
+# this workspace.
+flate2 = "1"
+
+[build-dependencies]
+flate2 = "1"

@@ -3,10 +3,10 @@
 //! TypedMark block mode, mumeum's `mumeum-text-editor`, and immermemo's
 //! `immermemo-editor`, none of which render embedded elements recursively
 //! inline (each falls back to a single-line label or a whole-line/whole-
-//! block decoration instead). See `origami-richtext`'s README for the
+//! block decoration instead). See `origiri-richtext`'s README for the
 //! Slint-facing half of this pair.
 //!
-//! No UI-toolkit dependency, same split as `origami-theme`/`origami-panes`.
+//! No UI-toolkit dependency, same split as `origiri-theme`/`origiri-panes`.
 
 pub mod layout;
 pub mod model;

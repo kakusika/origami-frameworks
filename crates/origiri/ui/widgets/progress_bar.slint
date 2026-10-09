@@ -1,0 +1,26 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component ProgressBar inherits Rectangle {
+    in property <float> progress: 0.0;
+    in property <bool> indeterminate: false;
+
+    height: 6px;
+    border-radius: self.height / 2;
+    background: Tokens.surface-raised;
+    border-width: Tokens.border-width;
+    border-color: Tokens.border-on-raised;
+    clip: true;
+
+    fill := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: parent.width * max(0.0, min(1.0, root.progress));
+        height: parent.height;
+        border-radius: parent.height / 2;
+        background: Tokens.accent;
+        animate width {
+            duration: Tokens.anim-short * 1ms;
+            easing: ease-out;
+        }
+    }
+}

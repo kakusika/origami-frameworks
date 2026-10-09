@@ -1,0 +1,63 @@
+import { Tokens } from "@origiri/tokens.slint";
+
+export component RadioButton inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: max(22px, layout.preferred-height);
+    width: layout.preferred-width;
+
+    layout := HorizontalLayout {
+        spacing: Tokens.spacing-medium;
+        alignment: start;
+
+        circle := Rectangle {
+            width: 18px;
+            height: 18px;
+            y: (parent.height - self.height) / 2;
+            border-radius: self.height / 2;
+            border-width: Tokens.border-width;
+            border-color: !root.enabled ? Tokens.border-on-raised : root.checked ? Tokens.accent : (touch.has-hover ? Tokens.accent : Tokens.border-on-raised);
+            background: root.enabled && touch.has-hover ? Tokens.hover-on-raised : Tokens.surface-raised;
+
+            animate border-color {
+                duration: Tokens.anim-very-short * 1ms;
+                easing: ease-out;
+            }
+
+            if root.checked: Rectangle {
+                width: touch.pressed ? 6px : 8px;
+                height: touch.pressed ? 6px : 8px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                border-radius: self.height / 2;
+                background: root.enabled ? Tokens.accent : Tokens.text-disabled;
+                animate width {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+                animate height {
+                    duration: Tokens.anim-very-short * 1ms;
+                    easing: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+                }
+            }
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.clicked();
+        }
+    }
+}

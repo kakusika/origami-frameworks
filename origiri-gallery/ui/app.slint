@@ -1,0 +1,392 @@
+import { Tokens } from "@origiri/tokens.slint";
+import {
+    AppButton,
+    PaneCell,
+    PaneOutlineRow,
+    EditableListEntry,
+} from "@origiri/widgets.slint";
+import { OrigiriPage } from "pages/origiri.slint";
+import { RegionsPage } from "pages/regions.slint";
+import { PanePage } from "pages/pane.slint";
+import { FoundationPage } from "pages/foundation.slint";
+import { ViewportPage } from "pages/viewport.slint";
+import { MobilePage } from "pages/mobile.slint";
+import { SettingsPage } from "pages/settings.slint";
+
+export {
+    Tokens,
+    PaneCell,
+    PaneOutlineRow,
+    EditableListEntry,
+}
+
+// Slint Component Gallery showcasing Origiri widget libraries.
+export component AppWindow inherits Window {
+    title: "Origiri Slint Component Showcase";
+    preferred-width: 1040px;
+    preferred-height: 760px;
+    background: Tokens.background;
+
+    in-out property <int> current-tab: 0;
+
+    // OrigiriPage property forwardings
+    in-out property <[EditableListEntry]> editable-items: [
+        { label: "Layer 1 (Background)" },
+        { label: "Layer 2 (Main Art)" },
+        { label: "Layer 3 (Overlay)" },
+    ];
+    callback list-add-requested();
+    callback list-remove-requested(int);
+    callback list-move-up-requested(int);
+    callback list-move-down-requested(int);
+
+    // PanePage property forwardings
+    in-out property <[PaneCell]> pane-cells: [];
+    in-out property <[PaneOutlineRow]> pane-outline: [];
+    in-out property <int> maximized-leaf-id: -1;
+    in-out property <string> pane-status: "Ready";
+
+    callback relayout(length, length);
+    callback select-tab(int, int);
+    callback close-tab(int, int);
+    callback toggle-drawer(int);
+    callback convert-group(int);
+    callback toggle-maximize(int);
+    callback close-leaf(int, int);
+    callback detach-leaf(int, int);
+    callback resize-divider-start(int, int);
+    callback resize-divider(int, int, float, float);
+    callback resize-divider-end();
+    callback tab-drag-ended(int, int, length, length);
+    callback drag-hover(length, length);
+    callback set-active-leaf(int);
+    callback manager-action(int, int, string);
+
+    // ViewportPage property forwardings
+    in-out property <image> viewport-image;
+    in-out property <int> viewport-width: 0;
+    in-out property <int> viewport-height: 0;
+    in-out property <float> viewport-fps: 60.0;
+    in-out property <bool> viewport-paused: false;
+    in-out property <float> viewport-speed: 1.0;
+
+    callback viewport-toggle-pause();
+    callback viewport-speed-changed(float);
+    callback viewport-resized(length, length);
+
+    // SettingsPage property forwardings
+    in-out property <string> settings-scheme: "origiri";
+    in-out property <string> settings-variant: "dark";
+    in-out property <string> settings-accent: "";
+    in-out property <string> settings-corner-radius: "small";
+    in-out property <string> settings-border-width: "default";
+    in-out property <float> settings-ui-scale: 1.0;
+    in-out property <string> settings-anim-speed: "normal";
+
+    callback set-scheme(string);
+    callback set-variant(string);
+    callback set-accent(string);
+    callback set-corner-radius(string);
+    callback set-border-width(string);
+    callback set-ui-scale(float);
+    callback set-anim-speed(string);
+    callback reset-settings-defaults();
+
+    VerticalLayout {
+        // Top navigation bar
+        Rectangle {
+            height: 56px;
+            background: Tokens.surface;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border-on-surface;
+
+            HorizontalLayout {
+                padding-left: Tokens.spacing-large;
+                padding-right: Tokens.spacing-large;
+                spacing: Tokens.spacing-medium;
+
+                HorizontalLayout {
+                    spacing: Tokens.spacing-medium;
+
+                    Rectangle {
+                        y: (parent.height - self.height) / 2;
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 6px;
+                        background: Tokens.accent;
+
+                        Text {
+                            width: 100%;
+                            height: 100%;
+                            text: "O";
+                            color: Tokens.text-on-accent;
+                            font-size: 15px;
+                            font-weight: 800;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Text {
+                        height: 100%;
+                        text: "Origiri Gallery";
+                        font-weight: 700;
+                        font-size: Tokens.font-size-large;
+                        color: Tokens.text-primary;
+                        vertical-alignment: center;
+                    }
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+
+                // Segmented Tab Bar (4 Tabs)
+                Rectangle {
+                    y: (parent.height - self.height) / 2;
+                    height: 38px;
+                    background: Tokens.surface-raised;
+                    border-radius: Tokens.corner-radius + 2px;
+                    border-width: Tokens.border-width;
+                    border-color: Tokens.border-on-raised;
+
+                    HorizontalLayout {
+                        padding: 3px;
+                        spacing: 2px;
+
+                        tab0 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 0 ? Tokens.accent : (tab0-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Widgets";
+                                color: root.current-tab == 0 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 0 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab0-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 0; }
+                            }
+                        }
+
+                        tab1 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 1 ? Tokens.accent : (tab1-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Regions & Shell";
+                                color: root.current-tab == 1 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 1 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab1-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 1; }
+                            }
+                        }
+
+                        tab2 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 2 ? Tokens.accent : (tab2-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Pane System";
+                                color: root.current-tab == 2 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 2 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab2-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 2; }
+                            }
+                        }
+
+                        tab3 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 3 ? Tokens.accent : (tab3-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Foundation";
+                                color: root.current-tab == 3 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 3 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab3-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 3; }
+                            }
+                        }
+
+                        tab4 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 4 ? Tokens.accent : (tab4-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Viewport";
+                                color: root.current-tab == 4 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 4 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab4-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 4; }
+                            }
+                        }
+
+                        tab5 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 5 ? Tokens.accent : (tab5-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Mobile";
+                                color: root.current-tab == 5 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 5 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab5-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 5; }
+                            }
+                        }
+
+                        tab6 := Rectangle {
+                            border-radius: Tokens.corner-radius;
+                            background: root.current-tab == 6 ? Tokens.accent : (tab6-touch.has-hover ? Tokens.hover-on-raised : transparent);
+                            animate background { duration: 100ms; }
+
+                            Text {
+                                width: 100%;
+                                height: 100%;
+                                text: "Settings";
+                                color: root.current-tab == 6 ? Tokens.text-on-accent : Tokens.text-secondary-on-raised;
+                                font-size: Tokens.font-size-normal;
+                                font-weight: root.current-tab == 6 ? 600 : 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            tab6-touch := TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.current-tab = 6; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.current-tab == 0: OrigiriPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            editable-items: root.editable-items;
+            list-add-requested => { root.list-add-requested(); }
+            list-remove-requested(i) => { root.list-remove-requested(i); }
+            list-move-up-requested(i) => { root.list-move-up-requested(i); }
+            list-move-down-requested(i) => { root.list-move-down-requested(i); }
+        }
+        if root.current-tab == 1: RegionsPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+        }
+        if root.current-tab == 2: PanePage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            cells: root.pane-cells;
+            outline: root.pane-outline;
+            maximized-leaf-id: root.maximized-leaf-id;
+            status: root.pane-status;
+            relayout(w, h) => { root.relayout(w, h); }
+            select-tab(id, idx) => { root.select-tab(id, idx); }
+            close-tab(id, child) => { root.close-tab(id, child); }
+            toggle-drawer(id) => { root.toggle-drawer(id); }
+            convert-group(id) => { root.convert-group(id); }
+            toggle-maximize(id) => { root.toggle-maximize(id); }
+            close-leaf(id, child) => { root.close-leaf(id, child); }
+            detach-leaf(id, child) => { root.detach-leaf(id, child); }
+            resize-divider-start(id, idx) => { root.resize-divider-start(id, idx); }
+            resize-divider(id, idx, extra, delta) => { root.resize-divider(id, idx, extra, delta); }
+            resize-divider-end() => { root.resize-divider-end(); }
+            tab-drag-ended(g, c, x, y) => { root.tab-drag-ended(g, c, x, y); }
+            drag-hover(x, y) => { root.drag-hover(x, y); }
+            set-active-leaf(id) => { root.set-active-leaf(id); }
+            manager-action(n, l, a) => { root.manager-action(n, l, a); }
+        }
+        if root.current-tab == 3: FoundationPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+        }
+        if root.current-tab == 4: ViewportPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            viewport-image: root.viewport-image;
+            viewport-width: root.viewport-width;
+            viewport-height: root.viewport-height;
+            fps: root.viewport-fps;
+            is-paused: root.viewport-paused;
+            rotation-speed: root.viewport-speed;
+            toggle-pause => { root.viewport-toggle-pause(); }
+            speed-changed(s) => { root.viewport-speed-changed(s); }
+            viewport-resized(w, h) => { root.viewport-resized(w, h); }
+        }
+        if root.current-tab == 5: MobilePage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+        }
+        if root.current-tab == 6: SettingsPage {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            current-scheme: root.settings-scheme;
+            current-variant: root.settings-variant;
+            current-accent: root.settings-accent;
+            current-corner-radius: root.settings-corner-radius;
+            current-border-width: root.settings-border-width;
+            current-ui-scale: root.settings-ui-scale;
+            current-anim-speed: root.settings-anim-speed;
+            set-scheme(s) => { root.set-scheme(s); }
+            set-variant(v) => { root.set-variant(v); }
+            set-accent(a) => { root.set-accent(a); }
+            set-corner-radius(r) => { root.set-corner-radius(r); }
+            set-border-width(b) => { root.set-border-width(b); }
+            set-ui-scale(u) => { root.set-ui-scale(u); }
+            set-anim-speed(a) => { root.set-anim-speed(a); }
+            reset-defaults => { root.reset-settings-defaults(); }
+        }
+    }
+}

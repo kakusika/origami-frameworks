@@ -1,0 +1,90 @@
+import { Tokens } from "@origiri/tokens.slint";
+import { Icon, TablerIcons } from "@origiri-icons/icons.slint";
+
+export component DropdownButton inherits Rectangle {
+    in property <string> text;
+    in property <[string]> options: [];
+    callback selected(int);
+
+    height: 30px;
+    width: 200px;
+    border-radius: Tokens.corner-radius;
+    border-width: Tokens.border-width;
+    border-color: area.has-hover ? Tokens.accent : Tokens.border-on-surface;
+    background: area.pressed ? Tokens.pressed-on-surface : area.has-hover ? Tokens.hover-on-surface : Tokens.surface;
+
+    animate background { duration: 100ms; }
+    animate border-color { duration: 100ms; }
+
+    HorizontalLayout {
+        padding-left: Tokens.spacing-medium;
+        padding-right: Tokens.spacing-medium;
+        spacing: Tokens.spacing-small;
+
+        Text {
+            height: 100%;
+            text: root.text;
+            color: Tokens.text-primary;
+            font-size: Tokens.font-size-normal;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+
+        Rectangle {
+            width: 14px;
+            height: 100%;
+
+            Icon {
+                y: (parent.height - self.height) / 2;
+                source: TablerIcons.chevron-down;
+                color: Tokens.text-secondary-on-surface;
+                width: 14px;
+                height: 14px;
+            }
+        }
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { popup.show(); }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: root.height + 4px;
+        width: root.width;
+
+        Rectangle {
+            background: Tokens.surface-raised;
+            border-width: Tokens.border-width;
+            border-color: Tokens.border-on-raised;
+            border-radius: Tokens.corner-radius;
+
+            VerticalLayout {
+                padding: Tokens.spacing-small;
+                spacing: 2px;
+
+                for opt[i] in root.options: Rectangle {
+                    height: 28px;
+                    background: itemArea.has-hover ? Tokens.hover-on-raised : transparent;
+                    border-radius: Tokens.corner-radius;
+
+                    animate background { duration: 80ms; }
+
+                    Text {
+                        text: opt;
+                        color: Tokens.text-primary;
+                        font-size: Tokens.font-size-normal;
+                        vertical-alignment: center;
+                        x: Tokens.spacing-medium;
+                    }
+
+                    itemArea := TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => { root.selected(i); }
+                    }
+                }
+            }
+        }
+    }
+}

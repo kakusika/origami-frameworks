@@ -611,6 +611,7 @@ fn main() -> Result<(), slint::PlatformError> {
         let app_weak = app.as_weak();
         app.on_set_border_width(move |width| {
             let w = match width.as_str() {
+                "none" => BorderWidth::Disabled,
                 "thin" => BorderWidth::Thin,
                 "default" => BorderWidth::Default,
                 "thick" => BorderWidth::Thick,

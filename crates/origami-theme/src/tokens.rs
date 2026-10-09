@@ -262,6 +262,7 @@ fn corner_radius_px(preset: CornerRadius) -> f32 {
 
 fn border_width_px(preset: BorderWidth) -> f32 {
     match preset {
+        BorderWidth::Disabled => 0.0,
         BorderWidth::Thin => 0.5,
         BorderWidth::Default => 1.0,
         BorderWidth::Thick => 2.0,
@@ -371,6 +372,7 @@ mod tests {
 
     #[test]
     fn border_width_presets() {
+        assert_eq!(border_width_px(BorderWidth::Disabled), 0.0);
         assert_eq!(border_width_px(BorderWidth::Thin), 0.5);
         assert_eq!(border_width_px(BorderWidth::Default), 1.0);
         assert_eq!(border_width_px(BorderWidth::Thick), 2.0);

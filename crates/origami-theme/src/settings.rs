@@ -17,6 +17,7 @@ pub enum CornerRadius {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BorderWidth {
+    Disabled,
     Thin,
     #[default]
     Default,

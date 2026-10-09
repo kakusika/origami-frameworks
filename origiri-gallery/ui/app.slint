@@ -78,14 +78,17 @@ export component AppWindow inherits Window {
     in-out property <string> settings-scheme: "origiri";
     in-out property <string> settings-variant: "dark";
     in-out property <string> settings-accent: "";
+    in-out property <bool> settings-accent-is-system: false;
     in-out property <string> settings-corner-radius: "small";
     in-out property <string> settings-border-width: "default";
     in-out property <float> settings-ui-scale: 1.0;
     in-out property <string> settings-anim-speed: "normal";
+    in-out property <bool> settings-system-scheme-available: false;
 
     callback set-scheme(string);
     callback set-variant(string);
     callback set-accent(string);
+    callback set-accent-system();
     callback set-corner-radius(string);
     callback set-border-width(string);
     callback set-ui-scale(float);
@@ -375,13 +378,16 @@ export component AppWindow inherits Window {
             current-scheme: root.settings-scheme;
             current-variant: root.settings-variant;
             current-accent: root.settings-accent;
+            current-accent-is-system: root.settings-accent-is-system;
             current-corner-radius: root.settings-corner-radius;
             current-border-width: root.settings-border-width;
             current-ui-scale: root.settings-ui-scale;
             current-anim-speed: root.settings-anim-speed;
+            system-scheme-available: root.settings-system-scheme-available;
             set-scheme(s) => { root.set-scheme(s); }
             set-variant(v) => { root.set-variant(v); }
             set-accent(a) => { root.set-accent(a); }
+            set-accent-system() => { root.set-accent-system(); }
             set-corner-radius(r) => { root.set-corner-radius(r); }
             set-border-width(b) => { root.set-border-width(b); }
             set-ui-scale(u) => { root.set-ui-scale(u); }

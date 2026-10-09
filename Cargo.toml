@@ -38,6 +38,7 @@ origiri-viewport = { path = "crates/origiri-viewport" }
 anyhow = "1"
 ash = "0.38"
 clap = { version = "4.6", features = ["derive"] }
+dark-light = { version = "3", default-features = false }
 directories = "6.0"
 naga = { version = "30", features = ["spv-out", "wgsl-in"] }
 notify = "8.2"
@@ -58,6 +59,8 @@ tracy-client = { version = "0.18", default-features = false }
 trash = "5.2.6"
 wgpu = { version = "30", default-features = false, features = ["wgsl"] }
 wgpu-hal = { version = "30", features = ["vulkan"] }
+winreg = "0.56"
+zbus = "5.19"
 
 [profile.dev.package."*"]
 opt-level = 3

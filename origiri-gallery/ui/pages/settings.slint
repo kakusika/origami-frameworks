@@ -11,14 +11,17 @@ export component SettingsPage inherits Rectangle {
     in-out property <string> current-scheme: "origiri";
     in-out property <string> current-variant: "dark";
     in-out property <string> current-accent: "";
+    in-out property <bool> current-accent-is-system: false;
     in-out property <string> current-corner-radius: "small";
     in-out property <string> current-border-width: "default";
     in-out property <float> current-ui-scale: 1.0;
     in-out property <string> current-anim-speed: "normal";
+    in-out property <bool> system-scheme-available: false;
 
     callback set-scheme(string);
     callback set-variant(string);
     callback set-accent(string);
+    callback set-accent-system();
     callback set-corner-radius(string);
     callback set-border-width(string);
     callback set-ui-scale(float);
@@ -89,6 +92,15 @@ export component SettingsPage inherits Rectangle {
 
                 HorizontalLayout {
                     spacing: Tokens.spacing-small;
+
+                    if root.system-scheme-available: AppButton {
+                        text: "システム (System)";
+                        primary: root.current-scheme == "system";
+                        clicked => {
+                            root.set-scheme("system");
+                            root.status = "Scheme: System";
+                        }
+                    }
 
                     AppButton {
                         text: "Origiri";
@@ -191,8 +203,17 @@ export component SettingsPage inherits Rectangle {
                     alignment: start;
 
                     AppButton {
+                        text: "システム (System)";
+                        primary: root.current-accent-is-system;
+                        clicked => {
+                            root.set-accent-system();
+                            root.status = "Accent: System";
+                        }
+                    }
+
+                    AppButton {
                         text: "テーマ標準";
-                        primary: root.current-accent == "";
+                        primary: !root.current-accent-is-system && root.current-accent == "";
                         clicked => {
                             root.set-accent("");
                             root.status = "Accent: theme default";
@@ -201,7 +222,8 @@ export component SettingsPage inherits Rectangle {
 
                     ColorSwatchRow {
                         swatches: root.accent-colors;
-                        selected-index: root.accent-hexes[0] == root.current-accent ? 0
+                        selected-index: root.current-accent-is-system ? -1
+                            : root.accent-hexes[0] == root.current-accent ? 0
                             : root.accent-hexes[1] == root.current-accent ? 1
                             : root.accent-hexes[2] == root.current-accent ? 2
                             : root.accent-hexes[3] == root.current-accent ? 3

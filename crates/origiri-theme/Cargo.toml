@@ -4,4 +4,15 @@ version.workspace = true
 edition.workspace = true
 readme = "README.md"
 
+[features]
+os = ["dep:dark-light", "dep:winreg", "dep:zbus", "dep:directories"]
+
 [dependencies]
+dark-light = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { workspace = true, optional = true }
+directories = { workspace = true, optional = true }

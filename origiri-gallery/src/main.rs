@@ -519,6 +519,8 @@ fn main() -> Result<(), slint::PlatformError> {
     let current_scheme = Rc::new(RefCell::new("origiri".to_string()));
     let current_is_dark = Rc::new(RefCell::new(true));
 
+    app.set_settings_system_scheme_available(origiri_theme::os::detect().full_palette.is_some());
+
     let apply_theme_fn = {
         let theme_settings = theme_settings.clone();
         let app_weak = app.as_weak();
@@ -538,10 +540,33 @@ fn main() -> Result<(), slint::PlatformError> {
         let app_weak = app.as_weak();
         app.on_set_scheme(move |scheme| {
             *current_scheme.borrow_mut() = scheme.to_string();
+            let (os_accent, os_full_palette) = if scheme == "system" {
+                let os_theme = origiri_theme::os::detect();
+                let is_dark = os_theme.color_scheme == origiri_theme::os::ColorScheme::Dark;
+                *current_is_dark.borrow_mut() = is_dark;
+                (os_theme.accent, os_theme.full_palette)
+            } else {
+                (None, None)
+            };
             let var = resolve_variant(&scheme, *current_is_dark.borrow());
-            theme_settings.borrow_mut().variant = var.to_string();
+            let mut st = theme_settings.borrow_mut();
+            st.variant = var.to_string();
+            st.preset_override = os_full_palette;
+            if let Some(accent) = os_accent {
+                st.accent = Some(accent);
+            }
+            drop(st);
             if let Some(app) = app_weak.upgrade() {
                 app.set_settings_scheme(scheme);
+                app.set_settings_variant(if *current_is_dark.borrow() {
+                    "dark".into()
+                } else {
+                    "light".into()
+                });
+                if let Some(accent) = os_accent {
+                    app.set_settings_accent(accent.to_hex().into());
+                    app.set_settings_accent_is_system(true);
+                }
             }
             apply_fn();
         });
@@ -579,8 +604,28 @@ fn main() -> Result<(), slint::PlatformError> {
             theme_settings.borrow_mut().accent = accent;
             if let Some(app) = app_weak.upgrade() {
                 app.set_settings_accent(hex);
+                app.set_settings_accent_is_system(false);
             }
             apply_fn();
+        });
+    }
+
+    {
+        let theme_settings = theme_settings.clone();
+        let apply_fn = apply_theme_fn.clone();
+        let app_weak = app.as_weak();
+        app.on_set_accent_system(move || {
+            // No-op when the OS has no single accent (e.g. macOS's
+            // "Multicolor") -- keep whatever accent was already in effect
+            // rather than clearing it.
+            if let Some(accent) = origiri_theme::os::detect().accent {
+                theme_settings.borrow_mut().accent = Some(accent);
+                if let Some(app) = app_weak.upgrade() {
+                    app.set_settings_accent(accent.to_hex().into());
+                    app.set_settings_accent_is_system(true);
+                }
+                apply_fn();
+            }
         });
     }
 
@@ -676,6 +721,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 app.set_settings_scheme("origiri".into());
                 app.set_settings_variant("dark".into());
                 app.set_settings_accent("".into());
+                app.set_settings_accent_is_system(false);
                 app.set_settings_corner_radius("small".into());
                 app.set_settings_border_width("default".into());
                 app.set_settings_ui_scale(1.0);

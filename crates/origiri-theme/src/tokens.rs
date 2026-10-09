@@ -331,7 +331,9 @@ pub fn resolve(settings: &ThemeSettings) -> ResolvedTheme {
     let accent = settings
         .accent
         .unwrap_or_else(|| palette::default_accent_for(&settings.variant));
-    let preset = palette::preset_by_id(&settings.variant);
+    let preset = settings
+        .preset_override
+        .unwrap_or_else(|| palette::preset_by_id(&settings.variant));
 
     let multiplier = animation_speed_multiplier(settings.animation_speed);
     let duration = |base_ms: f32| scaled_duration(base_ms, multiplier, settings.animations_enabled);
